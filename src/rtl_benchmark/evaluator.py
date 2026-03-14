@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -52,10 +53,12 @@ class Evaluator:
         tb = case_dir / "tb.sv"
         dut.write_text(rtl_code, encoding="utf-8")
         tb.write_text(problem.testbench, encoding="utf-8")
+        dump_scope = self._detect_module_name(tb)
 
         lint = self._run_lint([dut.name, tb.name], case_dir)
-        sim = self._run_sim([dut.name, tb.name], case_dir)
+        sim = self._run_sim([dut.name, tb.name], case_dir, dump_scope=dump_scope)
         synth = self._run_synth(dut.name, problem.top_module, case_dir)
+        artifacts = list_case_artifacts(case_dir)
 
         passed = sim.status == "pass" and (synth.status in {"pass", "skipped"}) and (lint.status in {"pass", "skipped"})
         feedback = build_feedback(lint, sim, synth)
@@ -70,6 +73,8 @@ class Evaluator:
             simulation=sim,
             synthesis=synth,
             feedback=feedback,
+            artifact_dir=str(case_dir.resolve()),
+            artifacts=artifacts,
         )
 
     def _eval_tb(self, model_id: str, problem: Problem, tb_code: str, attempt: int, case_dir: Path) -> CaseResult:
@@ -78,17 +83,23 @@ class Evaluator:
 
         tb.write_text(tb_code, encoding="utf-8")
         dut_golden.write_text(problem.golden_rtl, encoding="utf-8")
+        dump_scope = self._detect_module_name(tb)
 
         lint = self._run_lint([dut_golden.name, tb.name], case_dir)
 
-        golden_sim = self._run_sim([dut_golden.name, tb.name], case_dir, output_name="simv_golden")
+        golden_sim = self._run_sim([dut_golden.name, tb.name], case_dir, output_name="simv_golden", dump_scope=dump_scope)
 
         mutant_results: list[StageStatus] = []
         for idx, mutant in enumerate(problem.mutant_rtls, start=1):
             dut_mutant = case_dir / f"dut_mutant_{idx}.sv"
             dut_mutant.write_text(mutant, encoding="utf-8")
             mutant_results.append(
-                self._run_sim([dut_mutant.name, tb.name], case_dir, output_name=f"simv_mutant_{idx}")
+                self._run_sim(
+                    [dut_mutant.name, tb.name],
+                    case_dir,
+                    output_name=f"simv_mutant_{idx}",
+                    dump_scope=dump_scope,
+                )
             )
 
         kills = sum(1 for m in mutant_results if m.status == "fail")
@@ -103,6 +114,7 @@ class Evaluator:
 
         synth = StageStatus(status="skipped", reason="synthesis is not used for testbench tasks")
         feedback = build_tb_feedback(lint, golden_sim, kill_rate, problem.min_kill_rate)
+        artifacts = list_case_artifacts(case_dir)
 
         return CaseResult(
             model_id=model_id,
@@ -114,15 +126,28 @@ class Evaluator:
             simulation=golden_sim,
             synthesis=synth,
             mutation_kill_rate=kill_rate,
+            mutation_results=mutant_results,
             feedback=feedback,
+            artifact_dir=str(case_dir.resolve()),
+            artifacts=artifacts,
         )
 
     def _run_lint(self, sv_files: list[str], case_dir: Path) -> StageStatus:
         cmd = ["verilator", "--lint-only", "--timing", "-Wall", "-Wno-fatal", *sv_files]
         return self._run_tool(cmd, case_dir, "lint.log", required_tools=["verilator"])
 
-    def _run_sim(self, sv_files: list[str], case_dir: Path, output_name: str = "simv") -> StageStatus:
-        compile_cmd = ["iverilog", "-g2012", "-o", output_name, *sv_files]
+    def _run_sim(
+        self,
+        sv_files: list[str],
+        case_dir: Path,
+        output_name: str = "simv",
+        dump_scope: str = "",
+    ) -> StageStatus:
+        compile_inputs = list(sv_files)
+        wave_support = self._write_wave_support(case_dir, dump_scope, output_name)
+        if wave_support:
+            compile_inputs.append(wave_support.name)
+        compile_cmd = ["iverilog", "-g2012", "-o", output_name, *compile_inputs]
         compile_result = self._run_tool(
             compile_cmd,
             case_dir,
@@ -227,6 +252,31 @@ class Evaluator:
         docker_cmd.extend(cmd)
         return docker_cmd
 
+    def _detect_module_name(self, source_path: Path) -> str:
+        text = source_path.read_text(encoding="utf-8")
+        match = re.search(r"\bmodule\s+([A-Za-z_][A-Za-z0-9_$]*)\b", text)
+        if not match:
+            return ""
+        return match.group(1)
+
+    def _write_wave_support(self, case_dir: Path, dump_scope: str, output_name: str) -> Path | None:
+        if not dump_scope:
+            return None
+        wave_file = case_dir / f"{output_name}.vcd"
+        helper = case_dir / f"{output_name}_wave_dump.sv"
+        helper.write_text(
+            (
+                "module _rtl_benchmark_wave_dump;\n"
+                "  initial begin\n"
+                f'    $dumpfile("{wave_file.name}");\n'
+                f"    $dumpvars(0, {dump_scope});\n"
+                "  end\n"
+                "endmodule\n"
+            ),
+            encoding="utf-8",
+        )
+        return helper
+
 
 def run_cmd(cmd: list[str], cwd: Path, log_name: str, timeout_seconds: int = 20) -> StageStatus:
     try:
@@ -283,3 +333,30 @@ def trim_feedback(prefix: str, stage: StageStatus) -> str:
 
 def safe_name(value: str) -> str:
     return value.replace("/", "__").replace(":", "_")
+
+
+def list_case_artifacts(case_dir: Path) -> list[dict[str, object]]:
+    artifacts: list[dict[str, object]] = []
+    for path in sorted(case_dir.glob("*")):
+        if not path.is_file():
+            continue
+        suffix = path.suffix.lower()
+        artifacts.append(
+            {
+                "name": path.name,
+                "path": str(path.resolve()),
+                "size": path.stat().st_size,
+                "kind": artifact_kind(suffix),
+            }
+        )
+    return artifacts
+
+
+def artifact_kind(suffix: str) -> str:
+    if suffix in {".log", ".txt"}:
+        return "log"
+    if suffix in {".sv", ".v"}:
+        return "source"
+    if suffix in {".vcd", ".fst"}:
+        return "waveform"
+    return "binary"

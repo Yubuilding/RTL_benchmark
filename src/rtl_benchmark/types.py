@@ -11,6 +11,10 @@ class Problem:
     language: str
     prompt: str
     top_module: str
+    source: str = "local"
+    category: str = ""
+    tags: list[str] = field(default_factory=list)
+    path: str = ""
     module_header: str = ""
     testbench: str = ""
     reference_rtl: str = ""
@@ -49,7 +53,10 @@ class CaseResult:
     simulation: StageStatus
     synthesis: StageStatus
     mutation_kill_rate: float | None = None
+    mutation_results: list[StageStatus] = field(default_factory=list)
     feedback: str = ""
+    artifact_dir: str = ""
+    artifacts: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass

@@ -6,16 +6,20 @@
     <title>RTL Benchmark Console</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
+  <body data-page="home">
     <div class="page-shell">
       <header class="hero">
         <div>
           <p class="eyebrow">Local Control Surface</p>
           <h1>RTL Benchmark Console</h1>
           <p class="hero-copy">
-            Manage provider APIs and model lists, launch curated or ad-hoc RTL tests, and review local benchmark history
-            without leaving the workspace.
+            Manage providers, choose benchmark sources and individual problems, then inspect completed runs in a dedicated
+            results page with full prompts, answers, harnesses, logs, and artifacts.
           </p>
+          <nav class="top-nav">
+            <a class="nav-link nav-link-active" href="/">Control</a>
+            <a class="nav-link" href="/results">Results</a>
+          </nav>
         </div>
         <div class="hero-actions">
           <button id="refreshButton" class="ghost">Refresh</button>
@@ -30,7 +34,7 @@
               <p class="eyebrow">Providers</p>
               <h2>API And Model Control</h2>
             </div>
-            <p class="panel-note">Each enabled card becomes an explicit benchmark source.</p>
+            <p class="panel-note">Each enabled provider card contributes explicit models to the next run.</p>
           </div>
           <div id="providersGrid" class="providers-grid"></div>
         </section>
@@ -77,7 +81,7 @@
           </div>
         </section>
 
-        <section class="panel span-6">
+        <section class="panel span-12">
           <div class="panel-head">
             <div>
               <p class="eyebrow">Targets</p>
@@ -93,12 +97,20 @@
             </label>
             <label class="scope-pill">
               <input type="radio" name="scope" value="selected_problems" />
-              Selected Problems
+              Manual Problem Selection
             </label>
             <label class="scope-pill">
               <input type="radio" name="scope" value="custom_problem" />
               Custom Pasted Problem
             </label>
+          </div>
+
+          <div class="problem-toolbar">
+            <label class="search-field">
+              Problem Search
+              <input id="problemSearchInput" type="text" placeholder="Filter by id, source, category, prompt, or module" />
+            </label>
+            <div id="problemStats" class="problem-stats"></div>
           </div>
 
           <div id="problemPicker" class="problem-picker"></div>
@@ -171,23 +183,22 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Live Runs</p>
-              <h2>Active Jobs And Details</h2>
+              <h2>Active Jobs</h2>
             </div>
           </div>
           <div id="jobsList" class="stack-list"></div>
-          <div id="resultDetail" class="result-detail empty-state">
-            Select a history row or wait for a live run to complete.
-          </div>
         </section>
 
         <section class="panel span-6">
           <div class="panel-head">
             <div>
               <p class="eyebrow">Recorded Tests</p>
-              <h2>History</h2>
+              <h2>Recent Runs</h2>
             </div>
+            <a class="mini-link" href="/results">Open Results Page</a>
           </div>
           <div id="historyList" class="stack-list"></div>
+          <div id="resultDetail" class="result-detail empty-state">Select a history row to preview the latest run summary.</div>
         </section>
 
         <section class="panel span-12">

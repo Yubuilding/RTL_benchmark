@@ -19,12 +19,17 @@ def load_problems(glob_pattern: str) -> list[Problem]:
         if missing:
             raise ValueError(f"Problem file {path} missing fields: {sorted(missing)}")
 
+        source, category = infer_problem_taxonomy(path)
         problem = Problem(
             id=str(data["id"]),
             task_type=str(data["task_type"]),
             language=str(data["language"]),
             prompt=str(data["prompt"]),
             top_module=str(data["top_module"]),
+            source=str(data.get("source", source)).strip() or source,
+            category=str(data.get("category", category)).strip() or category,
+            tags=[str(tag).strip() for tag in data.get("tags", []) if str(tag).strip()],
+            path=str(path.resolve()),
             module_header=str(data.get("module_header", "")),
             testbench=str(data.get("testbench", "")),
             reference_rtl=str(data.get("reference_rtl", "")),
@@ -47,6 +52,21 @@ def resolve_problem_files(glob_pattern: str) -> list[Path]:
     if pattern_path.is_absolute():
         return [Path(p) for p in sorted(glob.glob(glob_pattern, recursive=True))]
     return sorted(Path(".").glob(glob_pattern))
+
+
+def infer_problem_taxonomy(path: Path) -> tuple[str, str]:
+    parts = list(path.parts)
+    if "benchmarks" in parts:
+        rel_parts = parts[parts.index("benchmarks") + 1 :]
+    else:
+        rel_parts = parts[-3:]
+
+    folders = rel_parts[:-1]
+    if not folders:
+        return "local", "uncategorized"
+    if len(folders) == 1:
+        return "local", folders[0]
+    return folders[0], "/".join(folders[1:])
 
 
 def validate_problem(problem: Problem, path: Path) -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import threading
 import traceback
@@ -10,13 +11,13 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
-from rtl_benchmark.evaluator import Evaluator
+from rtl_benchmark.evaluator import Evaluator, list_case_artifacts, safe_name
 from rtl_benchmark.leaderboard import summarize_cases, update_leaderboard
 from rtl_benchmark.model_runner import ModelRunner
 from rtl_benchmark.model_sources import discover_models
-from rtl_benchmark.problem_bank import load_problems, resolve_problem_files
+from rtl_benchmark.problem_bank import load_problems
 from rtl_benchmark.types import CaseResult, ModelDescriptor, Problem, StageStatus
 from rtl_benchmark.utils import ensure_dir, load_json, now_utc_iso, save_json, utc_run_id
 
@@ -106,9 +107,15 @@ class WebAppService:
         return normalized
 
     def get_state(self) -> dict[str, Any]:
+        problems = self.list_problems()
         return {
             "uiConfig": self.load_ui_config(),
-            "problems": self.list_problems(),
+            "problems": problems,
+            "problemStats": {
+                "total": len(problems),
+                "sources": len({item["source"] for item in problems}),
+                "categories": len({f"{item['source']}::{item['category']}" for item in problems}),
+            },
             "history": self.list_history(limit=20),
             "leaderboard": self.load_leaderboard(),
             "jobs": self.list_jobs(),
@@ -118,19 +125,22 @@ class WebAppService:
     def list_problems(self) -> list[dict[str, Any]]:
         glob_pattern = str(self.base_config.get("problem_glob", "benchmarks/**/*.json"))
         entries: list[dict[str, Any]] = []
-        for path in resolve_problem_files(glob_pattern):
-            data = load_json(path, default={})
+        for problem in load_problems(glob_pattern):
             entries.append(
                 {
-                    "id": str(data.get("id", "")),
-                    "task_type": str(data.get("task_type", "")),
-                    "language": str(data.get("language", "")),
-                    "top_module": str(data.get("top_module", "")),
-                    "prompt": str(data.get("prompt", "")),
-                    "group": path.parent.name,
-                    "path": str(path),
+                    "id": problem.id,
+                    "task_type": problem.task_type,
+                    "language": problem.language,
+                    "top_module": problem.top_module,
+                    "prompt": problem.prompt,
+                    "source": problem.source,
+                    "category": problem.category or "uncategorized",
+                    "tags": list(problem.tags),
+                    "path": problem.path,
+                    "has_harness": bool(problem.testbench or problem.reference_tb or problem.golden_rtl),
                 }
             )
+        entries.sort(key=lambda item: (item["source"], item["category"], item["id"]))
         return entries
 
     def list_history(self, limit: int = 20) -> list[dict[str, Any]]:
@@ -161,12 +171,12 @@ class WebAppService:
         raw_dir = ensure_dir(self.base_config.get("raw_results_dir", "results/raw"))
         direct = raw_dir / f"{run_id}.json"
         if direct.exists():
-            return load_json(direct, default={})
+            return self._enrich_history_detail(load_json(direct, default={}))
 
         for path in raw_dir.glob("*.json"):
             data = load_json(path, default={})
             if str(data.get("run_id", "")) == run_id:
-                return data
+                return self._enrich_history_detail(data)
         return None
 
     def load_leaderboard(self) -> dict[str, Any]:
@@ -174,6 +184,116 @@ class WebAppService:
             self.base_config.get("leaderboard_path", "results/leaderboard.json"),
             default={"updated_at": "", "models": []},
         )
+
+    def load_artifact(self, raw_path: str) -> tuple[bytes, str, str] | None:
+        target = Path(raw_path).expanduser().resolve()
+        allowed_roots = [
+            ensure_dir(self.base_config.get("run_root", "results/runs")).resolve(),
+            ensure_dir(self.base_config.get("raw_results_dir", "results/raw")).resolve(),
+        ]
+        if not any(self._is_within(target, root) for root in allowed_roots):
+            return None
+        if not target.exists() or not target.is_file():
+            return None
+        content_type = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+        return target.read_bytes(), content_type, target.name
+
+    def _enrich_history_detail(self, detail: dict[str, Any]) -> dict[str, Any]:
+        enriched = dict(detail)
+        problem_map = self._load_problem_map()
+        saved_problems = {
+            str(item.get("id", "")): item for item in enriched.get("problems", []) if str(item.get("id", "")).strip()
+        }
+
+        if not saved_problems:
+            saved_problems = {
+                problem_id: asdict(problem)
+                for problem_id, problem in problem_map.items()
+                if problem_id in set(enriched.get("problem_ids", []))
+            }
+            enriched["problems"] = list(saved_problems.values())
+
+        cases: list[dict[str, Any]] = []
+        for case in enriched.get("cases", []):
+            row = dict(case)
+            problem_id = str(row.get("problem_id", ""))
+            if problem_id and problem_id not in saved_problems and problem_id in problem_map:
+                saved_problems[problem_id] = asdict(problem_map[problem_id])
+            row["problem"] = saved_problems.get(problem_id, {})
+            row["artifact_dir"] = row.get("artifact_dir") or self._infer_case_dir(enriched, row)
+            artifact_dir = str(row.get("artifact_dir", "")).strip()
+            if artifact_dir and not row.get("artifacts"):
+                case_dir = Path(artifact_dir)
+                if case_dir.exists():
+                    row["artifacts"] = list_case_artifacts(case_dir)
+            cases.append(row)
+
+        enriched["cases"] = cases
+        enriched["problems"] = list(saved_problems.values())
+        enriched["model_results"] = self._summarize_model_results(cases)
+        enriched["overview"] = self._build_run_overview(enriched, cases)
+        return enriched
+
+    def _load_problem_map(self) -> dict[str, Problem]:
+        problems = load_problems(str(self.base_config.get("problem_glob", "benchmarks/**/*.json")))
+        return {problem.id: problem for problem in problems}
+
+    def _infer_case_dir(self, detail: dict[str, Any], case: dict[str, Any]) -> str:
+        run_root = str(detail.get("run_root", "")).strip()
+        if not run_root:
+            base_run_root = ensure_dir(self.base_config.get("run_root", "results/runs"))
+            run_id = str(detail.get("run_id", "")).strip()
+            run_root = str((base_run_root / run_id).resolve())
+        attempt = int(case.get("attempt", 0) or 0)
+        if not run_root or attempt <= 0:
+            return ""
+        model_id = str(case.get("model_id", "")).strip()
+        problem_id = str(case.get("problem_id", "")).strip()
+        if not model_id or not problem_id:
+            return ""
+        return str((Path(run_root) / safe_name(model_id) / problem_id / f"attempt_{attempt}").resolve())
+
+    def _summarize_model_results(self, cases: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for case in cases:
+            grouped.setdefault(str(case.get("model_id", "")), []).append(case)
+
+        rows: list[dict[str, Any]] = []
+        for model_id, items in grouped.items():
+            passed = sum(1 for item in items if item.get("passed"))
+            failed = sum(1 for item in items if item.get("passed") is False)
+            rows.append(
+                {
+                    "model_id": model_id,
+                    "provider": items[0].get("provider", ""),
+                    "cases": len(items),
+                    "passed": passed,
+                    "failed": failed,
+                    "pass_rate": round(passed / len(items), 4) if items else 0.0,
+                    "items": items,
+                }
+            )
+
+        rows.sort(key=lambda item: (-item["pass_rate"], item["model_id"]))
+        return rows
+
+    def _build_run_overview(self, detail: dict[str, Any], cases: list[dict[str, Any]]) -> dict[str, Any]:
+        passed = sum(1 for case in cases if case.get("passed"))
+        return {
+            "run_id": str(detail.get("run_id", "")),
+            "model_count": len({str(case.get("model_id", "")) for case in cases}),
+            "problem_count": len({str(case.get("problem_id", "")) for case in cases}),
+            "case_count": len(cases),
+            "passed_cases": passed,
+            "failed_cases": len(cases) - passed,
+        }
+
+    def _is_within(self, target: Path, root: Path) -> bool:
+        try:
+            target.relative_to(root)
+            return True
+        except ValueError:
+            return False
 
     def list_jobs(self) -> list[dict[str, Any]]:
         with self._jobs_lock:
@@ -278,7 +398,13 @@ class WebAppService:
                         )
                         candidate = model_runner.generate(model, problem, feedback=feedback)
                         if not candidate.strip():
-                            result = self._generation_failed_result(model.id, problem.id, problem.task_type, attempt)
+                            result = self._generation_failed_result(
+                                model.id,
+                                problem.id,
+                                problem.task_type,
+                                attempt,
+                                detail=model_runner.last_error,
+                            )
                         elif can_evaluate:
                             result = evaluator.evaluate(model.id, problem, candidate, attempt)
                         else:
@@ -295,6 +421,8 @@ class WebAppService:
                         row = asdict(result)
                         row["provider"] = model.provider
                         row["candidate_code"] = candidate
+                        row["problem_source"] = problem.source
+                        row["problem_category"] = problem.category
                         case_records.append(row)
                         if result.passed or not can_evaluate:
                             break
@@ -311,9 +439,11 @@ class WebAppService:
             "scope": scope,
             "custom_problem": custom_problem,
             "problem_ids": [problem.id for problem in problems],
+            "problems": [asdict(problem) for problem in problems],
             "models": model_records,
             "cases": case_records,
             "summary": summary,
+            "run_root": str(run_root.resolve()),
         }
 
         raw_dir = ensure_dir(self.base_config.get("raw_results_dir", "results/raw"))
@@ -379,8 +509,18 @@ class WebAppService:
             return True, ""
         return False, f"unsupported task type: {problem.task_type}"
 
-    def _generation_failed_result(self, model_id: str, problem_id: str, task_type: str, attempt: int) -> CaseResult:
+    def _generation_failed_result(
+        self,
+        model_id: str,
+        problem_id: str,
+        task_type: str,
+        attempt: int,
+        detail: str = "",
+    ) -> CaseResult:
         skipped = StageStatus(status="skipped", reason="generation failed")
+        feedback = "generation failed: provider returned no HDL code"
+        if detail:
+            feedback = f"{feedback}; {detail}"
         return CaseResult(
             model_id=model_id,
             problem_id=problem_id,
@@ -390,7 +530,7 @@ class WebAppService:
             lint=skipped,
             simulation=skipped,
             synthesis=skipped,
-            feedback="generation failed: provider returned no HDL code",
+            feedback=feedback,
         )
 
     def _evaluation_skipped_result(
@@ -560,6 +700,9 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
         if path == "/":
             self._serve_asset("index.html", "text/html; charset=utf-8")
             return
+        if path == "/results":
+            self._serve_asset("results.html", "text/html; charset=utf-8")
+            return
         if path == "/app.js":
             self._serve_asset("app.js", "application/javascript; charset=utf-8")
             return
@@ -568,6 +711,16 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/state":
             self._send_json(self.service.get_state())
+            return
+        if path == "/api/artifact":
+            query = parse_qs(parsed.query)
+            raw_path = unquote(query.get("path", [""])[0])
+            payload = self.service.load_artifact(raw_path)
+            if payload is None:
+                self._send_json({"error": "artifact not found"}, status=HTTPStatus.NOT_FOUND)
+                return
+            raw, content_type, filename = payload
+            self._send_raw(raw, content_type, filename)
             return
         if path.startswith("/api/history/"):
             run_id = unquote(path.rsplit("/", 1)[-1])
@@ -623,6 +776,14 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def _send_raw(self, raw: bytes, content_type: str, filename: str) -> None:
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(raw)))
+        self.send_header("Content-Disposition", f'inline; filename="{filename}"')
         self.end_headers()
         self.wfile.write(raw)
 

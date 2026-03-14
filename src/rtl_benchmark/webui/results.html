@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTL Benchmark Results</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="results">
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Inspection Surface</p>
+          <h1>Benchmark Results</h1>
+          <p class="hero-copy">
+            Review each model's pass and fail breakdown, expand case-level detail, inspect prompts and generated HDL, and
+            open raw artifacts including logs and waveforms.
+          </p>
+          <nav class="top-nav">
+            <a class="nav-link" href="/">Control</a>
+            <a class="nav-link nav-link-active" href="/results">Results</a>
+          </nav>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost">Refresh</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel span-4">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Runs</p>
+              <h2>History</h2>
+            </div>
+          </div>
+          <div id="resultsHistoryList" class="stack-list"></div>
+        </section>
+
+        <section class="panel span-8">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Run Summary</p>
+              <h2>Overview</h2>
+            </div>
+            <p id="resultsRunMeta" class="panel-note"></p>
+          </div>
+          <div id="resultsOverview"></div>
+        </section>
+
+        <section class="panel span-12">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Case Console</p>
+              <h2>Prompt, Answer, Harness, Logs, Artifacts</h2>
+            </div>
+          </div>
+          <div id="resultsConsole" class="result-detail empty-state">
+            Select a run and a case to inspect prompts, outputs, harnesses, logs, and waveforms.
+          </div>
+        </section>
+
+        <section class="panel span-12">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Model Results</p>
+              <h2>Success And Failure Breakdown</h2>
+            </div>
+          </div>
+          <div id="resultsModelSummary"></div>
+        </section>
+
+        <section class="panel span-12">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Local Benchmark</p>
+              <h2>Leaderboard Snapshot</h2>
+            </div>
+            <p id="resultsLeaderboardTimestamp" class="panel-note"></p>
+          </div>
+          <div id="resultsLeaderboardTable" class="table-shell"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
