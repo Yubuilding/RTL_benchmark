@@ -1,0 +1,72 @@
+[
+  {
+    "name": "RTLLM",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/hkust-zhiyao/RTLLM",
+    "license": "MIT",
+    "license_status": "verified",
+    "problem_style": ["spec_to_rtl"],
+    "coverage": ["arithmetic", "storage", "control", "misc"],
+    "problem_count": 50,
+    "mirror_policy": "eligible_for_import",
+    "notes": [
+      "Repository README states that RTLLM 2.0 includes 50 designs.",
+      "Suitable as a curated open-source RTL benchmark source."
+    ]
+  },
+  {
+    "name": "RTL-Repo",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/AUCOHL/RTL-Repo",
+    "license": "MIT",
+    "license_status": "verified",
+    "problem_style": ["repo_level_completion", "contextual_generation"],
+    "coverage": ["real_world_repositories"],
+    "problem_count": 4000,
+    "mirror_policy": "eligible_for_import",
+    "notes": [
+      "Repository README describes more than 4000 real-world Verilog samples.",
+      "Best used for repository-context evaluation rather than single-module smoke tests."
+    ]
+  },
+  {
+    "name": "PyHDL-Eval",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/masc-ucsc/pyhdl-eval",
+    "license": "MIT",
+    "license_status": "verified",
+    "problem_style": ["python_to_hdl", "algorithm_to_hdl"],
+    "coverage": ["pyhdl", "conversion"],
+    "mirror_policy": "eligible_for_import",
+    "notes": [
+      "Open-source benchmark focused on generating Python-based HDLs from problem statements."
+    ]
+  },
+  {
+    "name": "AutoBench",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/AutoBench/AutoBench",
+    "license": "MIT",
+    "license_status": "verified",
+    "problem_style": ["spec_to_rtl"],
+    "coverage": ["mixed"],
+    "mirror_policy": "manual_review_before_import",
+    "notes": [
+      "Repository is MIT-licensed.",
+      "README states the HDLBits subset in this repo is extended from HDLBits data, so redistribution of those derived samples should be reviewed separately before mirroring."
+    ]
+  },
+  {
+    "name": "CorrectBench",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/Open-Verification/CorrectBench",
+    "license": "MIT",
+    "license_status": "verified",
+    "problem_style": ["spec_to_rtl", "self_correction"],
+    "coverage": ["verilog", "sv", "hls", "circuit_type_labels"],
+    "mirror_policy": "eligible_for_import",
+    "notes": [
+      "Open verification benchmark with labels useful for error analysis and self-correction workflows."
+    ]
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "problem_glob": "benchmarks/**/*.json",
+  "problem_filters": {
+    "sources": ["hdlbits"],
+    "tracks": ["rtl_core"],
+    "difficulties": ["easy", "medium"]
+  },
+  "max_iterations": 3,
+  "generation": {
+    "temperature": 0.0,
+    "max_tokens": 1024,
+    "timeout_seconds": 60
+  },
+  "execution": {
+    "mode": "local",
+    "timeout_seconds": 20,
+    "docker_binary": "docker",
+    "docker_image": "rtl-benchmark-tools:latest",
+    "docker_build_context": ".",
+    "dockerfile": "Dockerfile",
+    "container_workdir": "/workspace",
+    "docker_network": "none",
+    "docker_read_only_rootfs": true,
+    "docker_tmpfs_mounts": [
+      "/tmp"
+    ],
+    "docker_security_opts": [
+      "no-new-privileges:true"
+    ],
+    "docker_cap_drop": [
+      "ALL"
+    ],
+    "docker_pids_limit": 256,
+    "docker_memory": "1g",
+    "docker_cpus": "1.0"
+  },
+  "selection": {
+    "include_any": [],
+    "exclude_any": [],
+    "providers": [],
+    "max_models": 0
+  },
+  "run_root": "results/runs",
+  "raw_results_dir": "results/raw",
+  "leaderboard_path": "results/leaderboard.json",
+  "state_path": ".state/known_models.json",
+  "sources": [
+    {
+      "type": "file_feed",
+      "path": "data/model_feeds/open_models.json"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+$date
+	Sat Mar 14 23:14:36 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module tb $end
+$var wire 4 ! grant [3:0] $end
+$var reg 1 " clk $end
+$var reg 4 # req [3:0] $end
+$var reg 1 $ rst_n $end
+$scope module dut $end
+$var wire 1 " clk $end
+$var wire 4 % req [3:0] $end
+$var wire 1 $ rst_n $end
+$var reg 4 & grant [3:0] $end
+$var reg 2 ' last_grant [1:0] $end
+$scope function pick_grant $end
+$upscope $end
+$upscope $end
+$scope task step_check $end
+$var reg 4 ( expected [3:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+b0 (
+b11 '
+b0 &
+b0 %
+0$
+b0 #
+0"
+b0 !
+$end
+#5000
+1"
+#6000
+b1 (
+b101 #
+b101 %
+1$
+#10000
+0"
+#15000
+b0 '
+b1 !
+b1 &
+1"
+#16000
+b100 (
+#20000
+0"
+#25000
+b10 '
+b100 !
+b100 &
+1"
+#26000
+b1 (
+#30000
+0"
+#35000
+b0 '
+b1 !
+b1 &
+1"
+#36000
+b1000 (
+b1000 #
+b1000 %
+#40000
+0"
+#45000
+b11 '
+b1000 !
+b1000 &
+1"
+#46000
+b10 (
+b1010 #
+b1010 %
+#50000
+0"
+#55000
+b1 '
+b10 !
+b10 &
+1"
+#56000
+b1000 (
+#60000
+0"
+#65000
+b11 '
+b1000 !
+b1000 &
+1"
+#66000
+b0 (
+b0 #
+b0 %
+#70000
+0"
+#75000
+b0 !
+b0 &
+1"
+#76000
+b10 (
+b110 #
+b110 %
+#80000
+0"
+#85000
+b1 '
+b10 !
+b10 &
+1"
+#86000
+b100 (
+#90000
+0"
+#95000
+b10 '
+b100 !
+b100 &
+1"
+#96000

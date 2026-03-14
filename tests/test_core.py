@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from rtl_benchmark.evaluator import Evaluator
+from rtl_benchmark.importers import import_rtllm_repo
 from rtl_benchmark.model_runner import ModelRunner
 from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.pipeline import BenchmarkPipeline
@@ -19,6 +20,52 @@ ROOT = Path("/Users/gary/RTL_benchmark")
 
 
 class ProblemBankTests(unittest.TestCase):
+    def test_external_problem_catalogs_are_well_formed(self) -> None:
+        catalog_root = ROOT / "data" / "problem_catalogs"
+        self.assertTrue((catalog_root / "hdlbits_index.json").exists())
+        self.assertTrue((catalog_root / "open_rtl_benchmarks.json").exists())
+
+        hdlbits = json.loads((catalog_root / "hdlbits_index.json").read_text(encoding="utf-8"))
+        self.assertEqual(hdlbits["name"], "HDLBits")
+        self.assertEqual(hdlbits["mirror_policy"], "link_only")
+        self.assertEqual(hdlbits["license_status"], "unverified")
+        self.assertTrue(hdlbits["topic_groups"])
+
+        open_catalog = json.loads((catalog_root / "open_rtl_benchmarks.json").read_text(encoding="utf-8"))
+        names = {item["name"] for item in open_catalog}
+        self.assertTrue({"RTLLM", "RTL-Repo", "PyHDL-Eval", "AutoBench", "CorrectBench"}.issubset(names))
+        self.assertTrue(all(item["license_status"] == "verified" for item in open_catalog))
+
+    def test_import_rtllm_repo_converts_local_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            src_root = tmp_path / "RTLLM"
+            design_dir = src_root / "Arithmetic" / "Add8"
+            design_dir.mkdir(parents=True, exist_ok=True)
+            (design_dir / "design_description.txt").write_text(
+                "Design a module named add8 with inputs a, b and output sum.",
+                encoding="utf-8",
+            )
+            (design_dir / "testbench.v").write_text("module tb; endmodule\n", encoding="utf-8")
+            (design_dir / "verified_verilog.v").write_text(
+                "module add8(input [7:0] a, input [7:0] b, output [8:0] sum); assign sum = a + b; endmodule\n",
+                encoding="utf-8",
+            )
+
+            outputs = import_rtllm_repo(str(src_root), str(tmp_path / "benchmarks" / "rtllm"))
+
+            self.assertEqual(len(outputs), 1)
+            payload = json.loads(outputs[0].read_text(encoding="utf-8"))
+            self.assertEqual(payload["id"], "rtllm_arithmetic_add8")
+            self.assertEqual(payload["source"], "rtllm")
+            self.assertEqual(payload["suite"], "rtllm")
+            self.assertEqual(payload["category"], "arithmetic")
+            self.assertEqual(payload["track"], "arithmetic")
+            self.assertEqual(payload["top_module"], "add8")
+            self.assertEqual(payload["difficulty"], "medium")
+            self.assertIn("Design a module named add8", payload["prompt"])
+            self.assertIn("module add8", payload["reference_rtl"])
+
     def test_load_problems_supports_absolute_glob(self) -> None:
         problems = load_problems(str(ROOT / "benchmarks/**/*.json"))
         ids = {problem.id for problem in problems}
@@ -32,6 +79,8 @@ class ProblemBankTests(unittest.TestCase):
             "hdlbits_shift4",
             "hdlbits_edge_capture8",
             "hdlbits_count10",
+            "industrial_valid_ready_slice",
+            "industrial_rr_arb4",
         }
         self.assertTrue(expected_ids.issubset(ids))
         self.assertEqual(len(ids), len(problems))
@@ -48,6 +97,10 @@ class ProblemBankTests(unittest.TestCase):
         self.assertEqual(by_id["tb_mod3_counter"].prompt_style, "spec_to_testbench")
         self.assertEqual(by_id["tb_mod3_counter"].harness_type, "mutation")
         self.assertEqual(by_id["hdlbits_count10"].category, "counters")
+        self.assertEqual(by_id["industrial_valid_ready_slice"].track, "protocol")
+        self.assertEqual(by_id["industrial_valid_ready_slice"].difficulty, "hard")
+        self.assertEqual(by_id["industrial_valid_ready_slice"].exposure, "curated")
+        self.assertEqual(by_id["industrial_rr_arb4"].track, "control")
 
     def test_load_problems_supports_metadata_filters(self) -> None:
         problems = load_problems(
@@ -61,6 +114,18 @@ class ProblemBankTests(unittest.TestCase):
         )
 
         self.assertEqual({problem.id for problem in problems}, {"hdlbits_vector_rev8", "hdlbits_popcount3", "hdlbits_mux9_16"})
+
+    def test_problem_filters_can_select_industrial_subset(self) -> None:
+        problems = load_problems(
+            str(ROOT / "benchmarks/**/*.json"),
+            {
+                "sources": ["industrial"],
+                "tracks": ["protocol", "control"],
+                "difficulties": ["hard"],
+            },
+        )
+
+        self.assertEqual({problem.id for problem in problems}, {"industrial_valid_ready_slice", "industrial_rr_arb4"})
 
 
 class DiscoveryTests(unittest.TestCase):

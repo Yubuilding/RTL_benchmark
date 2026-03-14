@@ -7,6 +7,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from rtl_benchmark.evaluator import Evaluator
+from rtl_benchmark.importers import import_rtllm_repo
 from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.pipeline import BenchmarkPipeline
 from rtl_benchmark.problem_bank import load_problems
@@ -57,6 +58,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="EOF",
         help="line used to terminate interactive paste mode",
     )
+
+    import_rtllm = sub.add_parser("import-rtllm", help="convert a local RTLLM repo snapshot into benchmark JSON files")
+    import_rtllm.add_argument("--src", required=True, help="path to the local RTLLM repository snapshot")
+    import_rtllm.add_argument("--dest", default="benchmarks/rtllm", help="output directory for converted JSON files")
+    import_rtllm.add_argument("--overwrite", action="store_true", help="overwrite existing generated files")
 
     return parser
 
@@ -233,6 +239,14 @@ def cmd_grade(
     return 0
 
 
+def cmd_import_rtllm(src_root: str, dest_root: str, overwrite: bool) -> int:
+    outputs = import_rtllm_repo(src_root=src_root, dest_root=dest_root, overwrite=overwrite)
+    print(f"imported problems: {len(outputs)}")
+    for path in outputs:
+        print(f"- {path}")
+    return 0
+
+
 def _resolve_candidate_code(
     code: str,
     code_file: str,
@@ -306,6 +320,8 @@ def main() -> None:
                 end_marker=args.end_marker,
             )
         )
+    if args.cmd == "import-rtllm":
+        raise SystemExit(cmd_import_rtllm(args.src, args.dest, args.overwrite))
 
     raise SystemExit(2)
 

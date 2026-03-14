@@ -67,12 +67,18 @@ src/rtl_benchmark/
 benchmarks/
   rtl/*.json
   hdlbits/*/*.json
+  industrial/*/*.json
   testbench/*.json
 configs/pipeline.json
 data/model_feeds/open_models.json
 .github/workflows/benchmark.yml
 Dockerfile
 ```
+
+External benchmark source catalogs live under `data/problem_catalogs/`:
+
+- `hdlbits_index.json`: link-only HDLBits index because the site license is not explicit
+- `open_rtl_benchmarks.json`: open-source benchmark repos that are candidates for future import
 
 ## Configuration
 
@@ -216,6 +222,30 @@ Example filter:
   }
 }
 ```
+
+Ready-to-use examples:
+
+- `configs/pipeline.hdlbits.json`: teaching-oriented HDLBits sweep
+- `configs/pipeline.industrial.json`: harder control/protocol subset
+- `configs/pipeline.rtllm.json`: imported RTLLM subset once local conversion is done
+
+External-source policy:
+
+- mirror into `benchmarks/` only when the upstream license is explicit and compatible
+- keep link-only indexes for public sites without clear redistribution terms
+- review derived datasets separately if they incorporate HDLBits or other unclear sources
+
+RTLLM local import:
+
+```bash
+PYTHONPATH=src python3 -m rtl_benchmark.cli import-rtllm \
+  --src /path/to/RTLLM \
+  --dest benchmarks/rtllm
+PYTHONPATH=src python3 -m rtl_benchmark.cli problems --config configs/pipeline.rtllm.json
+```
+
+This importer expects the official RTLLM folder layout with `design_description.txt`, `testbench.v`, and either
+`designer_RTL.v` or `verified_verilog.v` inside each design directory.
 
 ## Check Environment
 

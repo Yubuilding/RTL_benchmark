@@ -1,0 +1,75 @@
+{
+  "name": "HDLBits",
+  "base_url": "https://hdlbits.01xz.net/wiki/Main_Page",
+  "license_status": "unverified",
+  "mirror_policy": "link_only",
+  "notes": [
+    "The HDLBits site is publicly accessible, but no explicit open-source or content redistribution license was identified from the main site pages reviewed.",
+    "Do not mirror full problem statements or judge assets into benchmarks/ without an explicit upstream license or permission."
+  ],
+  "pages": [
+    {
+      "title": "Main Page",
+      "url": "https://hdlbits.01xz.net/wiki/Main_Page"
+    },
+    {
+      "title": "About",
+      "url": "https://hdlbits.01xz.net/wiki/Project:About"
+    },
+    {
+      "title": "Browse Problem Set",
+      "url": "https://hdlbits.01xz.net/wiki/Special:VtlBrowse"
+    },
+    {
+      "title": "Problem Sets",
+      "url": "https://hdlbits.01xz.net/wiki/Problem_sets"
+    },
+    {
+      "title": "Problem Statistics",
+      "url": "https://hdlbits.01xz.net/wiki/Problem_statistics"
+    }
+  ],
+  "topic_groups": [
+    {
+      "title": "Getting Started",
+      "url": "https://hdlbits.01xz.net/wiki/Problem_sets#Getting_Started",
+      "problem_count": 2
+    },
+    {
+      "title": "Verilog Language",
+      "url": "https://hdlbits.01xz.net/wiki/Problem_sets#Verilog_Language",
+      "subtopics": [
+        {"title": "Basics", "problem_count": 8},
+        {"title": "Vectors", "problem_count": 9},
+        {"title": "Modules", "problem_count": 9},
+        {"title": "Procedures", "problem_count": 8},
+        {"title": "More Verilog Features", "problem_count": 7}
+      ]
+    },
+    {
+      "title": "Circuits",
+      "url": "https://hdlbits.01xz.net/wiki/Problem_sets#Circuits",
+      "subtopics": [
+        {"title": "Combinational Logic", "problem_count": 15},
+        {"title": "Multiplexers", "problem_count": 5},
+        {"title": "Arithmetic Circuits", "problem_count": 7},
+        {"title": "Karnaugh Map to Circuit", "problem_count": 8},
+        {"title": "Sequential Logic", "problem_count": 18},
+        {"title": "Counters", "problem_count": 8},
+        {"title": "Shift Registers", "problem_count": 9},
+        {"title": "More Circuits", "problem_count": 3},
+        {"title": "Finite State Machines", "problem_count": 32},
+        {"title": "Building Larger Circuits", "problem_count": 7}
+      ]
+    },
+    {
+      "title": "Verification",
+      "url": "https://hdlbits.01xz.net/wiki/Problem_sets#Verification:_Reading_Simulations_and_Waveforms",
+      "subtopics": [
+        {"title": "Reading Simulations", "problem_count": 5},
+        {"title": "Build a Circuit from a Waveform", "problem_count": 10},
+        {"title": "Writing Testbenches", "problem_count": 5}
+      ]
+    }
+  ]
+}

@@ -38,8 +38,12 @@ Inferred when omitted:
 - `benchmarks/rtl`: small local smoke-test suite
 - `benchmarks/testbench`: mutation-scored verification tasks
 - `benchmarks/hdlbits/<category>`: public HDLBits-style practice tasks
+- `benchmarks/industrial/<category>`: curated higher-difficulty control/protocol tasks
+- `benchmarks/rtllm/<category>`: imported open-source RTLLM tasks converted into local JSON
 
 The loader still infers `source` and `category` from the path, so `benchmarks/hdlbits/sequential/foo.json` becomes `source=hdlbits`, `category=sequential`.
+
+For external sources that are not mirrored locally yet, see `data/problem_catalogs/`.
 
 ## Config-driven selection
 

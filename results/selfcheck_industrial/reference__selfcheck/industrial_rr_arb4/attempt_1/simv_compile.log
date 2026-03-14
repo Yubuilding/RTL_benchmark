@@ -1,0 +1,7 @@
+CMD: iverilog -g2012 -o simv dut.sv tb.sv simv_wave_dump.sv
+
+STDOUT:
+
+
+STDERR:
+

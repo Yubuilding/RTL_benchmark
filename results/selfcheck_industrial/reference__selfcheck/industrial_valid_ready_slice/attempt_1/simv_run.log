@@ -1,0 +1,10 @@
+CMD: vvp simv
+
+STDOUT:
+VCD info: dumpfile simv.vcd opened for output.
+PASS
+tb.sv:78: $finish called at 86000 (1ps)
+
+
+STDERR:
+

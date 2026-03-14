@@ -1,0 +1,15 @@
+{
+  "id": "industrial_rr_arb4",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "rr_arb4",
+  "suite": "industrial",
+  "track": "control",
+  "difficulty": "hard",
+  "exposure": "curated",
+  "tags": ["industrial", "arbiter", "round-robin", "control"],
+  "module_header": "module rr_arb4(input logic clk, input logic rst_n, input logic [3:0] req, output logic [3:0] grant);",
+  "prompt": "Implement a 4-request round-robin arbiter. grant must be one-hot and is updated on each rising clock edge. After reset, requester 0 has the highest priority. When there are active requests, choose the first active requester starting just after the previously granted requester, wrapping around from 3 back to 0. If no request is active, drive grant to 0 and keep the priority pointer unchanged.",
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  logic clk;\n  logic rst_n;\n  logic [3:0] req;\n  logic [3:0] grant;\n\n  rr_arb4 dut(.clk(clk), .rst_n(rst_n), .req(req), .grant(grant));\n\n  always #5 clk = ~clk;\n\n  task step_check(input logic [3:0] expected);\n    begin\n      @(posedge clk);\n      #1;\n      if (grant !== expected) begin\n        $display(\"FAIL req=%0b expected grant=%0b got=%0b\", req, expected, grant);\n        $fatal(1);\n      end\n    end\n  endtask\n\n  initial begin\n    clk = 0;\n    rst_n = 0;\n    req = 4'b0000;\n    step_check(4'b0000);\n\n    rst_n = 1;\n    req = 4'b0101;\n    step_check(4'b0001);\n    step_check(4'b0100);\n    step_check(4'b0001);\n\n    req = 4'b1000;\n    step_check(4'b1000);\n\n    req = 4'b1010;\n    step_check(4'b0010);\n    step_check(4'b1000);\n\n    req = 4'b0000;\n    step_check(4'b0000);\n\n    req = 4'b0110;\n    step_check(4'b0010);\n    step_check(4'b0100);\n\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module rr_arb4(input logic clk, input logic rst_n, input logic [3:0] req, output logic [3:0] grant);\n  logic [1:0] last_grant;\n\n  function automatic logic [3:0] pick_grant(input logic [3:0] req_i, input logic [1:0] last_i);\n    logic [3:0] result;\n    int offset;\n    int idx;\n    begin\n      result = 4'b0000;\n      for (offset = 1; offset <= 4; offset++) begin\n        idx = (last_i + offset) % 4;\n        if ((result == 4'b0000) && req_i[idx])\n          result[idx] = 1'b1;\n      end\n      pick_grant = result;\n    end\n  endfunction\n\n  always_ff @(posedge clk or negedge rst_n) begin\n    if (!rst_n) begin\n      grant <= 4'b0000;\n      last_grant <= 2'd3;\n    end else begin\n      grant <= pick_grant(req, last_grant);\n      case (pick_grant(req, last_grant))\n        4'b0001: last_grant <= 2'd0;\n        4'b0010: last_grant <= 2'd1;\n        4'b0100: last_grant <= 2'd2;\n        4'b1000: last_grant <= 2'd3;\n        default: last_grant <= last_grant;\n      endcase\n    end\n  end\nendmodule\n"
+}
