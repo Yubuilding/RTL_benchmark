@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTL Benchmark Console</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Local Control Surface</p>
+          <h1>RTL Benchmark Console</h1>
+          <p class="hero-copy">
+            Manage provider APIs and model lists, launch curated or ad-hoc RTL tests, and review local benchmark history
+            without leaving the workspace.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost">Refresh</button>
+          <button id="saveConfigButton" class="primary">Save Local Config</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel span-7">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Providers</p>
+              <h2>API And Model Control</h2>
+            </div>
+            <p class="panel-note">Each enabled card becomes an explicit benchmark source.</p>
+          </div>
+          <div id="providersGrid" class="providers-grid"></div>
+        </section>
+
+        <section class="panel span-5">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Run Settings</p>
+              <h2>Generation And Execution</h2>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <label>
+              Temperature
+              <input id="temperatureInput" type="number" min="0" step="0.1" />
+            </label>
+            <label>
+              Max Tokens
+              <input id="maxTokensInput" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Generation Timeout (s)
+              <input id="generationTimeoutInput" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Execution Mode
+              <select id="executionModeSelect">
+                <option value="docker">docker</option>
+                <option value="local">local</option>
+              </select>
+            </label>
+            <label>
+              Eval Timeout (s)
+              <input id="executionTimeoutInput" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Docker Image
+              <input id="dockerImageInput" type="text" />
+            </label>
+            <label>
+              Docker Binary
+              <input id="dockerBinaryInput" type="text" />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel span-6">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Targets</p>
+              <h2>Choose Benchmarks</h2>
+            </div>
+            <button id="runButton" class="primary">Run Now</button>
+          </div>
+
+          <div class="scope-picker">
+            <label class="scope-pill">
+              <input type="radio" name="scope" value="suite" checked />
+              Full Suite
+            </label>
+            <label class="scope-pill">
+              <input type="radio" name="scope" value="selected_problems" />
+              Selected Problems
+            </label>
+            <label class="scope-pill">
+              <input type="radio" name="scope" value="custom_problem" />
+              Custom Pasted Problem
+            </label>
+          </div>
+
+          <div id="problemPicker" class="problem-picker"></div>
+
+          <div id="customProblemForm" class="custom-form hidden">
+            <div class="settings-grid">
+              <label>
+                Custom ID
+                <input id="customIdInput" type="text" placeholder="custom_rtl_case" />
+              </label>
+              <label>
+                Task Type
+                <select id="customTaskTypeSelect">
+                  <option value="rtl">rtl</option>
+                  <option value="testbench">testbench</option>
+                </select>
+              </label>
+              <label>
+                Language
+                <input id="customLanguageInput" type="text" value="verilog" />
+              </label>
+              <label>
+                Top Module
+                <input id="customTopModuleInput" type="text" placeholder="add8" />
+              </label>
+            </div>
+
+            <label>
+              Module Header
+              <textarea id="customModuleHeaderInput" rows="3" placeholder="module add8(...);"></textarea>
+            </label>
+            <label>
+              Prompt
+              <textarea id="customPromptInput" rows="5" placeholder="Paste the benchmark requirement here."></textarea>
+            </label>
+
+            <div class="panel-note">
+              For full evaluation, fill the verification fields below. If they are missing, the run will still generate HDL and
+              record a generation-only result with evaluation skipped.
+            </div>
+
+            <label>
+              RTL Testbench
+              <textarea id="customTestbenchInput" rows="6" placeholder="Needed for rtl tasks."></textarea>
+            </label>
+            <label>
+              Reference RTL
+              <textarea id="customReferenceRtlInput" rows="6" placeholder="Needed for rtl tasks."></textarea>
+            </label>
+            <label>
+              Golden RTL
+              <textarea id="customGoldenRtlInput" rows="6" placeholder="Needed for testbench tasks."></textarea>
+            </label>
+            <label>
+              Reference Testbench
+              <textarea id="customReferenceTbInput" rows="6" placeholder="Needed for testbench tasks."></textarea>
+            </label>
+            <label>
+              Mutant RTLs
+              <textarea
+                id="customMutantsInput"
+                rows="8"
+                placeholder="Separate mutants with a line containing only ---"
+              ></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel span-6">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Live Runs</p>
+              <h2>Active Jobs And Details</h2>
+            </div>
+          </div>
+          <div id="jobsList" class="stack-list"></div>
+          <div id="resultDetail" class="result-detail empty-state">
+            Select a history row or wait for a live run to complete.
+          </div>
+        </section>
+
+        <section class="panel span-6">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Recorded Tests</p>
+              <h2>History</h2>
+            </div>
+          </div>
+          <div id="historyList" class="stack-list"></div>
+        </section>
+
+        <section class="panel span-12">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Local Benchmark</p>
+              <h2>Leaderboard Snapshot</h2>
+            </div>
+            <p id="leaderboardTimestamp" class="panel-note"></p>
+          </div>
+          <div id="leaderboardTable" class="table-shell"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

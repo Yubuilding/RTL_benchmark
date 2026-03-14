@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from rtl_benchmark.evaluator import Evaluator
 from rtl_benchmark.model_runner import ModelRunner
@@ -71,6 +73,38 @@ class DiscoveryTests(unittest.TestCase):
             self.assertEqual([model.id for model in models], ["gpt-4.1-mini"])
             self.assertEqual(state["known_model_ids"], ["gpt-4.1-mini"])
 
+    def test_gemini_discovery_normalizes_model_names(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            state_path = tmp_path / "known.json"
+            state_path.write_text(json.dumps({"known_model_ids": []}), encoding="utf-8")
+
+            payload = {
+                "models": [
+                    {
+                        "name": "models/gemini-2.5-flash",
+                        "supportedGenerationMethods": ["generateContent"],
+                    },
+                    {
+                        "name": "models/embedding-001",
+                        "supportedGenerationMethods": ["embedContent"],
+                    },
+                ]
+            }
+
+            with patch("rtl_benchmark.model_sources._fetch_json", return_value=payload):
+                with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=False):
+                    models = discover_models(
+                        sources=[{"type": "gemini", "enabled": True}],
+                        state_path=str(state_path),
+                        include_known=False,
+                        selection={},
+                        update_state=False,
+                    )
+
+            self.assertEqual([model.id for model in models], ["gemini-2.5-flash"])
+            self.assertEqual([model.provider for model in models], ["gemini"])
+
 
 class RunnerTests(unittest.TestCase):
     def test_real_provider_failure_does_not_fallback_to_mock(self) -> None:
@@ -86,6 +120,36 @@ class RunnerTests(unittest.TestCase):
         )
         model = ModelDescriptor(id="gpt-4.1-mini", provider="openai")
         self.assertEqual(runner.generate(model, problem), "")
+
+    def test_gemini_provider_failure_does_not_fallback_to_mock(self) -> None:
+        runner = ModelRunner({})
+        problem = Problem(
+            id="rtl_add8",
+            task_type="rtl",
+            language="verilog",
+            prompt="Implement add8.",
+            top_module="add8",
+            reference_rtl="module add8(input [7:0] a, input [7:0] b, output [8:0] sum); assign sum = a+b; endmodule",
+            testbench="module tb; endmodule",
+        )
+        model = ModelDescriptor(id="gemini-2.5-flash", provider="gemini")
+        self.assertEqual(runner.generate(model, problem), "")
+
+    def test_extract_gemini_message_collects_text_parts(self) -> None:
+        runner = ModelRunner({})
+        payload = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {"text": "module add8("},
+                            {"text": ");\nendmodule"},
+                        ]
+                    }
+                }
+            ]
+        }
+        self.assertEqual(runner._extract_gemini_message(payload), "module add8(\n);\nendmodule")
 
 
 class PipelineTests(unittest.TestCase):

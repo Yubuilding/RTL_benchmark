@@ -94,6 +94,18 @@
       ]
     },
     {
+      "type": "gemini",
+      "enabled": false,
+      "provider": "gemini",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "api_key_env": "GEMINI_API_KEY",
+      "models": [
+        {
+          "id": "gemini-2.5-flash"
+        }
+      ]
+    },
+    {
       "type": "openai",
       "enabled": false,
       "provider": "openai_compatible",

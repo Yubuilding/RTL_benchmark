@@ -268,6 +268,53 @@ def from_anthropic(
     return models
 
 
+def from_gemini(
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta",
+    api_key_env: str = "GEMINI_API_KEY",
+    provider: str = "gemini",
+    page_size: int = 100,
+    id_contains: list[str] | None = None,
+) -> list[ModelDescriptor]:
+    key = os.getenv(api_key_env, "")
+    if not key:
+        return []
+
+    params = urllib.parse.urlencode({"pageSize": str(page_size)})
+    url = f"{base_url.rstrip('/')}/models?{params}"
+    headers = {"x-goog-api-key": key}
+    try:
+        payload = _fetch_json(url, headers=headers)
+    except Exception:
+        return []
+
+    models: list[ModelDescriptor] = []
+    for item in payload.get("models", []):
+        model_id = _normalize_gemini_model_id(str(item.get("name", "")))
+        if not model_id:
+            continue
+        if not _matches_keywords(model_id, id_contains):
+            continue
+
+        methods = item.get("supportedGenerationMethods", [])
+        if methods and "generateContent" not in methods:
+            continue
+
+        raw = dict(item)
+        raw["_base_url"] = base_url.rstrip("/")
+        raw["_api_key_env"] = api_key_env
+        models.append(
+            ModelDescriptor(
+                id=model_id,
+                provider=provider,
+                released_at="",
+                capability=classify_capability(model_id),
+                raw=raw,
+            )
+        )
+
+    return models
+
+
 def discover_models(
     sources: list[dict],
     state_path: str,
@@ -333,6 +380,16 @@ def discover_models(
                     window_hours=int(source.get("window_hours", 24)),
                     id_contains=list(source.get("id_contains", [])),
                     version=str(source.get("version", "2023-06-01")),
+                )
+            )
+        elif src_type == "gemini":
+            discovered.extend(
+                from_gemini(
+                    base_url=str(source.get("base_url", "https://generativelanguage.googleapis.com/v1beta")),
+                    api_key_env=str(source.get("api_key_env", "GEMINI_API_KEY")),
+                    provider=str(source.get("provider", "gemini")),
+                    page_size=int(source.get("page_size", 100)),
+                    id_contains=list(source.get("id_contains", [])),
                 )
             )
 
@@ -431,3 +488,10 @@ def _matches_keywords(model_id: str, id_contains: list[str] | None) -> bool:
 
 def _is_pinned_model(model: ModelDescriptor) -> bool:
     return bool(model.raw.get("_selection_mode") == "pinned")
+
+
+def _normalize_gemini_model_id(model_name: str) -> str:
+    value = (model_name or "").strip()
+    if value.startswith("models/"):
+        return value[len("models/") :]
+    return value

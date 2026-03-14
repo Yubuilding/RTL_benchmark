@@ -37,6 +37,11 @@ class ModelRunner:
             if generated:
                 return self._strip_markdown_fence(generated)
             return ""
+        if model.provider == "gemini":
+            generated = self._gemini_generate(model, problem, feedback)
+            if generated:
+                return self._strip_markdown_fence(generated)
+            return ""
 
         return self._mock_generate(model, problem)
 
@@ -224,6 +229,43 @@ class ModelRunner:
         except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError):
             return ""
 
+    def _gemini_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
+        base_url = str(model.raw.get("_base_url", "https://generativelanguage.googleapis.com/v1beta")).rstrip("/")
+        api_key_env = str(model.raw.get("_api_key_env", "GEMINI_API_KEY"))
+        key = os.getenv(api_key_env, "")
+        if not key:
+            return ""
+
+        prompt = self._build_prompt(problem, feedback)
+        model_id = self._normalize_gemini_model_id(model.id)
+        payload = {
+            "system_instruction": {
+                "parts": [{"text": "You are an expert RTL engineer. Return only code, no markdown."}]
+            },
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": self.temperature,
+                "maxOutputTokens": self.max_tokens,
+                "responseMimeType": "text/plain",
+            },
+        }
+        encoded_model = urllib.parse.quote(model_id, safe="")
+        req = urllib.request.Request(
+            f"{base_url}/models/{encoded_model}:generateContent",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "x-goog-api-key": key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+            return self._extract_gemini_message(result)
+        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError):
+            return ""
+
     def _build_prompt(self, problem: Problem, feedback: str) -> str:
         base = (
             f"Task type: {problem.task_type}\n"
@@ -289,3 +331,24 @@ class ModelRunner:
             if isinstance(part, dict) and part.get("type") == "text":
                 texts.append(str(part.get("text", "")))
         return "\n".join(x for x in texts if x).strip()
+
+    def _extract_gemini_message(self, payload: dict) -> str:
+        candidates = payload.get("candidates", [])
+        if not isinstance(candidates, list) or not candidates:
+            return ""
+        first = candidates[0]
+        content = first.get("content", {})
+        parts = content.get("parts", [])
+        if not isinstance(parts, list):
+            return ""
+        texts: list[str] = []
+        for part in parts:
+            if isinstance(part, dict) and part.get("text"):
+                texts.append(str(part.get("text", "")))
+        return "\n".join(x for x in texts if x).strip()
+
+    def _normalize_gemini_model_id(self, model_id: str) -> str:
+        value = (model_id or "").strip()
+        if value.startswith("models/"):
+            return value[len("models/") :]
+        return value

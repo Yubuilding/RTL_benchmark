@@ -11,6 +11,7 @@ from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.pipeline import BenchmarkPipeline
 from rtl_benchmark.problem_bank import load_problems
 from rtl_benchmark.utils import ensure_dir, load_json, save_json, utc_run_id
+from rtl_benchmark.webapp import serve_webapp
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,6 +37,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     build_image = sub.add_parser("build-image", help="build the Docker evaluator image from config")
     build_image.add_argument("--config", default="configs/pipeline.json")
+
+    serve = sub.add_parser("serve", help="run the local web control panel")
+    serve.add_argument("--config", default="configs/pipeline.realtime.json")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8787)
+    serve.add_argument("--ui-config", default="")
 
     grade = sub.add_parser("grade", help="evaluate pasted/local code for one problem")
     grade.add_argument("--config", default="configs/pipeline.json")
@@ -143,6 +150,11 @@ def cmd_build_image(config_path: str) -> int:
     except FileNotFoundError:
         print(f"{docker_binary} not found")
         return 1
+
+
+def cmd_serve(config_path: str, host: str, port: int, ui_config_path: str) -> int:
+    serve_webapp(base_config_path=config_path, host=host, port=port, ui_config_path=ui_config_path)
+    return 0
 
 
 def cmd_rank(leaderboard_path: str) -> int:
@@ -275,6 +287,8 @@ def main() -> None:
         raise SystemExit(cmd_doctor(args.config))
     if args.cmd == "build-image":
         raise SystemExit(cmd_build_image(args.config))
+    if args.cmd == "serve":
+        raise SystemExit(cmd_serve(args.config, args.host, args.port, args.ui_config))
     if args.cmd == "grade":
         raise SystemExit(
             cmd_grade(

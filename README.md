@@ -15,6 +15,7 @@ This project scaffolds a practical RTL benchmark system for evaluating large lan
   - `openrouter` source (best used with explicit `models`)
   - `openai` source (best used with explicit `models`)
   - `anthropic` source (best used with explicit `models`)
+  - `gemini` source (Google Gemini API, best used with explicit `models`)
 - Model selection filters:
   - `include_any` / `exclude_any` keyword filters
   - provider filters (`openrouter`, `huggingface`, `mock`, etc.)
@@ -109,11 +110,12 @@ Set environment variables if you want live API discovery:
 - `OPENROUTER_API_KEY` for OpenRouter discovery + chat completion API
 - `OPENAI_API_KEY` for OpenAI `/v1` APIs
 - `ANTHROPIC_API_KEY` for Anthropic `/v1` APIs
+- `GEMINI_API_KEY` for Google Gemini `/v1beta` APIs
 - `OPENAI_COMPATIBLE_API_KEY` for OpenAI-compatible third-party gateways (optional)
 
 Without these, the pipeline still works with local model feeds.
 
-For Docker benchmarking of a fixed target set, prefer explicit `models` lists for `openai`, `anthropic`, `openrouter`, and `openai_compatible` sources. Those entries are treated as pinned benchmark targets:
+For Docker benchmarking of a fixed target set, prefer explicit `models` lists for `openai`, `anthropic`, `openrouter`, `gemini`, and `openai_compatible` sources. Those entries are treated as pinned benchmark targets:
 
 - they run on every `run`, even if they were already seen in `.state/known_models.json`
 - `models: []` disables that provider cleanly instead of falling back to provider-side discovery
@@ -152,7 +154,7 @@ In `configs/pipeline.realtime.json`, use a source block like:
 }
 ```
 
-For OpenAI, Anthropic, OpenRouter, or OpenAI-compatible gateways, a static model list is usually more reliable than relying on provider `/models` timestamps. Example:
+For OpenAI, Anthropic, OpenRouter, Gemini, or OpenAI-compatible gateways, a static model list is usually more reliable than relying on provider `/models` timestamps. Example:
 
 ```json
 {
@@ -168,7 +170,28 @@ For OpenAI, Anthropic, OpenRouter, or OpenAI-compatible gateways, a static model
 }
 ```
 
-The same `models` field works for `anthropic`, `openrouter`, and `openai_compatible` sources.
+The same `models` field works for `anthropic`, `openrouter`, `gemini`, and `openai_compatible` sources.
+
+## Google Gemini API
+
+Native Gemini support uses the Google AI Studio Gemini API with `x-goog-api-key` authentication and the REST `generateContent` endpoint.
+
+Example source block:
+
+```json
+{
+  "type": "gemini",
+  "enabled": true,
+  "provider": "gemini",
+  "base_url": "https://generativelanguage.googleapis.com/v1beta",
+  "api_key_env": "GEMINI_API_KEY",
+  "models": [
+    {"id": "gemini-2.5-flash"}
+  ]
+}
+```
+
+If you omit `models`, the `gemini` source can also list available models from `/v1beta/models` and keeps only entries that support `generateContent`.
 
 ## List Problems
 
@@ -194,6 +217,30 @@ Build the evaluator image from config:
 ```bash
 python -m rtl_benchmark.cli build-image --config configs/pipeline.realtime.json
 ```
+
+## Web Console
+
+Run the lightweight local control panel:
+
+```bash
+python -m rtl_benchmark.cli serve --config configs/pipeline.realtime.json --host 127.0.0.1 --port 8787
+```
+
+Then open [http://127.0.0.1:8787](http://127.0.0.1:8787).
+
+The web console supports:
+
+- editing local API keys and explicit model lists for OpenAI, Anthropic, Gemini, OpenRouter, Hugging Face, and OpenAI-compatible gateways
+- choosing the full benchmark suite or a selected subset of built-in problems
+- pasting a custom problem with structured fields
+- viewing live run status, saved history, per-run result details, and the local leaderboard
+
+Custom pasted problems can run in two modes:
+
+- full evaluation when you provide the required verification fields such as `testbench` and `reference_rtl`
+- generation-only when those fields are missing; the UI records the generated HDL and marks evaluation as skipped
+
+The console stores its local settings in `.state/webui_config.json`.
 
 ## Paste Code And Grade
 
