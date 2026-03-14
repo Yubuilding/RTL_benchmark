@@ -1,0 +1,10 @@
+{
+  "id": "rtl_add8",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "add8",
+  "module_header": "module add8(input [7:0] a, input [7:0] b, output [8:0] sum);",
+  "prompt": "Implement an 8-bit combinational adder. sum should hold a+b with carry.",
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg [7:0] a, b;\n  wire [8:0] sum;\n\n  add8 dut(.a(a), .b(b), .sum(sum));\n\n  task check(input [7:0] ta, input [7:0] tb, input [8:0] expected);\n    begin\n      a = ta; b = tb; #1;\n      if (sum !== expected) begin\n        $display(\"FAIL a=%0d b=%0d expected=%0d got=%0d\", ta, tb, expected, sum);\n        $fatal(1);\n      end\n    end\n  endtask\n\n  initial begin\n    check(8'd0, 8'd0, 9'd0);\n    check(8'd3, 8'd5, 9'd8);\n    check(8'd255, 8'd1, 9'd256);\n    check(8'd127, 8'd128, 9'd255);\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module add8(input [7:0] a, input [7:0] b, output [8:0] sum);\n  assign sum = a + b;\nendmodule\n"
+}

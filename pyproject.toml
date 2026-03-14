@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rtl-benchmark"
+version = "0.1.0"
+description = "Dynamic benchmark pipeline for RTL/Testbench LLM evaluation"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  {name = "RTL Benchmark Team"}
+]
+dependencies = []
+
+[project.scripts]
+rtl-bench = "rtl_benchmark.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

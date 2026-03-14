@@ -1,0 +1,163 @@
+大型语言模型在RTL设计与验证中的基准测试：现状调研与自动化评估流水线设计方案
+硬件设计自动化与大型语言模型的范式演进
+在集成电路（IC）设计与电子设计自动化（EDA）领域，硬件描述语言（HDL）的代码生成与验证一直是耗费大量人力与时间的工程瓶颈。随着大型语言模型（LLM）在通用软件工程（如Python、C++等高级语言）中的代码生成能力取得突破性进展，学术界与工业界开始将目光转向利用LLM自动生成寄存器传输级（RTL）代码，特别是Verilog与SystemVerilog 1。然而，与通用软件语言相比，RTL代码生成面临着根本性的数据匮乏挑战。根据最新的统计数据，截至2025年初，GitHub上以Python为主要语言的开源代码库数量超过132,000个，而主要使用Verilog或SystemVerilog的代码库仅有不到850个 1。这种极度的数据不平衡，直接限制了基础大模型在零样本（Zero-shot）场景下生成高质量硬件代码的能力。
+此外，硬件代码的评估标准与软件代码存在显著的维度差异。通用的软件代码生成基准（如HumanEval或MBPP）主要侧重于语法正确性与通过简单的单元测试 3。但在硬件设计中，RTL代码不仅需要保证语法结构（Syntax）的严谨，还必须满足时序逻辑的准确性、并发信号的协调性，并通过综合工具（Synthesis Tools）将其转化为物理上可实现的门级网表（Gate-level Netlist） 4。更为严苛的是，最终的硬件质量不仅取决于逻辑功能的实现，还需要在功耗（Power）、性能/频率（Performance）以及面积（Area）（统称为PPA指标）之间取得最优的折中 6。
+随着模型厂商不断推出新的基础大模型与针对代码微调的专用模型（如DeepSeek-Coder、Qwen2.5-Coder、GPT-4o等），如何客观、公正且动态地评估这些模型在RTL代码与Testbench（测试平台）编写上的正确率，成为了当前EDA智能化领域亟待解决的核心问题。静态的基准测试（Benchmark）容易因为开源数据的过度曝光而导致数据污染（Data Contamination），进而使得模型的跑分失去真实参考价值 8。因此，构建一个能够随着新模型发布而自动触发测验、包含实时防作弊机制、并能动态更新排行榜（Leaderboard）的自动化评估流水线，不仅具有极高的学术研究价值，更是工业界在选择最佳AI辅助设计工具时的重要风向标。
+现有RTL生成与验证基准测试（Benchmark）深度剖析
+针对“市面上是否存在类似RTL benchmark”的疑问，当前的现状是：学术界已经推出了多个具有代表性的RTL基准测试集。这些测试集从最初的简单代码补全，逐步演进为涵盖系统级设计、物理综合约束以及复杂协议验证的多维度评估框架。以下对当前主流的RTL基准测试进行深度的梳理与对比。
+VerilogEval：基础代码补全与规范到RTL的演进
+VerilogEval是早期最具代表性的RTL基准测试之一，其初版由156个涵盖组合逻辑与复杂有限状态机（FSM）的问题组成，这些问题主要爬取自著名的Verilog在线学习网站HDLBits 10。最初的VerilogEval主要关注代码补全（Code Completion）任务，即给定部分模块代码，要求模型补全剩余逻辑。
+随着指令微调（Instruction-tuned）模型的普及，VerilogEval升级到了v2版本。新版本不仅支持从自然语言规范直接生成RTL（Specification-to-RTL，即S2R任务），还引入了上下文学习（In-Context Learning, ICL）机制，允许在提示词（Prompt）中加入示例，以测试模型在不更新参数的情况下的学习能力 12。此外，v2版本还建立了一个更为健壮的失败分类机制，能够对Icarus Verilog仿真器返回的错误进行细粒度的分类反馈 12。然而，VerilogEval的一个显著局限性在于其题目复杂度相对较低，目前最先进的商业模型（如GPT-4o）和开源模型（如Llama3.1 405B）在该基准上的通过率（Pass@1）已经出现饱和趋势，难以进一步区分顶尖模型的深层推理能力 12。
+RTLLM：引入物理设计与PPA评估指标
+与仅仅停留在功能仿真层面的VerilogEval不同，RTLLM框架将评估链路延伸到了后端物理设计阶段。RTLLM是一个开源的、基于自然语言指令生成RTL的结构化评估平台，其核心贡献在于提出了三重评估标准：语法目标（Syntax）、功能目标（Functionality）与设计质量目标（Design Quality） 15。
+在RTLLM的评估流程中，模型首先根据详细的自然语言规范（包含明确的模块I/O信号定义）生成代码；随后，生成的代码需通过配套的Testbench进行瞬态仿真验证；最后，那些功能正确的代码会被送入商业级逻辑综合工具（如Synopsys Design Compiler）或开源工具链（如Yosys）中，提取出面积、功耗以及最差负时序裕量（WNS）等PPA物理指标 15。RTLLM的2.0版本将数据集扩充至50个复杂设计，覆盖算术、存储、控制以及其他杂项模块，为衡量LLM在实际敏捷硬件设计中的应用价值提供了量化依据 17。
+TuRTLe：统一的综合性RTL评估框架
+由于不同的基准测试往往采用不同的评估指标与工具链，导致难以对不同模型进行横向的公平比较。为此，TuRTLe（A Unified Evaluation of LLMs for RTL Generation）框架应运而生。TuRTLe将包括VerilogEval、RTLLM、RTL-Repo以及VGen在内的多个现有基准测试整合进了一个单一的全自动化基础设施中 4。
+TuRTLe定义了五个关键的设计评估目标：
+	•	行级上下文准确性（Line-level Contextual Accuracy, LCA）
+	•	语法正确性（Syntax Correctness, STX）
+	•	功能正确性（Functional Correctness, FNC）
+	•	可综合性（Synthesizability, SYN）
+	•	综合后质量（Post-synthesis Quality, PPA-Score） 20
+TuRTLe框架完全建立在开源EDA工具链（如Icarus Verilog、Verilator、Yosys、OpenROAD）之上，极大地降低了复现和部署的门槛。其最新的测试表明，具备深度推理机制的模型（如DeepSeek R1）在功能正确性与可综合性上持续优于传统模型，但这是以增加计算开销和推理延迟为代价的 21。
+针对SystemVerilog与系统级设计的进阶基准测试
+现代芯片设计绝非单个模块的孤立编写，而是涉及复杂协议的交互与多文件代码库的协作。为了突破单模块测试的局限，研究界提出了更高阶的评估基准：
+	•	RTL-Repo：该基准测试包含了从GitHub提取的4000多个真实Verilog代码样本。在评估时，它为模型提供整个代码库的上下文信息，挑战模型在大型多文件项目中的代码理解、依赖关系处理以及代码补全能力，更贴近工业界真实的代码助手（Coding Assistant）应用场景 22。
+	•	ProtocolLLM：这是首个专门针对SystemVerilog及硬件通信协议（如SPI、I2C、UART、AXI）生成的基准测试。通信协议的实现需要严格遵守时序约束、信号同步与状态机完整性。研究表明，大多数模型在处理涉及严格时序约束的SystemVerilog协议生成时均遭遇失败，凸显了现有LLM在硬件时序语义理解上的严重不足 5。
+	•	VerifLLMBench与AssertEval：硬件验证往往占据芯片设计生命周期50%以上的时间。AssertEval重点测试LLM从自然语言规范甚至波形图中提取关键信息，并生成SystemVerilog断言（SVA）的能力 26。而VerifLLMBench则聚焦于通用验证方法学（UVM）测试平台的生成。由于UVM框架基于面向对象编程（OOP），具有极高的抽象层级，LLM在自动生成涵盖高功能覆盖率（Functional Coverage）的无错误UVM Testbench方面仍面临巨大挑战 28。
+基准测试名称 (Benchmark)
+核心应用场景与评估重点
+数据集规模 / 覆盖语言
+关键评估指标 (Metrics)
+VerilogEval (v1/v2)
+单模块代码补全、自然语言到RTL的生成
+156个题目 (Verilog)
+Pass@k, 精确匹配, Icarus仿真
+RTLLM (v1/v2.0)
+结构化设计生成与物理质量评估
+50个复杂模块 (Verilog)
+语法、功能验证、PPA综合质量
+TuRTLe
+统一评估框架，整合多个Benchmark
+聚合数据集 (V/SV)
+LCA, STX, FNC, SYN, 综合PPA打分
+RTL-Repo
+仓库级（Repository-level）上下文代码生成
+>4000个样本 (Verilog)
+多文件上下文理解与补全准确率
+ProtocolLLM
+工业级通信协议实现（时序与并发控制）
+SPI, I2C, UART, AXI (SV)
+Lint静态检查, 逻辑综合, 波形保真度
+AssertEval
+硬件验证与SystemVerilog断言(SVA)生成
+18个设计规范 (SV)
+SVA语法正确率, 影响锥覆盖率
+VerifLLMBench
+复杂的UVM测试平台(Testbench)自动生成
+UVM验证架构 (SV)
+编译成功率, 代码覆盖率, Lint警告
+开源RTL设计测验与练习网站的深度勘探
+为了建立一个稳定、持续且能够验证模型能力的自动化评测源，我们需要寻找能够提供高质量题目、测试向量（Test Vectors）以及隐式自动化判定逻辑的开源学习平台。以下平台在逻辑设计与验证领域具有类似“LeetCode”的地位，非常适合被逆向工程或通过API接口集成到自定义的Benchmark流水线中。
+HDLBits：Verilog语法的标准化演练场
+HDLBits是由01xz团队开发和维护的数字电路设计在线练习平台，它在RTL领域的地位等同于软件算法中的LeetCode 29。该平台涵盖了从基础逻辑门、多路复用器到复杂的时序电路（如移位寄存器、有限状态机）共计近180道精选题目 29。
+对于基准测试的创建者而言，HDLBits具有极高的利用价值。每道题目都提供了清晰的自然语言描述、标准化的模块接口声明（Module Header）以及隐蔽的测试向量 29。用户提交代码后，平台后端会使用Icarus Verilog仿真器将用户的输出与参考答案（Golden Solution）的输出进行逐周期比对，并立即反馈时序波形图与错误信息 29。值得注意的是，VerilogEval的原始数据集正是基于HDLBits的题库构建的 10。虽然HDLBits没有官方公开的REST API，但完全可以通过Python框架（如Scrapy或BeautifulSoup）结合自动化测试工具（如Selenium或Playwright）构建爬虫，动态抓取其题目并模拟代码提交，从而抓取其验证结果 32。
+ChipDev.io：面向SystemVerilog与工业级硬件面试的进阶平台
+如果说HDLBits是Verilog的基础教程，那么ChipDev.io则是更贴近真实工业环境的高级验证平台。该网站专门针对顶尖半导体公司（如苹果、英伟达、谷歌、英特尔等）的真实面试题目进行整理，提供超过35个高难度的SystemVerilog实战问题 33。
+相比于HDLBits，ChipDev.io更侧重于考察SystemVerilog的高级特性、重置策略（同步与异步）、边界条件处理以及非阻塞赋值的规范使用 34。该平台同样内置了自动化的代码仿真与验证机制。将ChipDev.io的题库整合进新的基准测试中，可以极大地弥补当前开源基准在SystemVerilog支持上的不足，并精准测试大模型在应对具有工业级陷阱（Corner Cases）的硬件设计时的鲁棒性 34。
+EDA Playground：轻量级验证沙盒
+虽然EDA Playground并非一个提供标准题库的刷题网站，但它是一个极其强大的基于浏览器的EDA工具集成环境 35。它支持使用各种开源及商业仿真器（如Icarus Verilog、Verilator、Synopsys VCS、Aldec Riviera-PRO等）对Verilog、SystemVerilog甚至VHDL代码进行在线编译与仿真 35。在构建自动化测评流水线时，如果缺乏本地部署EDA工具链的算力，可以考虑通过API接口或者自动化脚本调用EDA Playground的后端服务，作为云端仿真验证的替代方案。
+动态RTL基准测试流水线的自动化系统架构设计
+当前的RTL基准测试（如VerilogEval或RTLLM）大多是静态发布的。静态数据集的致命弱点在于数据泄漏（Data Leakage）——大模型的训练通常会无差别地抓取GitHub、学术论文及开源论坛上的数据，这使得静态考题很快就会被记忆，导致模型评估呈现出虚假的高分 12。因此，为了满足“当某个厂家发布新的模型时就能自动进行测验并更新排行榜”的需求，我们需要设计一个完全动态、自动化的端到端测评工作流（Pipeline）。
+该系统架构可划分为四个核心模块：模型自动监测与调度、题目动态下发、沙盒化验证引擎以及前端可视化排行榜。
+阶段一：基于API的新模型监控与调度触发器
+要实现自动化测试，第一步是建立一个持续监控模型发布生态的“守护进程”（Daemon）。目前绝大多数开源模型都托管在Hugging Face，而商业模型的API则可以通过聚合平台（如OpenRouter或LiteLLM）进行访问。
+可以通过编写Python脚本并集成到GitHub Actions的定时任务（Cron Jobs）中来实现这一机制：
+	•	开源模型监控：利用huggingface_hub库中的HfApi().list_models()接口，通过设置filter（例如标签为text-generation或custom_code）并根据lastModified时间戳进行降序排序，系统可以精准捕获过去24小时内新上传的基础模型或微调模型（如基于LLaMA3.1微调的RTL专用模型） 37。
+	•	商业API监控：对于闭源模型，可通过定时请求OpenRouter的/api/v1/models服务端点，提取可用模型列表。OpenRouter作为一个大模型API的路由聚合器，能够提供对GPT-4o、Claude 3.5 Sonnet、Gemini 2.5等最新模型的统一访问接口 39。
+	•	触发测试任务：当脚本比对本地数据库发现新模型ID后，将自动调用GitHub Actions的workflow_dispatch事件，启动针对该新模型的验证流水线。
+阶段二：测试用例的动态组装与提示词工程
+为防止模型作弊，测试系统不能仅使用固定的题库。题库系统（Problem Bank）应当包含从HDLBits、ChipDev.io爬取的历史题目，以及由人工验证过的新增硬件需求描述。
+在流水线执行时，任务调度器会动态提取题目，并根据预设的提示词模板（Prompt Templates）构建请求。由于硬件设计上下文极其敏感，系统应当支持两种模式：
+	•	零样本生成（Zero-shot Generation）：直接输入自然语言规格和模块接口，要求输出完整的RTL或Testbench 9。
+	•	多智能体协作与反馈循环（Multi-agent Feedback Loop）：对于复杂的SystemVerilog任务，单一的输出往往无法通过综合。系统可部署轻量级的Agent架构，将第一次生成的代码送入静态代码检查工具（Lint Check），若出现报错，则将错误日志（Error Log）自动包装进下一个Prompt中反馈给模型，允许其在限制的迭代次数（如3次）内进行自我修正 41。这种代理式评估（Agentic Evaluation）能够更真实地反映模型在真实研发工作流中的能力。
+阶段三：基于Docker与开源EDA的沙盒验证引擎
+这是该流水线最核心的判题（Evaluation）环节。由于运行AI生成的未知硬件代码存在安全风险与环境依赖问题，整个EDA工具链必须被完全Docker化（Containerization）。可以构建一个包含多种开源EDA工具的统一Docker镜像（类似LibreCores或OpenEDA镜像） 43。
+当获取到LLM生成的RTL和Testbench代码后，流水线将在Docker容器内按顺序执行严格的交叉验证：
+	•	语法与静态检查（Linting）：使用Verilator --lint-only或Verible对代码进行快速扫描。Verilator不仅速度极快，还能精准捕捉SystemVerilog的语法错误和未使用的信号 43。
+	•	动态功能仿真（Simulation）：
+	•	Icarus Verilog (iverilog)：作为开源界的标杆，Icarus Verilog原生支持四态逻辑（0, 1, X, Z）。这对于识别大模型常见的未初始化变量（X态）或高阻态（Z态）挂起错误至关重要 45。流水线通过iverilog编译代码与Testbench，生成可执行的仿真文件（vpp）。
+	•	CocoTB验证框架：如果测试平台较为复杂，可以集成基于Python的协同仿真框架CocoTB。它允许通过Python脚本向Verilog模块注入激励信号并读取波形输出，极大地简化了自动化断言逻辑的编写 44。
+	•	可综合性检查（Synthesizability）：通过仿真的代码未必能生成真实的电路（例如模型可能滥用了不可综合的initial块或无限while循环）。因此，流水线会调用开源综合工具Yosys。Yosys尝试将RTL映射到基本的逻辑门级网表。只有成功通过Yosys综合的代码，才会被标记为“完全正确”（Pass） 43。
+第四阶段：自动化数据聚合与前端Leaderboard发布
+在所有测试用例完成且并行容器关闭后，流水线将收集各项跑分指标（如Pass@1、编译成功率、功能仿真通过率、综合通过率等）。
+	•	数据落盘：将新模型的结果追加到存储在仓库中的结构化数据文件（如results.json或data.csv）中 49。
+	•	前端页面更新：借助github-action-benchmark一类的自动化动作，系统可以将更新后的数据自动推送到GitHub Pages的gh-pages分支。
+	•	动态Web应用渲染：为了实现最佳的展示效果，可以通过Hugging Face Spaces部署一个基于Gradio或Streamlit的交互式排行榜页面。前端应用实时读取JSON文件，用户可以通过筛选器（如模型参数量、开源/闭源、语言支持等）动态排序。这种机制与现有的主流LLM排行榜（如LMArena或TuRTLe的官方Leaderboard）高度一致，确保了信息展示的时效性与直观性 50。
+基准测试的创新与替代方案
+传统的“输入描述->输出代码->仿真对比”的流程虽然严谨，但在评估模型的深层次逻辑理解和代码审查能力时显得捉襟见肘。为构建最前沿的评测系统，还可以融合以下创新思路：
+引入“LLM作为裁判”（LLM-as-a-Judge）机制
+在某些复杂的RTL设计或验证场景中，由于测试向量难以实现100%的代码覆盖率（Coverage），单纯依赖传统的通过/失败（Pass/Fail）指标可能无法全面衡量代码质量。传统自然语言处理的BLEU或ROUGE指标更无法捕获硬件代码的语义正确性 51。
+此时，可以将“LLM-as-a-Judge”范式引入硬件基准测试。部署一个能力极强的前沿模型（如GPT-4o或Claude 3.5 Sonnet）作为智能裁判。裁判模型在接收到评分标准（Rubric）、原始设计规范、以及被测模型生成的代码后，会对代码的模块化程度、时钟域处理规范（同步复位与异步复位的合理性）、阻塞与非阻塞赋值的使用规范等进行定性分析与打分 53。研究表明，在评估代码的结构合理性与代码解释（Code Summarization）方面，强大大模型的裁判结果与人类高级硬件工程师的判断具有高度一致性 51。
+测试平台（Testbench）生成的反向评估
+您在需求中明确提到希望测试大模型对“testbench的写作的正确率”。针对Testbench的评估往往比RTL设计更具挑战性，因为Testbench的目的是“寻找Bug”。
+	•	变异测试（Mutation Testing）：要评估LLM生成的Testbench是否优秀，系统可以提供一个功能正常的“黄金RTL设计”（Golden RTL），并通过自动化脚本在其中故意注入错误（例如反转某个条件分支，或改变状态机的跳转逻辑），生成多个变异体（Mutants）。
+	•	覆盖率与查杀率分析：将大模型生成的Testbench去运行这些变异体。如果Testbench能够准确报错并捕捉到这些逻辑错误，并且在无错的黄金RTL上顺利通过，则证明该Testbench的激励生成（Stimulus Generation）与断言（Assertion）逻辑是完善的。结合Verilator或VCS提取代码的语句覆盖率（Statement Coverage）和功能覆盖率（Functional Coverage），可以形成一个对测试平台生成能力的量化评估得分 28。
+结论
+随着人工智能逐步渗透至电子设计自动化的核心环节，构建一个严谨、动态且自动化的RTL大型语言模型基准测试已成为必然趋势。当前的静态基准测试（如VerilogEval）面临严重的任务饱和与数据污染风险，而新兴的物理综合级基准（如RTLLM与TuRTLe）则为更深度的能力验证提供了标杆。
+本报告提出的自动化工作流设计，依托于Hugging Face和OpenRouter的API实现新模型的敏锐嗅探，整合了从HDLBits与ChipDev.io动态获取的工业级与教学级题库。通过将开源EDA工具链（Icarus Verilog、Verilator、Yosys）封装于Docker沙盒中并在CI/CD流水线中并行调度，彻底打通了从语法扫描、逻辑仿真到后端综合的端到端验证闭环。最终，所有测试指标被无缝汇聚并渲染至交互式的实时排行榜（Leaderboard）上。这套方案不仅克服了传统静态评测更新滞后、难以抵御模型作弊的痛点，更为广大的芯片设计工程师与研究人员提供了一个透明、客观的工具选择指南。同时，通过引入“变异测试”与“LLM-as-a-Judge”等前沿评估方法，该系统能够精准丈量大模型在Testbench生成与深层架构推理上的真实边界，进而引领硬件生成人工智能向更具工程实用性的方向演进。
+引用的著作
+	•	Improving LLM Performance in Generating Verilog by Fine Tuning with a Translated Code Dataset - EECS at Berkeley, 访问时间为 二月 16, 2026， https://www2.eecs.berkeley.edu/Pubs/TechRpts/2025/EECS-2025-104.pdf
+	•	Large Language Model for Verilog Code Generation: Literature Review and the Road Ahead - Preprints.org, 访问时间为 二月 16, 2026， https://www.preprints.org/manuscript/202511.0656
+	•	Awesome-Code-Benchmark/README.md at main - GitHub, 访问时间为 二月 16, 2026， https://github.com/tongye98/Awesome-Code-Benchmark/blob/main/README.md
+	•	TuRTLe: A Unified Evaluation of LLMs for RTL Generation - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2504.01986v2
+	•	[2506.07945] ProtocolLLM: RTL Benchmark for SystemVerilog Generation of Communication Protocols - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/abs/2506.07945
+	•	ProtocolLLM: RTL Benchmark for SystemVerilog Code Generation of Communication Protocols - OpenReview, 访问时间为 二月 16, 2026， https://openreview.net/pdf?id=ruvdhXVOgA
+	•	RTL-OPT: Rethinking the Generation of PPA-Optimized RTL Code and A New Benchmark, 访问时间为 二月 16, 2026， https://openreview.net/forum?id=GrbNjReVC6
+	•	LiveBench, 访问时间为 二月 16, 2026， https://livebench.ai/
+	•	Survey and Benchmarking of Large Language Models for RTL Code Generation: Techniques and Open Challenges - Preprints.org, 访问时间为 二月 16, 2026， https://www.preprints.org/manuscript/202509.1681
+	•	[2309.07544] VerilogEval: Evaluating Large Language Models for Verilog Code Generation, 访问时间为 二月 16, 2026， https://arxiv.org/abs/2309.07544
+	•	VerilogEval: Evaluating Large Language Models for Verilog Code Generation | Research, 访问时间为 二月 16, 2026， https://research.nvidia.com/index.php/publication/2023-09_verilogeval-evaluating-large-language-models-verilog-code-generation
+	•	Revisiting VerilogEval: A Year of Improvements in Large-Language Models for Hardware Code Generation - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2408.11053v2
+	•	NVlabs/verilog-eval: Verilog evaluation benchmark for large language model - GitHub, 访问时间为 二月 16, 2026， https://github.com/NVlabs/verilog-eval
+	•	Revisiting VerilogEval: A Year of Improvements in Large-Language Models for Hardware Code Generation | Request PDF - ResearchGate, 访问时间为 二月 16, 2026， https://www.researchgate.net/publication/389154641_Revisiting_VerilogEval_A_Year_of_Improvements_in_Large-Language_Models_for_Hardware_Code_Generation
+	•	RTLLM Benchmark for RTL Code Generation - Emergent Mind, 访问时间为 二月 16, 2026， https://www.emergentmind.com/topics/rtllm-benchmark
+	•	RTLLM: An Open-Source Benchmark for Design RTL Generation with Large Language Model - Semantic Scholar, 访问时间为 二月 16, 2026， https://www.semanticscholar.org/paper/RTLLM%3A-An-Open-Source-Benchmark-for-Design-RTL-with-Lu-Liu/079be8c8a93fc80274ff22251a3dac9804bec66a
+	•	OpenLLM-RTL: Open Dataset and Benchmark for LLM-Aided Design RTL Generation - Zhiyao Xie, 访问时间为 二月 16, 2026， https://zhiyaoxie.com/files/ICCAD24_OpenLLM.pdf
+	•	hkust-zhiyao/RTLLM: An open-source benchmark for generating design RTL with natural language - GitHub, 访问时间为 二月 16, 2026， https://github.com/hkust-zhiyao/RTLLM
+	•	HPAI-BSC/TuRTLe: TuRTLe: A Unified Evaluation of LLMs for RTL Generation (MLCAD 2025) - GitHub, 访问时间为 二月 16, 2026， https://github.com/HPAI-BSC/TuRTLe
+	•	TuRTLe: A Unified Evaluation of LLMs for RTL Generation - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2504.01986v1
+	•	[2504.01986] TuRTLe: A Unified Evaluation of LLMs for RTL Generation - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/abs/2504.01986
+	•	RTL-Repo: A Benchmark for Evaluating LLMs on Large-Scale RTL Design Projects - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2405.17378v1
+	•	RTL-Repo: A Benchmark for Evaluating LLMs on Large-Scale RTL Design Projects - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/pdf/2405.17378?
+	•	RTL-Repo: A Benchmark for Evaluating LLMs on Large-Scale RTL Design Projects - IEEE LAD'24 - GitHub, 访问时间为 二月 16, 2026， https://github.com/AUCOHL/RTL-Repo
+	•	ProtocolLLM: RTL Benchmark for SystemVerilog Code Generation of Communication Protocols - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2506.07945v2
+	•	AssertLLM: Generating Hardware Verification Assertions from Design Specifications via Multi-LLMs - Zhiyao Xie, 访问时间为 二月 16, 2026， https://zhiyaoxie.com/files/ASPDAC25_AssertLLM.pdf
+	•	AssertLLM: Generating Hardware Verification Assertions from Design Specifications via Multi-LLMs - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2411.14436v1
+	•	VerifLLMBench: An Open-Source Benchmark for Testbenches Generated with Large Language Models - Department of Electrical and Computer Engineering, 访问时间为 二月 16, 2026， https://people.ece.umn.edu/users/jsartori/papers/dvcon25.pdf
+	•	HDLBits, 访问时间为 二月 16, 2026， https://hdlbits.01xz.net/wiki/Main_Page
+	•	In-Depth Evaluation and User Guide for the Verilog HDL Practice Website HDLBits, 访问时间为 二月 16, 2026， http://oreateai.com/blog/indepth-evaluation-and-user-guide-for-the-verilog-hdl-practice-website-hdlbits/74ce9c3517dc5c201880a8ec602575a3
+	•	Iverilog - HDLBits, 访问时间为 二月 16, 2026， https://hdlbits.01xz.net/wiki/Iverilog
+	•	Scrapy, a fast high-level web crawling & scraping framework for Python. - GitHub, 访问时间为 二月 16, 2026， https://github.com/scrapy/scrapy
+	•	chipdev.io, 访问时间为 二月 16, 2026， https://chipdev.io/
+	•	SystemVerilog coding and simulation website, aimed at interview prep : r/FPGA - Reddit, 访问时间为 二月 16, 2026， https://www.reddit.com/r/FPGA/comments/q83jvm/systemverilog_coding_and_simulation_website_aimed/
+	•	EDA Playground: Edit code, 访问时间为 二月 16, 2026， https://www.edaplayground.com/
+	•	LLMs are at the point where they can generate your Verilog testbench for you - Reddit, 访问时间为 二月 16, 2026， https://www.reddit.com/r/FPGA/comments/1doi118/llms_are_at_the_point_where_they_can_generate/
+	•	Navigating the HuggingFace Model Universe: A Python Tool for Systematic Model Discovery, 访问时间为 二月 16, 2026， https://2020machinelearning.medium.com/navigating-the-huggingface-model-universe-a-python-tool-for-systematic-model-discovery-02b61c2680cc
+	•	Python filter list_models() based on lastModified field - Hub - Hugging Face Forums, 访问时间为 二月 16, 2026， https://discuss.huggingface.co/t/python-filter-list-models-based-on-lastmodified-field/67248
+	•	OpenRouter Quickstart Guide | Developer Documentation, 访问时间为 二月 16, 2026， https://openrouter.ai/docs/quickstart
+	•	OpenRouter: A Guide With Practical Examples - DataCamp, 访问时间为 二月 16, 2026， https://www.datacamp.com/tutorial/openrouter
+	•	AI Agents For UVM Generation: Challenges And Opportunities - Semiconductor Engineering, 访问时间为 二月 16, 2026， https://semiengineering.com/ai-agents-for-uvm-generation-challenges-and-opportunities/
+	•	EDA-Aware RTL Generation with Large Language Models - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2412.04485v1
+	•	vmunoz82/eda_tools: A Dockerfile with a collections of ready to use open source EDA tools: Yosys, SimbiYosys (with Z3, boolector and Yices2), nextpnr-ice40, netxpnr-ecp5, nextpnr-gowin, Amaranth HDL, Silice and Verilator. - GitHub, 访问时间为 二月 16, 2026， https://github.com/vmunoz82/eda_tools
+	•	librecores/ci-docker-image - GitHub, 访问时间为 二月 16, 2026， https://github.com/librecores/ci-docker-image
+	•	Icarus verilog vs Verilator - Reddit, 访问时间为 二月 16, 2026， https://www.reddit.com/r/Verilog/comments/18glf6m/icarus_verilog_vs_verilator/
+	•	Is IVerilog more "advanced" than Verilator? : r/Verilog - Reddit, 访问时间为 二月 16, 2026， https://www.reddit.com/r/Verilog/comments/1gnngmf/is_iverilog_more_advanced_than_verilator/
+	•	Comprehensive Verilog Design Problems: A Next-Generation Benchmark Dataset for Evaluating Large Language Models and Agents on RTL Design and Verification - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2506.14074v1
+	•	VerilogDB: The Largest, Highest-Quality Dataset with a Preprocessing Framework for LLM-based RTL Generation - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/html/2507.13369v1
+	•	Continuous Benchmark · Actions · GitHub Marketplace, 访问时间为 二月 16, 2026， https://github.com/marketplace/actions/continuous-benchmark
+	•	TuRTLe Leaderboard - a Hugging Face Space by HPAI-BSC, 访问时间为 二月 16, 2026， https://huggingface.co/spaces/HPAI-BSC/TuRTLe-Leaderboard
+	•	On the Effectiveness of LLM-as-a-judge for Code Generation and Summarization - arXiv, 访问时间为 二月 16, 2026， https://arxiv.org/abs/2507.16587
+	•	LLM-as-a-Judge: A Practical Guide | Towards Data Science, 访问时间为 二月 16, 2026， https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
+	•	LLM-as-a-Judge: How to Build an Automated Evaluation Pipeline You Can Trust, 访问时间为 二月 16, 2026， https://hackernoon.com/llm-as-a-judge-how-to-build-an-automated-evaluation-pipeline-you-can-trust
+	•	LLM-as-a-Judge Evaluation: Complete Guide - Langfuse, 访问时间为 二月 16, 2026， https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge

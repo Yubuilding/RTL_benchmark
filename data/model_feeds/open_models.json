@@ -1,0 +1,20 @@
+[
+  {
+    "id": "mock/rtl-strong-v1",
+    "provider": "mock",
+    "released_at": "2026-02-20T00:00:00Z",
+    "capability": "strong"
+  },
+  {
+    "id": "mock/rtl-weak-v1",
+    "provider": "mock",
+    "released_at": "2026-02-21T00:00:00Z",
+    "capability": "weak"
+  },
+  {
+    "id": "mock/tb-strong-v1",
+    "provider": "mock",
+    "released_at": "2026-02-22T00:00:00Z",
+    "capability": "strong"
+  }
+]

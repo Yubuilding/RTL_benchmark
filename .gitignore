@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+results/runs/
+results/raw/
+.state/known_models.json

@@ -1,0 +1,10 @@
+{
+  "id": "rtl_edge_detect",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "edge_detect",
+  "module_header": "module edge_detect(input logic clk, input logic rst_n, input logic sig, output logic pulse);",
+  "prompt": "Implement rising-edge detector. pulse should assert 1 for exactly one cycle when sig rises from 0 to 1.",
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  logic clk, rst_n, sig;\n  logic pulse;\n\n  edge_detect dut(.clk(clk), .rst_n(rst_n), .sig(sig), .pulse(pulse));\n\n  always #5 clk = ~clk;\n\n  task step;\n    begin\n      @(posedge clk); #1;\n    end\n  endtask\n\n  initial begin\n    clk = 0; rst_n = 0; sig = 0;\n    step();\n    if (pulse !== 0) $fatal(1, \"pulse should be 0 during reset\");\n\n    rst_n = 1;\n    step();\n    if (pulse !== 0) $fatal(1, \"pulse should remain 0\");\n\n    sig = 1;\n    step();\n    if (pulse !== 1) $fatal(1, \"pulse should be 1 on rising edge\");\n\n    step();\n    if (pulse !== 0) $fatal(1, \"pulse should drop after one cycle\");\n\n    sig = 0;\n    step();\n    if (pulse !== 0) $fatal(1, \"pulse should stay 0 on falling edge\");\n\n    sig = 1;\n    step();\n    if (pulse !== 1) $fatal(1, \"pulse should rise again\");\n\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module edge_detect(input logic clk, input logic rst_n, input logic sig, output logic pulse);\n  logic sig_d;\n  always_ff @(posedge clk or negedge rst_n) begin\n    if (!rst_n) begin\n      sig_d <= 1'b0;\n      pulse <= 1'b0;\n    end else begin\n      pulse <= sig & ~sig_d;\n      sig_d <= sig;\n    end\n  end\nendmodule\n"
+}
