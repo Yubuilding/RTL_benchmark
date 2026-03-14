@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTL Benchmark Config</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="config">
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Configuration Surface</p>
+          <h1>Provider And Model Config</h1>
+          <p class="hero-copy">
+            Manage API keys, provider endpoints, and model lists here. Benchmark execution stays on the Benchmark page so
+            configuration and test selection are no longer mixed together.
+          </p>
+          <nav class="top-nav">
+            <a class="nav-link" href="/">Benchmark</a>
+            <a class="nav-link nav-link-active" href="/config">Config</a>
+            <a class="nav-link" href="/results">Results</a>
+          </nav>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost">Refresh</button>
+          <button id="saveConfigButton" class="primary">Save Local Config</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel span-7">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Providers</p>
+              <h2>API And Model Control</h2>
+            </div>
+            <p class="panel-note">Each enabled provider card contributes explicit models to future benchmark runs.</p>
+          </div>
+          <div id="providersGrid" class="providers-grid"></div>
+        </section>
+
+        <section class="panel span-5">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Runtime Defaults</p>
+              <h2>Generation And Execution</h2>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <label>
+              Temperature
+              <input id="temperatureInput" type="number" min="0" step="0.1" />
+            </label>
+            <label>
+              Max Tokens
+              <input id="maxTokensInput" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Generation Timeout (s)
+              <input id="generationTimeoutInput" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Execution Mode
+              <select id="executionModeSelect">
+                <option value="docker">docker</option>
+                <option value="local">local</option>
+              </select>
+            </label>
+            <label>
+              Eval Timeout (s)
+              <input id="executionTimeoutInput" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Docker Image
+              <input id="dockerImageInput" type="text" />
+            </label>
+            <label>
+              Docker Binary
+              <input id="dockerBinaryInput" type="text" />
+            </label>
+          </div>
+          <div class="panel-note benchmark-note">
+            These values become the default runtime for launches from the <a class="inline-link" href="/">Benchmark</a> page.
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -13,6 +13,13 @@ class Problem:
     top_module: str
     source: str = "local"
     category: str = ""
+    suite: str = ""
+    track: str = ""
+    difficulty: str = ""
+    prompt_style: str = ""
+    harness_type: str = ""
+    evaluation_targets: list[str] = field(default_factory=list)
+    exposure: str = ""
     tags: list[str] = field(default_factory=list)
     path: str = ""
     module_header: str = ""

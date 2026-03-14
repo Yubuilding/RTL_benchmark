@@ -1,0 +1,13 @@
+{
+  "id": "hdlbits_popcount3",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "popcount3",
+  "track": "rtl_core",
+  "difficulty": "easy",
+  "module_header": "module popcount3(input [2:0] in, output [1:0] count);",
+  "prompt": "Count the number of 1 bits in a 3-bit input and drive the 2-bit result on count.",
+  "tags": ["hdlbits", "arithmetic", "combinational"],
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg [2:0] in;\n  wire [1:0] count;\n  integer i;\n\n  popcount3 dut(.in(in), .count(count));\n\n  function [1:0] pop3;\n    input [2:0] value;\n    begin\n      pop3 = value[0] + value[1] + value[2];\n    end\n  endfunction\n\n  initial begin\n    for (i = 0; i < 8; i = i + 1) begin\n      in = i[2:0];\n      #1;\n      if (count !== pop3(i[2:0])) begin\n        $display(\"FAIL in=%0b expected=%0d got=%0d\", in, pop3(i[2:0]), count);\n        $fatal(1);\n      end\n    end\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module popcount3(input [2:0] in, output [1:0] count);\n  assign count = in[0] + in[1] + in[2];\nendmodule\n"
+}

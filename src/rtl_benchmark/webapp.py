@@ -14,7 +14,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from rtl_benchmark.evaluator import Evaluator, list_case_artifacts, safe_name
-from rtl_benchmark.leaderboard import summarize_cases, update_leaderboard
+from rtl_benchmark.leaderboard import rebuild_leaderboard_from_raw_results, summarize_cases, update_leaderboard
 from rtl_benchmark.model_runner import ModelRunner
 from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.problem_bank import load_problems
@@ -124,8 +124,9 @@ class WebAppService:
 
     def list_problems(self) -> list[dict[str, Any]]:
         glob_pattern = str(self.base_config.get("problem_glob", "benchmarks/**/*.json"))
+        problem_filters = dict(self.base_config.get("problem_filters", {}))
         entries: list[dict[str, Any]] = []
-        for problem in load_problems(glob_pattern):
+        for problem in load_problems(glob_pattern, problem_filters):
             entries.append(
                 {
                     "id": problem.id,
@@ -135,6 +136,13 @@ class WebAppService:
                     "prompt": problem.prompt,
                     "source": problem.source,
                     "category": problem.category or "uncategorized",
+                    "suite": problem.suite,
+                    "track": problem.track,
+                    "difficulty": problem.difficulty,
+                    "prompt_style": problem.prompt_style,
+                    "harness_type": problem.harness_type,
+                    "evaluation_targets": list(problem.evaluation_targets),
+                    "exposure": problem.exposure,
                     "tags": list(problem.tags),
                     "path": problem.path,
                     "has_harness": bool(problem.testbench or problem.reference_tb or problem.golden_rtl),
@@ -180,9 +188,9 @@ class WebAppService:
         return None
 
     def load_leaderboard(self) -> dict[str, Any]:
-        return load_json(
+        return rebuild_leaderboard_from_raw_results(
             self.base_config.get("leaderboard_path", "results/leaderboard.json"),
-            default={"updated_at": "", "models": []},
+            self.base_config.get("raw_results_dir", "results/raw"),
         )
 
     def load_artifact(self, raw_path: str) -> tuple[bytes, str, str] | None:
@@ -235,7 +243,10 @@ class WebAppService:
         return enriched
 
     def _load_problem_map(self) -> dict[str, Problem]:
-        problems = load_problems(str(self.base_config.get("problem_glob", "benchmarks/**/*.json")))
+        problems = load_problems(
+            str(self.base_config.get("problem_glob", "benchmarks/**/*.json")),
+            self.base_config.get("problem_filters", {}),
+        )
         return {problem.id: problem for problem in problems}
 
     def _infer_case_dir(self, detail: dict[str, Any], case: dict[str, Any]) -> str:
@@ -423,6 +434,9 @@ class WebAppService:
                         row["candidate_code"] = candidate
                         row["problem_source"] = problem.source
                         row["problem_category"] = problem.category
+                        row["problem_suite"] = problem.suite
+                        row["problem_track"] = problem.track
+                        row["problem_difficulty"] = problem.difficulty
                         case_records.append(row)
                         if result.passed or not can_evaluate:
                             break
@@ -438,6 +452,7 @@ class WebAppService:
             "source": "webui",
             "scope": scope,
             "custom_problem": custom_problem,
+            "problem_filters": dict(self.base_config.get("problem_filters", {})),
             "problem_ids": [problem.id for problem in problems],
             "problems": [asdict(problem) for problem in problems],
             "models": model_records,
@@ -450,18 +465,27 @@ class WebAppService:
         save_json(raw_dir / f"{run_id}.json", run_result)
 
         if update_board:
-            update_leaderboard(self.base_config.get("leaderboard_path", "results/leaderboard.json"), run_id, summary)
+            update_leaderboard(
+                self.base_config.get("leaderboard_path", "results/leaderboard.json"),
+                run_id,
+                summary,
+                scope=scope,
+                problem_ids=[problem.id for problem in problems],
+            )
 
         return run_result
 
     def _resolve_requested_problems(self, request: dict[str, Any]) -> tuple[list[Problem], str, bool]:
         scope = str(request.get("scope", "suite"))
-        all_problems = {problem.id: problem for problem in load_problems(self.base_config["problem_glob"])}
+        all_problems = {
+            problem.id: problem
+            for problem in load_problems(self.base_config["problem_glob"], self.base_config.get("problem_filters", {}))
+        }
 
         if scope == "selected_problems":
             selected_ids = list(request.get("problemIds", []))
             problems = [all_problems[problem_id] for problem_id in selected_ids if problem_id in all_problems]
-            return problems, scope, False
+            return problems, scope, True
 
         if scope == "custom_problem":
             custom_payload = dict(request.get("customProblem", {}))
@@ -481,6 +505,17 @@ class WebAppService:
             language=str(payload.get("language", "verilog")).strip() or "verilog",
             prompt=str(payload.get("prompt", "")).strip(),
             top_module=str(payload.get("top_module", "")).strip(),
+            source="custom",
+            category="adhoc",
+            suite="custom",
+            track="verification" if task_type == "testbench" else "rtl_core",
+            difficulty="adhoc",
+            prompt_style="spec_to_testbench" if task_type == "testbench" else "spec_to_rtl",
+            harness_type="mutation" if task_type == "testbench" else "testbench_compare",
+            evaluation_targets=["syntax", "functionality", "mutation"]
+            if task_type == "testbench"
+            else ["syntax", "functionality", "synthesis"],
+            exposure="private",
             module_header=str(payload.get("module_header", "")).strip(),
             testbench=str(payload.get("testbench", "")).strip(),
             reference_rtl=str(payload.get("reference_rtl", "")).strip(),
@@ -699,6 +734,9 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/":
             self._serve_asset("index.html", "text/html; charset=utf-8")
+            return
+        if path == "/config":
+            self._serve_asset("config.html", "text/html; charset=utf-8")
             return
         if path == "/results":
             self._serve_asset("results.html", "text/html; charset=utf-8")

@@ -17,7 +17,8 @@
             open raw artifacts including logs and waveforms.
           </p>
           <nav class="top-nav">
-            <a class="nav-link" href="/">Control</a>
+            <a class="nav-link" href="/">Benchmark</a>
+            <a class="nav-link" href="/config">Config</a>
             <a class="nav-link nav-link-active" href="/results">Results</a>
           </nav>
         </div>
@@ -27,17 +28,17 @@
       </header>
 
       <main class="layout">
-        <section class="panel span-4">
+        <section class="panel span-4 results-history-panel">
           <div class="panel-head">
             <div>
               <p class="eyebrow">Runs</p>
               <h2>History</h2>
             </div>
           </div>
-          <div id="resultsHistoryList" class="stack-list"></div>
+          <div id="resultsHistoryList" class="stack-list results-history-list"></div>
         </section>
 
-        <section class="panel span-8">
+        <section class="panel span-8 results-overview-panel">
           <div class="panel-head">
             <div>
               <p class="eyebrow">Run Summary</p>
@@ -51,23 +52,16 @@
         <section class="panel span-12">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Case Console</p>
-              <h2>Prompt, Answer, Harness, Logs, Artifacts</h2>
+              <p class="eyebrow">Debug Workspace</p>
+              <h2>Model Navigator And Case Console</h2>
             </div>
           </div>
-          <div id="resultsConsole" class="result-detail empty-state">
-            Select a run and a case to inspect prompts, outputs, harnesses, logs, and waveforms.
-          </div>
-        </section>
-
-        <section class="panel span-12">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Model Results</p>
-              <h2>Success And Failure Breakdown</h2>
+          <div class="results-workbench">
+            <aside id="resultsModelSummary" class="results-sidebar"></aside>
+            <div id="resultsConsole" class="result-detail empty-state results-console">
+              Select a run and a case to inspect prompts, outputs, harnesses, logs, and waveforms.
             </div>
           </div>
-          <div id="resultsModelSummary"></div>
         </section>
 
         <section class="panel span-12">

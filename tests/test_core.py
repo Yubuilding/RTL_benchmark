@@ -22,7 +22,45 @@ class ProblemBankTests(unittest.TestCase):
     def test_load_problems_supports_absolute_glob(self) -> None:
         problems = load_problems(str(ROOT / "benchmarks/**/*.json"))
         ids = {problem.id for problem in problems}
-        self.assertEqual(ids, {"rtl_add8", "rtl_edge_detect", "tb_mod3_counter"})
+        expected_ids = {
+            "rtl_add8",
+            "rtl_edge_detect",
+            "tb_mod3_counter",
+            "hdlbits_vector_rev8",
+            "hdlbits_popcount3",
+            "hdlbits_mux9_16",
+            "hdlbits_shift4",
+            "hdlbits_edge_capture8",
+            "hdlbits_count10",
+        }
+        self.assertTrue(expected_ids.issubset(ids))
+        self.assertEqual(len(ids), len(problems))
+
+        by_id = {problem.id: problem for problem in problems}
+        self.assertEqual(by_id["hdlbits_vector_rev8"].source, "hdlbits")
+        self.assertEqual(by_id["hdlbits_vector_rev8"].suite, "hdlbits")
+        self.assertEqual(by_id["hdlbits_vector_rev8"].category, "vectors")
+        self.assertEqual(by_id["hdlbits_vector_rev8"].difficulty, "easy")
+        self.assertEqual(by_id["hdlbits_vector_rev8"].harness_type, "testbench_compare")
+        self.assertEqual(by_id["hdlbits_vector_rev8"].evaluation_targets, ["syntax", "functionality", "synthesis"])
+        self.assertEqual(by_id["hdlbits_vector_rev8"].exposure, "public")
+        self.assertEqual(by_id["tb_mod3_counter"].track, "verification")
+        self.assertEqual(by_id["tb_mod3_counter"].prompt_style, "spec_to_testbench")
+        self.assertEqual(by_id["tb_mod3_counter"].harness_type, "mutation")
+        self.assertEqual(by_id["hdlbits_count10"].category, "counters")
+
+    def test_load_problems_supports_metadata_filters(self) -> None:
+        problems = load_problems(
+            str(ROOT / "benchmarks/**/*.json"),
+            {
+                "sources": ["hdlbits"],
+                "tracks": ["rtl_core"],
+                "difficulties": ["easy"],
+                "tags_any": ["combinational", "mux"],
+            },
+        )
+
+        self.assertEqual({problem.id for problem in problems}, {"hdlbits_vector_rev8", "hdlbits_popcount3", "hdlbits_mux9_16"})
 
 
 class DiscoveryTests(unittest.TestCase):
@@ -151,6 +189,22 @@ class RunnerTests(unittest.TestCase):
         }
         self.assertEqual(runner._extract_gemini_message(payload), "module add8(\n);\nendmodule")
 
+    def test_describe_http_error_includes_response_body(self) -> None:
+        import io
+        import urllib.error
+
+        runner = ModelRunner({})
+        err = urllib.error.HTTPError(
+            url="https://example.com",
+            code=404,
+            msg="Not Found",
+            hdrs=None,
+            fp=io.BytesIO(b'{"error":{"message":"model not found"}}'),
+        )
+        detail = runner._describe_request_error(err)
+        self.assertIn("HTTP 404 Not Found", detail)
+        self.assertIn("model not found", detail)
+
 
 class PipelineTests(unittest.TestCase):
     def test_generation_failure_is_recorded_explicitly(self) -> None:
@@ -183,9 +237,12 @@ class PipelineTests(unittest.TestCase):
             config_path.write_text(json.dumps(config), encoding="utf-8")
 
             result = BenchmarkPipeline(str(config_path)).run(include_known=False)
+            expected_problem_count = len(load_problems(config["problem_glob"]))
 
             self.assertEqual(len(result["models"]), 1)
-            self.assertEqual(len(result["cases"]), 3)
+            self.assertEqual(len(result["cases"]), expected_problem_count)
+            self.assertEqual(len(result["problems"]), expected_problem_count)
+            self.assertEqual(result["problem_ids"], [problem["id"] for problem in result["problems"]])
             self.assertTrue(all(case["feedback"].startswith("generation failed:") for case in result["cases"]))
             self.assertTrue(all(case["lint"]["status"] == "skipped" for case in result["cases"]))
 
@@ -225,6 +282,43 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(len(first["models"]), 1)
             self.assertEqual(len(second["models"]), 1)
             self.assertEqual(state["known_model_ids"], [])
+
+    def test_generation_failure_includes_provider_error_detail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            state_path = tmp_path / "state.json"
+            config_path = tmp_path / "config.json"
+            state_path.write_text(json.dumps({"known_model_ids": []}), encoding="utf-8")
+
+            config = {
+                "problem_glob": str(ROOT / "benchmarks/**/*.json"),
+                "max_iterations": 1,
+                "generation": {"temperature": 0.0, "max_tokens": 128, "timeout_seconds": 5},
+                "selection": {"providers": ["openai"]},
+                "run_root": str(tmp_path / "runs"),
+                "raw_results_dir": str(tmp_path / "raw"),
+                "leaderboard_path": str(tmp_path / "leaderboard.json"),
+                "state_path": str(state_path),
+                "sources": [
+                    {
+                        "type": "openai",
+                        "enabled": True,
+                        "provider": "openai",
+                        "base_url": "https://api.openai.com/v1",
+                        "api_key_env": "OPENAI_API_KEY",
+                        "models": [{"id": "gpt-4.1-mini"}],
+                    }
+                ],
+            }
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+
+            pipe = BenchmarkPipeline(str(config_path))
+            pipe.model_runner.last_error = "HTTP 404 Not Found: model missing"
+            pipe.model_runner.generate = lambda model, problem, feedback="": ""  # type: ignore[assignment]
+
+            result = pipe.run(include_known=False)
+
+            self.assertTrue(all("HTTP 404 Not Found" in case["feedback"] for case in result["cases"]))
 
 
 class DockerExecutionTests(unittest.TestCase):

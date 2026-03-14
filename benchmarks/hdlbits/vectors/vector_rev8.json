@@ -1,0 +1,13 @@
+{
+  "id": "hdlbits_vector_rev8",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "vector_rev8",
+  "track": "rtl_core",
+  "difficulty": "easy",
+  "module_header": "module vector_rev8(input [7:0] in, output [7:0] out);",
+  "prompt": "Reverse the bit order of an 8-bit input vector. out[7] should equal in[0], out[6] should equal in[1], and so on.",
+  "tags": ["hdlbits", "vectors", "combinational"],
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg [7:0] in;\n  wire [7:0] out;\n  integer i;\n\n  vector_rev8 dut(.in(in), .out(out));\n\n  function [7:0] reverse8;\n    input [7:0] value;\n    integer idx;\n    begin\n      for (idx = 0; idx < 8; idx = idx + 1) begin\n        reverse8[idx] = value[7-idx];\n      end\n    end\n  endfunction\n\n  initial begin\n    for (i = 0; i < 256; i = i + 1) begin\n      in = i[7:0];\n      #1;\n      if (out !== reverse8(i[7:0])) begin\n        $display(\"FAIL in=%0h expected=%0h got=%0h\", in, reverse8(i[7:0]), out);\n        $fatal(1);\n      end\n    end\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module vector_rev8(input [7:0] in, output [7:0] out);\n  assign out = {in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7]};\nendmodule\n"
+}

@@ -77,6 +77,11 @@ class WebAppServiceTests(unittest.TestCase):
             first = problems[0]
             self.assertIn("source", first)
             self.assertIn("category", first)
+            self.assertIn("suite", first)
+            self.assertIn("track", first)
+            self.assertIn("difficulty", first)
+            self.assertIn("harness_type", first)
+            self.assertIn("evaluation_targets", first)
             self.assertIn("has_harness", first)
 
     def test_history_is_sorted_by_started_at(self) -> None:
@@ -150,6 +155,42 @@ class WebAppServiceTests(unittest.TestCase):
             self.assertIn("problem", detail["cases"][0])
             self.assertTrue(detail["cases"][0]["artifacts"])
 
+    def test_load_leaderboard_rebuilds_from_selected_problem_history(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            raw_dir = tmp_path / "raw"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            (raw_dir / "gemini_selected.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "gemini_selected",
+                        "started_at": "2026-03-14T14:22:33Z",
+                        "scope": "selected_problems",
+                        "problem_ids": ["rtl_add8"],
+                        "summary": [
+                            {
+                                "model_id": "gemini-3.1-pro-preview",
+                                "provider": "gemini",
+                                "score": 0.5,
+                                "pass_rate": 0.5,
+                                "cases": 2,
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+            board = service.load_leaderboard()
+
+            self.assertTrue(board["models"])
+            self.assertEqual(board["models"][0]["model_id"], "gemini-3.1-pro-preview")
+            self.assertEqual(board["models"][0]["last_scope"], "selected_problems")
+            self.assertEqual(board["models"][0]["last_problem_count"], 1)
+            self.assertEqual(board["updated_at"], "2026-03-14T14:22:33Z")
+
     def test_custom_problem_without_harness_skips_evaluation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -169,6 +210,26 @@ class WebAppServiceTests(unittest.TestCase):
 
             self.assertFalse(can_evaluate)
             self.assertIn("testbench", reason)
+
+    def test_selected_problems_update_leaderboard_but_custom_problem_does_not(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+
+            problems, scope, update_board = service._resolve_requested_problems(
+                {"scope": "selected_problems", "problemIds": ["rtl_add8"]}
+            )
+            self.assertEqual(scope, "selected_problems")
+            self.assertTrue(problems)
+            self.assertTrue(update_board)
+
+            custom, custom_scope, custom_update_board = service._resolve_requested_problems(
+                {"scope": "custom_problem", "customProblem": {"prompt": "Implement x", "top_module": "x"}}
+            )
+            self.assertEqual(custom_scope, "custom_problem")
+            self.assertEqual(len(custom), 1)
+            self.assertFalse(custom_update_board)
 
 
 if __name__ == "__main__":

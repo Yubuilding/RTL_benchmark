@@ -10,77 +10,24 @@
     <div class="page-shell">
       <header class="hero">
         <div>
-          <p class="eyebrow">Local Control Surface</p>
+          <p class="eyebrow">Benchmark Surface</p>
           <h1>RTL Benchmark Console</h1>
           <p class="hero-copy">
-            Manage providers, choose benchmark sources and individual problems, then inspect completed runs in a dedicated
-            results page with full prompts, answers, harnesses, logs, and artifacts.
+            Choose benchmark sources, select specific problems or paste a custom case, then launch runs and inspect local
+            history without mixing provider configuration into the benchmark workflow.
           </p>
           <nav class="top-nav">
-            <a class="nav-link nav-link-active" href="/">Control</a>
+            <a class="nav-link nav-link-active" href="/">Benchmark</a>
+            <a class="nav-link" href="/config">Config</a>
             <a class="nav-link" href="/results">Results</a>
           </nav>
         </div>
         <div class="hero-actions">
           <button id="refreshButton" class="ghost">Refresh</button>
-          <button id="saveConfigButton" class="primary">Save Local Config</button>
         </div>
       </header>
 
       <main class="layout">
-        <section class="panel span-7">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Providers</p>
-              <h2>API And Model Control</h2>
-            </div>
-            <p class="panel-note">Each enabled provider card contributes explicit models to the next run.</p>
-          </div>
-          <div id="providersGrid" class="providers-grid"></div>
-        </section>
-
-        <section class="panel span-5">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Run Settings</p>
-              <h2>Generation And Execution</h2>
-            </div>
-          </div>
-          <div class="settings-grid">
-            <label>
-              Temperature
-              <input id="temperatureInput" type="number" min="0" step="0.1" />
-            </label>
-            <label>
-              Max Tokens
-              <input id="maxTokensInput" type="number" min="1" step="1" />
-            </label>
-            <label>
-              Generation Timeout (s)
-              <input id="generationTimeoutInput" type="number" min="1" step="1" />
-            </label>
-            <label>
-              Execution Mode
-              <select id="executionModeSelect">
-                <option value="docker">docker</option>
-                <option value="local">local</option>
-              </select>
-            </label>
-            <label>
-              Eval Timeout (s)
-              <input id="executionTimeoutInput" type="number" min="1" step="1" />
-            </label>
-            <label>
-              Docker Image
-              <input id="dockerImageInput" type="text" />
-            </label>
-            <label>
-              Docker Binary
-              <input id="dockerBinaryInput" type="text" />
-            </label>
-          </div>
-        </section>
-
         <section class="panel span-12">
           <div class="panel-head">
             <div>
@@ -111,6 +58,11 @@
               <input id="problemSearchInput" type="text" placeholder="Filter by id, source, category, prompt, or module" />
             </label>
             <div id="problemStats" class="problem-stats"></div>
+          </div>
+
+          <div class="panel-note benchmark-note">
+            API/provider setup and runtime defaults now live on the dedicated <a class="inline-link" href="/config">Config</a>
+            page.
           </div>
 
           <div id="problemPicker" class="problem-picker"></div>

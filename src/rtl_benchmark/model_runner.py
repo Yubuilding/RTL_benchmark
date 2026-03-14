@@ -15,8 +15,10 @@ class ModelRunner:
         self.temperature = float(cfg.get("temperature", 0.0))
         self.max_tokens = int(cfg.get("max_tokens", 1024))
         self.timeout_seconds = int(cfg.get("timeout_seconds", 60))
+        self.last_error = ""
 
     def generate(self, model: ModelDescriptor, problem: Problem, feedback: str = "") -> str:
+        self.last_error = ""
         if model.provider == "openrouter":
             generated = self._openrouter_generate(model.id, problem, feedback)
             if generated:
@@ -106,7 +108,8 @@ class ModelRunner:
             with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
             return self._extract_openai_message(result)
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+            self.last_error = self._describe_request_error(exc)
             return ""
 
     def _huggingface_generate(self, model_id: str, problem: Problem, feedback: str) -> str:
@@ -145,7 +148,8 @@ class ModelRunner:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            self.last_error = self._describe_request_error(exc)
             return ""
 
         # Expected:
@@ -193,7 +197,8 @@ class ModelRunner:
             with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
             return self._extract_openai_message(result)
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+            self.last_error = self._describe_request_error(exc)
             return ""
 
     def _anthropic_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
@@ -226,7 +231,8 @@ class ModelRunner:
             with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
             return self._extract_anthropic_message(result)
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+            self.last_error = self._describe_request_error(exc)
             return ""
 
     def _gemini_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
@@ -263,7 +269,8 @@ class ModelRunner:
             with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
             return self._extract_gemini_message(result)
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+            self.last_error = self._describe_request_error(exc)
             return ""
 
     def _build_prompt(self, problem: Problem, feedback: str) -> str:
@@ -352,3 +359,21 @@ class ModelRunner:
         if value.startswith("models/"):
             return value[len("models/") :]
         return value
+
+    def _describe_request_error(self, exc: Exception) -> str:
+        if isinstance(exc, urllib.error.HTTPError):
+            detail = ""
+            try:
+                body = exc.read().decode("utf-8", errors="replace").strip()
+                if body:
+                    detail = f": {body}"
+            except Exception:
+                detail = ""
+            return f"HTTP {exc.code} {exc.reason}{detail}"
+        if isinstance(exc, urllib.error.URLError):
+            return f"network error: {exc.reason}"
+        if isinstance(exc, TimeoutError):
+            return "request timed out"
+        if isinstance(exc, json.JSONDecodeError):
+            return f"invalid JSON response: {exc}"
+        return str(exc)

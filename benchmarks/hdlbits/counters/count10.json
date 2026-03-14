@@ -1,0 +1,13 @@
+{
+  "id": "hdlbits_count10",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "count10",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "module_header": "module count10(input clk, input reset, output reg [3:0] q);",
+  "prompt": "Implement a decimal counter. On each rising clock edge, increment q from 0 through 9 and then wrap back to 0. When reset is high on a rising edge, q must become 0.",
+  "tags": ["hdlbits", "counter", "sequential"],
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg clk;\n  reg reset;\n  wire [3:0] q;\n  integer cycle;\n\n  count10 dut(.clk(clk), .reset(reset), .q(q));\n\n  always #5 clk = ~clk;\n\n  task step_check;\n    input [3:0] expected;\n    begin\n      @(posedge clk);\n      #1;\n      if (q !== expected) begin\n        $display(\"FAIL expected=%0d got=%0d\", expected, q);\n        $fatal(1);\n      end\n    end\n  endtask\n\n  initial begin\n    clk = 0;\n    reset = 1;\n    step_check(4'd0);\n\n    reset = 0;\n    for (cycle = 1; cycle <= 9; cycle = cycle + 1) begin\n      step_check(cycle[3:0]);\n    end\n    step_check(4'd0);\n    step_check(4'd1);\n\n    reset = 1;\n    step_check(4'd0);\n\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module count10(input clk, input reset, output reg [3:0] q);\n  always @(posedge clk) begin\n    if (reset)\n      q <= 4'd0;\n    else if (q == 4'd9)\n      q <= 4'd0;\n    else\n      q <= q + 4'd1;\n  end\nendmodule\n"
+}

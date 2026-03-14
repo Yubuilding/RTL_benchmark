@@ -20,7 +20,8 @@ class BenchmarkPipeline:
         started_at = now_utc_iso()
         run_id = utc_run_id()
 
-        problems = load_problems(self.config["problem_glob"])
+        problem_filters = dict(self.config.get("problem_filters", {}))
+        problems = load_problems(self.config["problem_glob"], problem_filters)
         models = discover_models(
             sources=self.config.get("sources", []),
             state_path=self.config["state_path"],
@@ -55,7 +56,13 @@ class BenchmarkPipeline:
                 for attempt in range(1, max_iterations + 1):
                     candidate = self.model_runner.generate(model, problem, feedback=feedback)
                     if not candidate.strip():
-                        result = self._generation_failed_result(model.id, problem.id, problem.task_type, attempt)
+                        result = self._generation_failed_result(
+                            model.id,
+                            problem.id,
+                            problem.task_type,
+                            attempt,
+                            detail=self.model_runner.last_error,
+                        )
                     else:
                         result = evaluator.evaluate(model.id, problem, candidate, attempt)
                     final = result
@@ -68,6 +75,11 @@ class BenchmarkPipeline:
 
                 row = asdict(final)
                 row["provider"] = model.provider
+                row["problem_source"] = problem.source
+                row["problem_category"] = problem.category
+                row["problem_suite"] = problem.suite
+                row["problem_track"] = problem.track
+                row["problem_difficulty"] = problem.difficulty
                 case_records.append(row)
 
         summary = summarize_cases(case_records)
@@ -76,19 +88,41 @@ class BenchmarkPipeline:
             "run_id": run_id,
             "started_at": started_at,
             "finished_at": now_utc_iso(),
+            "source": "pipeline",
+            "scope": "suite",
+            "problem_filters": problem_filters,
+            "problem_ids": [problem.id for problem in problems],
+            "problems": [asdict(problem) for problem in problems],
             "models": model_records,
             "cases": case_records,
             "summary": summary,
+            "run_root": str(run_root.resolve()),
         }
 
         raw_dir = ensure_dir(self.config["raw_results_dir"])
         save_json(raw_dir / f"{run_id}.json", run_result)
 
-        update_leaderboard(self.config["leaderboard_path"], run_id, summary)
+        update_leaderboard(
+            self.config["leaderboard_path"],
+            run_id,
+            summary,
+            scope="suite",
+            problem_ids=[problem.id for problem in problems],
+        )
         return run_result
 
-    def _generation_failed_result(self, model_id: str, problem_id: str, task_type: str, attempt: int) -> CaseResult:
+    def _generation_failed_result(
+        self,
+        model_id: str,
+        problem_id: str,
+        task_type: str,
+        attempt: int,
+        detail: str = "",
+    ) -> CaseResult:
         skipped = StageStatus(status="skipped", reason="generation failed")
+        feedback = "generation failed: provider returned no HDL code"
+        if detail:
+            feedback = f"{feedback}; {detail}"
         return CaseResult(
             model_id=model_id,
             problem_id=problem_id,
@@ -98,5 +132,5 @@ class BenchmarkPipeline:
             lint=skipped,
             simulation=skipped,
             synthesis=skipped,
-            feedback="generation failed: provider returned no HDL code",
+            feedback=feedback,
         )

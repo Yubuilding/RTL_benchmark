@@ -1,0 +1,13 @@
+{
+  "id": "hdlbits_mux9_16",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "mux9_16",
+  "track": "rtl_core",
+  "difficulty": "easy",
+  "module_header": "module mux9_16(input [15:0] a, input [15:0] b, input [15:0] c, input [15:0] d, input [15:0] e, input [15:0] f, input [15:0] g, input [15:0] h, input [15:0] i, input [3:0] sel, output reg [15:0] out);",
+  "prompt": "Implement a 9-to-1 16-bit multiplexer. sel values 0 through 8 select inputs a through i. Any other sel value should drive 16'hffff.",
+  "tags": ["hdlbits", "mux", "combinational"],
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg [15:0] a, b, c, d, e, f, g, h, i;\n  reg [3:0] sel;\n  wire [15:0] out;\n  integer idx;\n\n  mux9_16 dut(.a(a), .b(b), .c(c), .d(d), .e(e), .f(f), .g(g), .h(h), .i(i), .sel(sel), .out(out));\n\n  function [15:0] expected_mux;\n    input [3:0] s;\n    begin\n      case (s)\n        4'd0: expected_mux = a;\n        4'd1: expected_mux = b;\n        4'd2: expected_mux = c;\n        4'd3: expected_mux = d;\n        4'd4: expected_mux = e;\n        4'd5: expected_mux = f;\n        4'd6: expected_mux = g;\n        4'd7: expected_mux = h;\n        4'd8: expected_mux = i;\n        default: expected_mux = 16'hffff;\n      endcase\n    end\n  endfunction\n\n  initial begin\n    a = 16'h0001;\n    b = 16'h0010;\n    c = 16'h0100;\n    d = 16'h1000;\n    e = 16'h00ff;\n    f = 16'h0f0f;\n    g = 16'h3333;\n    h = 16'ha5a5;\n    i = 16'h5a5a;\n\n    for (idx = 0; idx < 11; idx = idx + 1) begin\n      sel = idx[3:0];\n      #1;\n      if (out !== expected_mux(idx[3:0])) begin\n        $display(\"FAIL sel=%0d expected=%0h got=%0h\", sel, expected_mux(idx[3:0]), out);\n        $fatal(1);\n      end\n    end\n\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module mux9_16(input [15:0] a, input [15:0] b, input [15:0] c, input [15:0] d, input [15:0] e, input [15:0] f, input [15:0] g, input [15:0] h, input [15:0] i, input [3:0] sel, output reg [15:0] out);\n  always @* begin\n    case (sel)\n      4'd0: out = a;\n      4'd1: out = b;\n      4'd2: out = c;\n      4'd3: out = d;\n      4'd4: out = e;\n      4'd5: out = f;\n      4'd6: out = g;\n      4'd7: out = h;\n      4'd8: out = i;\n      default: out = 16'hffff;\n    endcase\n  end\nendmodule\n"
+}

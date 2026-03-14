@@ -131,34 +131,46 @@ function syncFormFromState() {
 }
 
 function collectUiConfig() {
+  const existingConfig = state.uiConfig || { providers: [], generation: {}, execution: {} };
+  const providerCards = Array.from((dom.providersGrid || document.createElement("div")).querySelectorAll(".provider-card"));
+  const providers =
+    providerCards.length > 0
+      ? providerCards.map((card) => ({
+          key: card.dataset.key,
+          label: card.dataset.label,
+          type: card.dataset.type,
+          provider: card.dataset.provider,
+          supports_base_url: card.dataset.supportsBaseUrl === "true",
+          version: card.dataset.version || "",
+          api_key_env: card.querySelector("[data-field='api_key_env']").value.trim(),
+          api_key: card.querySelector("[data-field='api_key']").value.trim(),
+          base_url: (card.querySelector("[data-field='base_url']") || { value: "" }).value.trim(),
+          enabled: card.querySelector("[data-field='enabled']").checked,
+          models: card
+            .querySelector("[data-field='models']")
+            .value.split("\n")
+            .map((value) => value.trim())
+            .filter(Boolean),
+        }))
+      : existingConfig.providers || [];
   return {
-    providers: Array.from((dom.providersGrid || document.createElement("div")).querySelectorAll(".provider-card")).map((card) => ({
-      key: card.dataset.key,
-      label: card.dataset.label,
-      type: card.dataset.type,
-      provider: card.dataset.provider,
-      supports_base_url: card.dataset.supportsBaseUrl === "true",
-      version: card.dataset.version || "",
-      api_key_env: card.querySelector("[data-field='api_key_env']").value.trim(),
-      api_key: card.querySelector("[data-field='api_key']").value.trim(),
-      base_url: (card.querySelector("[data-field='base_url']") || { value: "" }).value.trim(),
-      enabled: card.querySelector("[data-field='enabled']").checked,
-      models: card
-        .querySelector("[data-field='models']")
-        .value.split("\n")
-        .map((value) => value.trim())
-        .filter(Boolean),
-    })),
+    providers,
     generation: {
-      temperature: Number((dom.temperatureInput || { value: 0 }).value || 0),
-      max_tokens: Number((dom.maxTokensInput || { value: 1024 }).value || 1024),
-      timeout_seconds: Number((dom.generationTimeoutInput || { value: 60 }).value || 60),
+      temperature: dom.temperatureInput ? Number(dom.temperatureInput.value || 0) : Number(existingConfig.generation.temperature || 0),
+      max_tokens: dom.maxTokensInput
+        ? Number(dom.maxTokensInput.value || 1024)
+        : Number(existingConfig.generation.max_tokens || 1024),
+      timeout_seconds: dom.generationTimeoutInput
+        ? Number(dom.generationTimeoutInput.value || 60)
+        : Number(existingConfig.generation.timeout_seconds || 60),
     },
     execution: {
-      mode: (dom.executionModeSelect || { value: "docker" }).value,
-      timeout_seconds: Number((dom.executionTimeoutInput || { value: 30 }).value || 30),
-      docker_image: (dom.dockerImageInput || { value: "" }).value.trim(),
-      docker_binary: (dom.dockerBinaryInput || { value: "" }).value.trim(),
+      mode: dom.executionModeSelect ? dom.executionModeSelect.value : String(existingConfig.execution.mode || "docker"),
+      timeout_seconds: dom.executionTimeoutInput
+        ? Number(dom.executionTimeoutInput.value || 30)
+        : Number(existingConfig.execution.timeout_seconds || 30),
+      docker_image: dom.dockerImageInput ? dom.dockerImageInput.value.trim() : String(existingConfig.execution.docker_image || ""),
+      docker_binary: dom.dockerBinaryInput ? dom.dockerBinaryInput.value.trim() : String(existingConfig.execution.docker_binary || ""),
     },
   };
 }
@@ -190,7 +202,7 @@ function render() {
   renderLeaderboard();
   if (page === "home") {
     renderHomeRunDetail();
-  } else {
+  } else if (page === "results") {
     renderResultsPage();
   }
 }
@@ -254,7 +266,20 @@ function renderProblems() {
   }
   const query = state.problemSearch.trim().toLowerCase();
   const filtered = state.problems.filter((problem) => {
-    const haystack = [problem.id, problem.prompt, problem.source, problem.category, problem.task_type, problem.top_module]
+    const haystack = [
+      problem.id,
+      problem.prompt,
+      problem.source,
+      problem.category,
+      problem.suite,
+      problem.track,
+      problem.difficulty,
+      problem.harness_type,
+      problem.task_type,
+      problem.top_module,
+      ...(problem.tags || []),
+      ...(problem.evaluation_targets || []),
+    ]
       .join(" ")
       .toLowerCase();
     return !query || haystack.includes(query);
@@ -313,9 +338,13 @@ function renderProblems() {
                                   <p class="problem-title">${escapeHtml(problem.id)}</p>
                                   <span class="problem-badge">${escapeHtml(problem.task_type)}</span>
                                 </div>
-                                <div class="problem-meta">${escapeHtml(problem.top_module || "n/a")} · ${escapeHtml(
-                                  problem.language || "n/a",
-                                )}</div>
+                                <div class="problem-meta">
+                                  ${escapeHtml(problem.top_module || "n/a")} · ${escapeHtml(problem.language || "n/a")} ·
+                                  ${escapeHtml(problem.suite || "n/a")} · ${escapeHtml(problem.difficulty || "n/a")}
+                                </div>
+                                <div class="problem-meta">
+                                  ${escapeHtml(problem.track || "n/a")} · ${escapeHtml(problem.harness_type || "n/a")}
+                                </div>
                                 <div class="stack-subtitle">${escapeHtml(problem.prompt)}</div>
                                 <div class="problem-foot mono">${escapeHtml(problem.path || "")}</div>
                               </div>
@@ -393,19 +422,23 @@ function renderHistory() {
 
   container.innerHTML = state.history
     .map((item) => {
+      const compact = page === "results";
       const summary = item.summary || [];
       const top = summary[0] ? `${summary[0].model_id} ${formatRate(summary[0].score)}` : "no summary";
       const active = state.selectedRunId === item.run_id ? "history-card-active" : "";
+      const meta = compact
+        ? `${escapeHtml(item.started_at || "")} · ${item.model_count} models · ${item.case_count} cases`
+        : `${escapeHtml(item.started_at || "")} · ${item.model_count} models · ${item.case_count} cases`;
       return `
-        <article class="stack-card ${active}">
+        <article class="stack-card ${active} ${compact ? "history-compact-card" : ""}">
           <div class="stack-head">
             <strong class="mono">${escapeHtml(item.run_id)}</strong>
             <span class="status-chip status-completed">${escapeHtml(item.scope || "suite")}</span>
           </div>
-          <div class="stack-subtitle">${escapeHtml(item.started_at || "")} · ${item.model_count} models · ${item.case_count} cases</div>
-          <div class="stack-subtitle">Top row: ${escapeHtml(top)}</div>
+          <div class="stack-subtitle">${meta}</div>
+          <div class="stack-subtitle">${compact ? `Best: ${escapeHtml(top)}` : `Top row: ${escapeHtml(top)}`}</div>
           <div class="stack-actions">
-            <button class="mini-button" data-view-run="${escapeHtml(item.run_id)}">Preview</button>
+            <button class="mini-button" data-view-run="${escapeHtml(item.run_id)}">${compact ? "Open" : "Preview"}</button>
             ${page === "home" ? `<a class="mini-link" href="/results?run=${encodeURIComponent(item.run_id)}">Results Page</a>` : ""}
           </div>
         </article>
@@ -437,6 +470,8 @@ function renderLeaderboard() {
           <th>Provider</th>
           <th>Pass Rate</th>
           <th>Cases</th>
+          <th>Last Scope</th>
+          <th>Problems</th>
           <th>Runs</th>
           <th>Last Run</th>
         </tr>
@@ -450,6 +485,8 @@ function renderLeaderboard() {
                 <td>${escapeHtml(row.provider || "")}</td>
                 <td>${formatRate(row.pass_rate)}</td>
                 <td>${row.cases || 0}</td>
+                <td>${escapeHtml(row.last_scope || "suite")}</td>
+                <td>${row.last_problem_count || row.cases || 0}</td>
                 <td>${row.runs || 0}</td>
                 <td class="mono">${escapeHtml(row.last_run_id || "")}</td>
               </tr>
@@ -528,7 +565,7 @@ function renderResultsPage() {
   }
   dom.resultsConsole.classList.remove("empty-state");
   const payload = state.selectedRun;
-  dom.resultsOverview.innerHTML = renderOverviewCards(payload.overview || {});
+  dom.resultsOverview.innerHTML = renderResultsOverview(payload);
   dom.resultsRunMeta.textContent = `${payload.scope || "run"} · ${payload.started_at || ""} → ${payload.finished_at || ""}`;
   renderResultsModelSummary();
   renderCaseConsole();
@@ -545,87 +582,75 @@ function renderResultsModelSummary() {
   }
 
   dom.resultsModelSummary.innerHTML = `
-    <div class="table-shell">
-      <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>Provider</th>
-            <th>Pass</th>
-            <th>Fail</th>
-            <th>Pass Rate</th>
-            <th>Cases</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${models
-            .map((model) => {
-              const expanded = state.expandedModels.has(model.model_id);
-              return `
-                <tr>
-                  <td class="mono">${escapeHtml(model.model_id)}</td>
-                  <td>${escapeHtml(model.provider || "")}</td>
-                  <td>${model.passed}</td>
-                  <td>${model.failed}</td>
-                  <td>${formatRate(model.pass_rate)}</td>
-                  <td>${model.cases}</td>
-                  <td><button class="mini-button" data-toggle-model="${escapeHtml(model.model_id)}">${expanded ? "Hide" : "Detail"}</button></td>
-                </tr>
-                ${
-                  expanded
-                    ? `<tr class="expand-row"><td colspan="7">${renderModelCasesTable(model)}</td></tr>`
-                    : ""
-                }
-              `;
-            })
-            .join("")}
-        </tbody>
-      </table>
+    <div class="results-sidebar-head">
+      <div>
+        <p class="eyebrow">Navigator</p>
+        <h2>Models And Cases</h2>
+      </div>
+      <div class="problem-meta">${models.length} models</div>
+    </div>
+    <div class="results-model-list">
+      ${models
+        .map((model) => {
+          const expanded = state.expandedModels.has(model.model_id);
+          return `
+            <article class="model-nav-card ${expanded ? "model-nav-card-active" : ""}">
+              <div class="model-nav-head">
+                <div class="model-nav-copy">
+                  <strong class="mono">${escapeHtml(model.model_id)}</strong>
+                  <div class="problem-meta">${escapeHtml(model.provider || "")}</div>
+                </div>
+                <button class="mini-button" data-toggle-model="${escapeHtml(model.model_id)}">${expanded ? "Hide" : "Detail"}</button>
+              </div>
+              <div class="model-nav-metrics">
+                <span>${model.passed} pass</span>
+                <span>${model.failed} fail</span>
+                <span>${formatRate(model.pass_rate)}</span>
+                <span>${model.cases} cases</span>
+              </div>
+              ${expanded ? renderModelCasesTable(model) : ""}
+            </article>
+          `;
+        })
+        .join("")}
     </div>
   `;
 }
 
 function renderModelCasesTable(model) {
   return `
-    <div class="model-case-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Problem</th>
-            <th>Source</th>
-            <th>Lint</th>
-            <th>Sim</th>
-            <th>Synth</th>
-            <th>Mutation</th>
-            <th>Attempt</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${model.items
-            .map((item) => {
-              const key = caseKey(item);
-              return `
-                <tr class="${state.selectedCaseKey === key ? "selected-row" : ""}">
-                  <td class="mono">${escapeHtml(item.problem_id)}</td>
-                  <td>${escapeHtml(item.problem_source || (item.problem || {}).source || "")} / ${escapeHtml(
-                    item.problem_category || (item.problem || {}).category || "",
-                  )}</td>
-                  <td>${renderStageBadge(item.lint)}</td>
-                  <td>${renderStageBadge(item.simulation)}</td>
-                  <td>${renderStageBadge(item.synthesis)}</td>
-                  <td>${formatOptionalRate(item.mutation_kill_rate)}</td>
-                  <td>${item.attempt || 0}</td>
-                  <td><button class="mini-button" data-select-case="${escapeHtml(key)}" data-model-id="${escapeHtml(
-                    model.model_id,
-                  )}">Open Console</button></td>
-                </tr>
-              `;
-            })
-            .join("")}
-        </tbody>
-      </table>
+    <div class="case-nav-list">
+      ${model.items
+        .map((item) => {
+          const key = caseKey(item);
+          const selected = state.selectedCaseKey === key;
+          return `
+            <button
+              class="case-nav-button ${selected ? "case-nav-button-active" : ""}"
+              data-select-case="${escapeHtml(key)}"
+              data-model-id="${escapeHtml(model.model_id)}"
+            >
+              <div class="case-nav-top">
+                <strong class="mono">${escapeHtml(item.problem_id)}</strong>
+                ${renderInlineStatus(item.passed ? "pass" : "fail")}
+              </div>
+              <div class="case-nav-meta">
+                <span>${escapeHtml(item.problem_source || (item.problem || {}).source || "")}</span>
+                <span>${escapeHtml(item.problem_category || (item.problem || {}).category || "")}</span>
+                <span>${escapeHtml(item.problem_suite || (item.problem || {}).suite || "")}</span>
+                <span>${escapeHtml(item.problem_difficulty || (item.problem || {}).difficulty || "")}</span>
+              </div>
+              <div class="case-nav-stages">
+                <span>L ${shortStage(item.lint)}</span>
+                <span>S ${shortStage(item.simulation)}</span>
+                <span>Y ${shortStage(item.synthesis)}</span>
+                <span>A ${item.attempt || 0}</span>
+                <span>M ${formatOptionalRate(item.mutation_kill_rate)}</span>
+              </div>
+            </button>
+          `;
+        })
+        .join("")}
     </div>
   `;
 }
@@ -661,6 +686,9 @@ function renderCaseConsole() {
     <div class="metric-grid compact-grid">
       <div class="metric-card"><span class="metric-label">Source</span><strong>${escapeHtml(problem.source || item.problem_source || "")}</strong></div>
       <div class="metric-card"><span class="metric-label">Category</span><strong>${escapeHtml(problem.category || item.problem_category || "")}</strong></div>
+      <div class="metric-card"><span class="metric-label">Suite</span><strong>${escapeHtml(problem.suite || item.problem_suite || "")}</strong></div>
+      <div class="metric-card"><span class="metric-label">Track</span><strong>${escapeHtml(problem.track || item.problem_track || "")}</strong></div>
+      <div class="metric-card"><span class="metric-label">Difficulty</span><strong>${escapeHtml(problem.difficulty || item.problem_difficulty || "")}</strong></div>
       <div class="metric-card"><span class="metric-label">Mutation Kill</span><strong>${formatOptionalRate(item.mutation_kill_rate)}</strong></div>
       <div class="metric-card"><span class="metric-label">Artifact Dir</span><strong class="mono">${escapeHtml(item.artifact_dir || "n/a")}</strong></div>
     </div>
@@ -739,6 +767,75 @@ function renderOverviewCards(overview) {
       <div class="metric-card"><span class="metric-label">Cases</span><strong>${overview.case_count || 0}</strong></div>
       <div class="metric-card"><span class="metric-label">Passed</span><strong>${overview.passed_cases || 0}</strong></div>
       <div class="metric-card"><span class="metric-label">Failed</span><strong>${overview.failed_cases || 0}</strong></div>
+    </div>
+  `;
+}
+
+function renderResultsOverview(payload) {
+  const overview = payload.overview || {};
+  const models = payload.model_results || [];
+  const problems = payload.problems || [];
+  const passRate = overview.case_count ? formatRate((overview.passed_cases || 0) / overview.case_count) : "n/a";
+  const providers = Array.from(new Set(models.map((item) => item.provider).filter(Boolean)));
+  const modelIds = models.map((item) => item.model_id);
+  const problemIds = problems.map((item) => item.id);
+  const failingCases = (payload.cases || []).filter((item) => !item.passed).slice(0, 4);
+
+  return `
+    <div class="overview-shell">
+      <div class="metric-grid overview-metrics">
+        <div class="metric-card"><span class="metric-label">Models</span><strong>${overview.model_count || 0}</strong></div>
+        <div class="metric-card"><span class="metric-label">Problems</span><strong>${overview.problem_count || 0}</strong></div>
+        <div class="metric-card"><span class="metric-label">Cases</span><strong>${overview.case_count || 0}</strong></div>
+        <div class="metric-card"><span class="metric-label">Passed</span><strong>${overview.passed_cases || 0}</strong></div>
+        <div class="metric-card"><span class="metric-label">Failed</span><strong>${overview.failed_cases || 0}</strong></div>
+        <div class="metric-card"><span class="metric-label">Pass Rate</span><strong>${passRate}</strong></div>
+      </div>
+
+      <div class="overview-detail-grid">
+        <section class="metric-card detail-card">
+          <span class="metric-label">Run Shape</span>
+          <div class="detail-list">
+            <div><strong>Run ID</strong><span class="mono">${escapeHtml(payload.run_id || "n/a")}</span></div>
+            <div><strong>Scope</strong><span>${escapeHtml(payload.scope || "n/a")}</span></div>
+            <div><strong>Providers</strong><span>${escapeHtml(providers.join(", ") || "n/a")}</span></div>
+            <div><strong>Started</strong><span class="mono">${escapeHtml(payload.started_at || "n/a")}</span></div>
+            <div><strong>Finished</strong><span class="mono">${escapeHtml(payload.finished_at || "n/a")}</span></div>
+          </div>
+        </section>
+
+        <section class="metric-card detail-card">
+          <span class="metric-label">Models In Run</span>
+          <div class="token-list">
+            ${modelIds.length ? modelIds.map((id) => `<span class="token mono">${escapeHtml(id)}</span>`).join("") : `<span class="problem-meta">No model rows.</span>`}
+          </div>
+        </section>
+
+        <section class="metric-card detail-card">
+          <span class="metric-label">Problems In Run</span>
+          <div class="token-list">
+            ${problemIds.length ? problemIds.map((id) => `<span class="token mono">${escapeHtml(id)}</span>`).join("") : `<span class="problem-meta">No problem snapshot.</span>`}
+          </div>
+        </section>
+
+        <section class="metric-card detail-card">
+          <span class="metric-label">Failing Cases</span>
+          <div class="detail-list">
+            ${
+              failingCases.length
+                ? failingCases
+                    .map(
+                      (item) =>
+                        `<div><strong class="mono">${escapeHtml(item.model_id)} / ${escapeHtml(item.problem_id)}</strong><span>${escapeHtml(
+                          item.feedback || "failed",
+                        )}</span></div>`,
+                    )
+                    .join("")
+                : `<div><strong>Summary</strong><span>No failing cases in this run.</span></div>`
+            }
+          </div>
+        </section>
+      </div>
     </div>
   `;
 }
@@ -1041,6 +1138,20 @@ function formatRate(value) {
 
 function formatOptionalRate(value) {
   return value === null || value === undefined ? "n/a" : formatRate(value);
+}
+
+function shortStage(stage) {
+  const status = ((stage && stage.status) || "n/a").toLowerCase();
+  if (status === "pass") {
+    return "PASS";
+  }
+  if (status === "fail") {
+    return "FAIL";
+  }
+  if (status === "skipped") {
+    return "SKIP";
+  }
+  return status.toUpperCase();
 }
 
 function formatBytes(value) {

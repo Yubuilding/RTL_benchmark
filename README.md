@@ -21,6 +21,8 @@ This project scaffolds a practical RTL benchmark system for evaluating large lan
   - provider filters (`openrouter`, `huggingface`, `mock`, etc.)
   - global cap with `max_models`
 - Dynamic problem loading from `benchmarks/**/*.json`
+- Bundled starter problem sets for local smoke tests and HDLBits-style RTL exercises
+- Structured problem-bank metadata for source/suite/track/difficulty-aware benchmark selection
 - Agent-style iterative repair loop (up to `max_iterations`)
 - Manual grading mode (`grade`) for pasted code / local files
 - Problem listing mode (`problems`) for quick lookup of benchmark ids
@@ -64,6 +66,7 @@ src/rtl_benchmark/
   utils.py
 benchmarks/
   rtl/*.json
+  hdlbits/*/*.json
   testbench/*.json
 configs/pipeline.json
 data/model_feeds/open_models.json
@@ -79,6 +82,7 @@ Real-provider template: `configs/pipeline.realtime.json`
 Key fields:
 
 - `problem_glob`: benchmark case pattern
+- `problem_filters`: optional metadata filters for dynamic problem-set assembly
 - `sources`: model discovery sources
 - `selection`: filtering policy for discovered models
 - `generation`: inference params (`temperature`, `max_tokens`, timeout)
@@ -197,6 +201,20 @@ If you omit `models`, the `gemini` source can also list available models from `/
 
 ```bash
 python -m rtl_benchmark.cli problems --config configs/pipeline.json
+```
+
+Problem rows now expose `source`, `suite`, `track`, and `difficulty` so you can verify the active benchmark mix before a run.
+
+Example filter:
+
+```json
+{
+  "problem_filters": {
+    "sources": ["hdlbits"],
+    "tracks": ["rtl_core"],
+    "difficulties": ["easy", "medium"]
+  }
+}
 ```
 
 ## Check Environment

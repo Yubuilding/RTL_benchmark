@@ -102,16 +102,20 @@ def cmd_discover(config_path: str, include_known: bool) -> int:
 
 def cmd_problems(config_path: str) -> int:
     cfg = load_json(config_path)
-    problems = load_problems(cfg["problem_glob"])
+    problems = load_problems(cfg["problem_glob"], cfg.get("problem_filters", {}))
     print(f"problems: {len(problems)}")
     for problem in problems:
-        print(f"- {problem.id} [{problem.task_type}] top={problem.top_module} lang={problem.language}")
+        print(
+            f"- {problem.id} [{problem.task_type}] "
+            f"source={problem.source} suite={problem.suite} track={problem.track} "
+            f"difficulty={problem.difficulty} top={problem.top_module} lang={problem.language}"
+        )
     return 0
 
 
 def cmd_doctor(config_path: str) -> int:
     cfg = load_json(config_path)
-    problems = load_problems(cfg["problem_glob"])
+    problems = load_problems(cfg["problem_glob"], cfg.get("problem_filters", {}))
     evaluator = Evaluator(str(ensure_dir(cfg["run_root"]) / "doctor"), cfg.get("execution", {}))
     backend = evaluator.check_execution_backend()
 
@@ -185,7 +189,7 @@ def cmd_grade(
     end_marker: str,
 ) -> int:
     cfg = load_json(config_path)
-    problems = {p.id: p for p in load_problems(cfg["problem_glob"])}
+    problems = {p.id: p for p in load_problems(cfg["problem_glob"], cfg.get("problem_filters", {}))}
     problem = problems.get(problem_id)
     if problem is None:
         print(f"Unknown problem_id: {problem_id}")

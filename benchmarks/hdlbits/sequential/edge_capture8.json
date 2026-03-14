@@ -1,0 +1,13 @@
+{
+  "id": "hdlbits_edge_capture8",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "edge_capture8",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "module_header": "module edge_capture8(input clk, input reset, input [7:0] in, output reg [7:0] out);",
+  "prompt": "Capture rising edges on each bit of in. When a bit of in rises from 0 to 1, the corresponding bit of out should become 1 and stay 1 until reset is asserted on a clock edge.",
+  "tags": ["hdlbits", "sequential", "edge-detect"],
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg clk;\n  reg reset;\n  reg [7:0] in;\n  wire [7:0] out;\n\n  edge_capture8 dut(.clk(clk), .reset(reset), .in(in), .out(out));\n\n  always #5 clk = ~clk;\n\n  task step_check;\n    input [7:0] expected;\n    begin\n      @(posedge clk);\n      #1;\n      if (out !== expected) begin\n        $display(\"FAIL expected=%0b got=%0b\", expected, out);\n        $fatal(1);\n      end\n    end\n  endtask\n\n  initial begin\n    clk = 0;\n    reset = 1;\n    in = 8'b00000000;\n    step_check(8'b00000000);\n\n    reset = 0;\n    step_check(8'b00000000);\n\n    in = 8'b00010001;\n    step_check(8'b00010001);\n    step_check(8'b00010001);\n\n    in = 8'b00010000;\n    step_check(8'b00010001);\n\n    in = 8'b10010010;\n    step_check(8'b10010011);\n\n    reset = 1;\n    step_check(8'b00000000);\n\n    reset = 0;\n    in = 8'b01000000;\n    step_check(8'b01000000);\n\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module edge_capture8(input clk, input reset, input [7:0] in, output reg [7:0] out);\n  reg [7:0] in_d;\n\n  always @(posedge clk) begin\n    if (reset) begin\n      out <= 8'b00000000;\n      in_d <= 8'b00000000;\n    end else begin\n      out <= out | (~in_d & in);\n      in_d <= in;\n    end\n  end\nendmodule\n"
+}

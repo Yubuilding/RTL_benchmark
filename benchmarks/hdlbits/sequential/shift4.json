@@ -1,0 +1,13 @@
+{
+  "id": "hdlbits_shift4",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "shift4",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "module_header": "module shift4(input clk, input areset_n, input load, input ena, input [3:0] data, output reg [3:0] q);",
+  "prompt": "Implement a 4-bit shift register with asynchronous active-low reset. On reset, q becomes 0. Otherwise, load has priority over ena. When load is 1, q loads data. When ena is 1, q shifts left by one and shifts in 0 on q[0].",
+  "tags": ["hdlbits", "sequential", "shift-register"],
+  "testbench": "`timescale 1ns/1ps\nmodule tb;\n  reg clk;\n  reg areset_n;\n  reg load;\n  reg ena;\n  reg [3:0] data;\n  wire [3:0] q;\n\n  shift4 dut(.clk(clk), .areset_n(areset_n), .load(load), .ena(ena), .data(data), .q(q));\n\n  always #5 clk = ~clk;\n\n  task step_check;\n    input [3:0] expected;\n    begin\n      @(posedge clk);\n      #1;\n      if (q !== expected) begin\n        $display(\"FAIL expected=%0b got=%0b\", expected, q);\n        $fatal(1);\n      end\n    end\n  endtask\n\n  initial begin\n    clk = 0;\n    areset_n = 1;\n    load = 0;\n    ena = 0;\n    data = 4'b0000;\n\n    #1;\n    areset_n = 0;\n    #1;\n    if (q !== 4'b0000) begin\n      $display(\"FAIL async reset expected=0000 got=%0b\", q);\n      $fatal(1);\n    end\n\n    areset_n = 1;\n    load = 1;\n    data = 4'b1011;\n    step_check(4'b1011);\n\n    load = 0;\n    ena = 1;\n    step_check(4'b0110);\n    step_check(4'b1100);\n\n    ena = 0;\n    step_check(4'b1100);\n\n    load = 1;\n    data = 4'b0101;\n    step_check(4'b0101);\n\n    areset_n = 0;\n    #1;\n    if (q !== 4'b0000) begin\n      $display(\"FAIL second async reset expected=0000 got=%0b\", q);\n      $fatal(1);\n    end\n\n    areset_n = 1;\n    load = 0;\n    ena = 1;\n    step_check(4'b0000);\n\n    $display(\"PASS\");\n    $finish;\n  end\nendmodule\n",
+  "reference_rtl": "module shift4(input clk, input areset_n, input load, input ena, input [3:0] data, output reg [3:0] q);\n  always @(posedge clk or negedge areset_n) begin\n    if (!areset_n)\n      q <= 4'b0000;\n    else if (load)\n      q <= data;\n    else if (ena)\n      q <= {q[2:0], 1'b0};\n  end\nendmodule\n"
+}
