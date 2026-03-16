@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from pathlib import Path
 
-from rtl_benchmark.evaluator import Evaluator
+from rtl_benchmark.evaluator import Evaluator, list_case_artifacts, safe_name
 from rtl_benchmark.leaderboard import summarize_cases, update_leaderboard
 from rtl_benchmark.model_runner import ModelRunner
 from rtl_benchmark.model_sources import discover_models
@@ -75,11 +76,20 @@ class BenchmarkPipeline:
 
                 row = asdict(final)
                 row["provider"] = model.provider
+                row["candidate_code"] = candidate
                 row["problem_source"] = problem.source
                 row["problem_category"] = problem.category
                 row["problem_suite"] = problem.suite
                 row["problem_track"] = problem.track
                 row["problem_difficulty"] = problem.difficulty
+                row["api_trace"] = dict(self.model_runner.last_trace)
+                self._persist_api_trace(
+                    run_root=run_root,
+                    row=row,
+                    model_id=model.id,
+                    problem_id=problem.id,
+                    attempt=attempt,
+                )
                 case_records.append(row)
 
         summary = summarize_cases(case_records)
@@ -110,6 +120,24 @@ class BenchmarkPipeline:
             problem_ids=[problem.id for problem in problems],
         )
         return run_result
+
+    def _persist_api_trace(
+        self,
+        run_root: Path,
+        row: dict,
+        model_id: str,
+        problem_id: str,
+        attempt: int,
+    ) -> None:
+        trace = row.get("api_trace")
+        if not trace:
+            return
+        artifact_dir = str(row.get("artifact_dir", "")).strip()
+        case_dir = Path(artifact_dir) if artifact_dir else run_root / safe_name(model_id) / problem_id / f"attempt_{attempt}"
+        case_dir = ensure_dir(case_dir)
+        save_json(case_dir / "api_trace.json", trace)
+        row["artifact_dir"] = str(case_dir.resolve())
+        row["artifacts"] = list_case_artifacts(case_dir)
 
     def _generation_failed_result(
         self,

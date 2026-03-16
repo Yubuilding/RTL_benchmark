@@ -338,3 +338,19 @@ If you run `grade` from a terminal without `--code`, `--code-file`, or `--stdin`
   - richer prompt templates and agent orchestration
   - PPA extraction and normalized scoring
   - web leaderboard (Streamlit/Gradio/GitHub Pages)
+
+## License
+
+This repository is licensed under the GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). See [LICENSE](LICENSE).
+
+## Contributing
+
+Community contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+This project uses the Developer Certificate of Origin instead of a CLA. Every commit in a pull request should be signed off:
+
+```bash
+git commit -s -m "your message"
+```
+
+See [DCO.md](DCO.md) for the exact certification text.

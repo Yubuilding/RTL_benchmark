@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 import unittest
+import urllib.request
 from pathlib import Path
 from unittest.mock import patch
 
@@ -210,6 +211,10 @@ class DiscoveryTests(unittest.TestCase):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_runner_clamps_excessive_max_tokens(self) -> None:
+        runner = ModelRunner({"max_tokens": 1048576})
+        self.assertEqual(runner.max_tokens, 8192)
+
     def test_real_provider_failure_does_not_fallback_to_mock(self) -> None:
         runner = ModelRunner({})
         problem = Problem(
@@ -253,6 +258,60 @@ class RunnerTests(unittest.TestCase):
             ]
         }
         self.assertEqual(runner._extract_gemini_message(payload), "module add8(\n);\nendmodule")
+
+    def test_openai_trace_captures_full_request_and_response(self) -> None:
+        runner = ModelRunner({"max_tokens": 128, "temperature": 0.0})
+        problem = Problem(
+            id="rtl_add8",
+            task_type="rtl",
+            language="verilog",
+            prompt="Implement add8.",
+            top_module="add8",
+            reference_rtl="module add8(input [7:0] a, input [7:0] b, output [8:0] sum); assign sum = a+b; endmodule",
+            testbench="module tb; endmodule",
+        )
+        model = ModelDescriptor(
+            id="gpt-4.1-mini",
+            provider="openai",
+            raw={"_base_url": "https://api.openai.com/v1", "_api_key_env": "OPENAI_API_KEY"},
+        )
+
+        class FakeResponse:
+            status = 200
+
+            def __enter__(self) -> "FakeResponse":
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> bool:
+                return False
+
+            def read(self) -> bytes:
+                return json.dumps(
+                    {
+                        "choices": [
+                            {
+                                "message": {
+                                    "content": "module add8(input [7:0] a, input [7:0] b, output [8:0] sum); assign sum = a + b; endmodule"
+                                }
+                            }
+                        ]
+                    }
+                ).encode("utf-8")
+
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}, clear=False):
+            with patch.object(urllib.request, "urlopen", return_value=FakeResponse()):
+                generated = runner.generate(model, problem)
+
+        self.assertIn("module add8", generated)
+        self.assertEqual(runner.last_trace["provider"], "openai")
+        self.assertEqual(runner.last_trace["model_id"], "gpt-4.1-mini")
+        self.assertEqual(runner.last_trace["request"]["headers"]["Authorization"], "<redacted>")
+        self.assertEqual(runner.last_trace["request"]["payload"]["model"], "gpt-4.1-mini")
+        self.assertEqual(runner.last_trace["conversation"][0]["role"], "system")
+        self.assertEqual(runner.last_trace["conversation"][1]["role"], "user")
+        self.assertEqual(runner.last_trace["conversation"][-1]["role"], "assistant")
+        self.assertIn("module add8", runner.last_trace["response"]["assistant_output"])
+        self.assertIn("\"choices\"", runner.last_trace["response"]["raw_text"])
 
     def test_describe_http_error_includes_response_body(self) -> None:
         import io

@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from rtl_benchmark.evaluator import Evaluator, list_case_artifacts, safe_name
 from rtl_benchmark.leaderboard import rebuild_leaderboard_from_raw_results, summarize_cases, update_leaderboard
-from rtl_benchmark.model_runner import ModelRunner
+from rtl_benchmark.model_runner import DEFAULT_MAX_TOKENS, ModelRunner, normalize_max_tokens
 from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.problem_bank import load_problems
 from rtl_benchmark.types import CaseResult, ModelDescriptor, Problem, StageStatus
@@ -89,6 +89,7 @@ class WebAppService:
         self.repo_root = self.base_config_path.parent.parent
         default_ui_path = self.repo_root / ".state" / "webui_config.json"
         self.ui_config_path = Path(ui_config_path).resolve() if ui_config_path else default_ui_path
+        self.leaderboard_state_path = self.repo_root / ".state" / "leaderboard_state.json"
         self._jobs: dict[str, dict[str, Any]] = {}
         self._jobs_lock = threading.Lock()
 
@@ -187,11 +188,79 @@ class WebAppService:
                 return self._enrich_history_detail(data)
         return None
 
+    def compare_models(self, run_id: str, model_a: str, model_b: str) -> dict[str, Any] | None:
+        detail = self.load_history_detail(run_id)
+        if detail is None:
+            return None
+
+        left = str(model_a).strip()
+        right = str(model_b).strip()
+        if not left or not right:
+            raise ValueError("model_a and model_b are required")
+        if left == right:
+            raise ValueError("model_a and model_b must be different")
+
+        available_models = [str(item.get("model_id", "")) for item in detail.get("model_results", []) if item.get("model_id")]
+        if left not in available_models:
+            raise ValueError(f"model not found in run: {left}")
+        if right not in available_models:
+            raise ValueError(f"model not found in run: {right}")
+
+        case_index = self._index_final_cases(detail.get("cases", []))
+        left_cases = case_index.get(left, {})
+        right_cases = case_index.get(right, {})
+        all_problem_ids = sorted(set(left_cases) | set(right_cases))
+
+        rows = [self._build_compare_row(problem_id, left_cases.get(problem_id), right_cases.get(problem_id)) for problem_id in all_problem_ids]
+        outcome_order = {"a_only_pass": 0, "b_only_pass": 1, "both_fail": 2, "both_pass": 3, "missing": 4}
+        rows.sort(key=lambda item: (outcome_order.get(str(item.get("outcome", "")), 99), str(item.get("problem_id", ""))))
+
+        comparable = sum(1 for row in rows if row["model_a"]["present"] and row["model_b"]["present"])
+        both_pass = sum(1 for row in rows if row["outcome"] == "both_pass")
+        both_fail = sum(1 for row in rows if row["outcome"] == "both_fail")
+        a_only_pass = sum(1 for row in rows if row["outcome"] == "a_only_pass")
+        b_only_pass = sum(1 for row in rows if row["outcome"] == "b_only_pass")
+        missing_a = sum(1 for row in rows if not row["model_a"]["present"])
+        missing_b = sum(1 for row in rows if not row["model_b"]["present"])
+
+        return {
+            "run_id": str(detail.get("run_id", run_id)),
+            "started_at": str(detail.get("started_at", "")),
+            "finished_at": str(detail.get("finished_at", "")),
+            "model_a": left,
+            "model_b": right,
+            "available_models": available_models,
+            "summary": {
+                "total_cases": len(rows),
+                "comparable_cases": comparable,
+                "same_outcome_cases": both_pass + both_fail,
+                "model_a_passed": sum(1 for row in rows if row["model_a"]["status"] == "pass"),
+                "model_b_passed": sum(1 for row in rows if row["model_b"]["status"] == "pass"),
+                "both_pass": both_pass,
+                "both_fail": both_fail,
+                "a_only_pass": a_only_pass,
+                "b_only_pass": b_only_pass,
+                "missing_a": missing_a,
+                "missing_b": missing_b,
+            },
+            "rows": rows,
+        }
+
     def load_leaderboard(self) -> dict[str, Any]:
-        return rebuild_leaderboard_from_raw_results(
+        board = rebuild_leaderboard_from_raw_results(
             self.base_config.get("leaderboard_path", "results/leaderboard.json"),
             self.base_config.get("raw_results_dir", "results/raw"),
+            reset_after=self._leaderboard_reset_at(),
         )
+        board["reset_at"] = self._leaderboard_reset_at()
+        return board
+
+    def reset_leaderboard(self) -> dict[str, Any]:
+        reset_at = now_utc_iso()
+        save_json(self.leaderboard_state_path, {"reset_at": reset_at})
+        board = {"updated_at": "", "models": [], "reset_at": reset_at}
+        save_json(self.base_config.get("leaderboard_path", "results/leaderboard.json"), board)
+        return board
 
     def load_artifact(self, raw_path: str) -> tuple[bytes, str, str] | None:
         target = Path(raw_path).expanduser().resolve()
@@ -299,12 +368,107 @@ class WebAppService:
             "failed_cases": len(cases) - passed,
         }
 
+    def _index_final_cases(self, cases: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, Any]]]:
+        index: dict[str, dict[str, dict[str, Any]]] = {}
+        for case in cases:
+            model_id = str(case.get("model_id", "")).strip()
+            problem_id = str(case.get("problem_id", "")).strip()
+            if not model_id or not problem_id:
+                continue
+            bucket = index.setdefault(model_id, {})
+            current = bucket.get(problem_id)
+            current_attempt = int(current.get("attempt", 0) or 0) if current else -1
+            attempt = int(case.get("attempt", 0) or 0)
+            if current is None or attempt >= current_attempt:
+                bucket[problem_id] = case
+        return index
+
+    def _build_compare_row(
+        self,
+        problem_id: str,
+        left_case: dict[str, Any] | None,
+        right_case: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        seed = left_case or right_case or {}
+        problem = dict(seed.get("problem", {}))
+        source = str(problem.get("source") or seed.get("problem_source", ""))
+        category = str(problem.get("category") or seed.get("problem_category", ""))
+        suite = str(problem.get("suite") or seed.get("problem_suite", ""))
+        difficulty = str(problem.get("difficulty") or seed.get("problem_difficulty", ""))
+
+        left = self._serialize_compare_case(left_case)
+        right = self._serialize_compare_case(right_case)
+        if left["present"] and right["present"]:
+            if left["status"] == "pass" and right["status"] == "fail":
+                outcome = "a_only_pass"
+            elif left["status"] == "fail" and right["status"] == "pass":
+                outcome = "b_only_pass"
+            elif left["status"] == "pass" and right["status"] == "pass":
+                outcome = "both_pass"
+            else:
+                outcome = "both_fail"
+        else:
+            outcome = "missing"
+
+        return {
+            "problem_id": problem_id,
+            "source": source,
+            "category": category,
+            "suite": suite,
+            "difficulty": difficulty,
+            "outcome": outcome,
+            "model_a": left,
+            "model_b": right,
+        }
+
+    def _serialize_compare_case(self, case: dict[str, Any] | None) -> dict[str, Any]:
+        if not case:
+            return {
+                "present": False,
+                "status": "missing",
+                "passed": None,
+                "attempt": None,
+                "feedback": "",
+                "case_key": "",
+                "lint_status": "missing",
+                "simulation_status": "missing",
+                "synthesis_status": "missing",
+            }
+
+        passed = bool(case.get("passed"))
+        return {
+            "present": True,
+            "status": "pass" if passed else "fail",
+            "passed": passed,
+            "attempt": int(case.get("attempt", 0) or 0),
+            "feedback": str(case.get("feedback", "")),
+            "case_key": self._case_key(case),
+            "lint_status": self._stage_status(case.get("lint")),
+            "simulation_status": self._stage_status(case.get("simulation")),
+            "synthesis_status": self._stage_status(case.get("synthesis")),
+        }
+
+    def _case_key(self, case: dict[str, Any]) -> str:
+        return "::".join(
+            [
+                str(case.get("model_id", "")),
+                str(case.get("problem_id", "")),
+                str(int(case.get("attempt", 0) or 0)),
+            ]
+        )
+
+    def _stage_status(self, stage: dict[str, Any] | None) -> str:
+        return str((stage or {}).get("status", "missing"))
+
     def _is_within(self, target: Path, root: Path) -> bool:
         try:
             target.relative_to(root)
             return True
         except ValueError:
             return False
+
+    def _leaderboard_reset_at(self) -> str:
+        return str(load_json(self.leaderboard_state_path, default={}).get("reset_at", "")).strip()
 
     def list_jobs(self) -> list[dict[str, Any]]:
         with self._jobs_lock:
@@ -437,6 +601,14 @@ class WebAppService:
                         row["problem_suite"] = problem.suite
                         row["problem_track"] = problem.track
                         row["problem_difficulty"] = problem.difficulty
+                        row["api_trace"] = dict(model_runner.last_trace)
+                        self._persist_api_trace(
+                            run_root=run_root,
+                            row=row,
+                            model_id=model.id,
+                            problem_id=problem.id,
+                            attempt=attempt,
+                        )
                         case_records.append(row)
                         if result.passed or not can_evaluate:
                             break
@@ -475,6 +647,24 @@ class WebAppService:
 
         return run_result
 
+    def _persist_api_trace(
+        self,
+        run_root: Path,
+        row: dict[str, Any],
+        model_id: str,
+        problem_id: str,
+        attempt: int,
+    ) -> None:
+        trace = row.get("api_trace")
+        if not trace:
+            return
+        artifact_dir = str(row.get("artifact_dir", "")).strip()
+        case_dir = Path(artifact_dir) if artifact_dir else run_root / safe_name(model_id) / problem_id / f"attempt_{attempt}"
+        case_dir = ensure_dir(case_dir)
+        save_json(case_dir / "api_trace.json", trace)
+        row["artifact_dir"] = str(case_dir.resolve())
+        row["artifacts"] = list_case_artifacts(case_dir)
+
     def _resolve_requested_problems(self, request: dict[str, Any]) -> tuple[list[Problem], str, bool]:
         scope = str(request.get("scope", "suite"))
         all_problems = {
@@ -485,7 +675,7 @@ class WebAppService:
         if scope == "selected_problems":
             selected_ids = list(request.get("problemIds", []))
             problems = [all_problems[problem_id] for problem_id in selected_ids if problem_id in all_problems]
-            return problems, scope, True
+            return problems, scope, False
 
         if scope == "custom_problem":
             custom_payload = dict(request.get("customProblem", {}))
@@ -603,7 +793,7 @@ class WebAppService:
             "providers": providers,
             "generation": {
                 "temperature": float(generation.get("temperature", 0.0)),
-                "max_tokens": int(generation.get("max_tokens", 1024)),
+                "max_tokens": normalize_max_tokens(generation.get("max_tokens", DEFAULT_MAX_TOKENS)),
                 "timeout_seconds": int(generation.get("timeout_seconds", 60)),
             },
             "execution": {
@@ -637,7 +827,7 @@ class WebAppService:
             "providers": providers,
             "generation": {
                 "temperature": float(generation.get("temperature", 0.0)),
-                "max_tokens": int(generation.get("max_tokens", 1024)),
+                "max_tokens": normalize_max_tokens(generation.get("max_tokens", DEFAULT_MAX_TOKENS)),
                 "timeout_seconds": int(generation.get("timeout_seconds", 60)),
             },
             "execution": {
@@ -738,6 +928,9 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
         if path == "/config":
             self._serve_asset("config.html", "text/html; charset=utf-8")
             return
+        if path == "/leaderboard":
+            self._serve_asset("leaderboard.html", "text/html; charset=utf-8")
+            return
         if path == "/results":
             self._serve_asset("results.html", "text/html; charset=utf-8")
             return
@@ -759,6 +952,24 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
                 return
             raw, content_type, filename = payload
             self._send_raw(raw, content_type, filename)
+            return
+        if path == "/api/leaderboard/compare":
+            query = parse_qs(parsed.query)
+            run_id = unquote(query.get("run", [""])[0]).strip()
+            model_a = unquote(query.get("a", [""])[0]).strip()
+            model_b = unquote(query.get("b", [""])[0]).strip()
+            if not run_id:
+                self._send_json({"error": "run is required"}, status=HTTPStatus.BAD_REQUEST)
+                return
+            try:
+                payload = self.service.compare_models(run_id, model_a, model_b)
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+                return
+            if payload is None:
+                self._send_json({"error": "run not found"}, status=HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(payload)
             return
         if path.startswith("/api/history/"):
             run_id = unquote(path.rsplit("/", 1)[-1])
@@ -783,6 +994,10 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/run":
             job = self.service.start_job(data)
             self._send_json({"ok": True, "job": job}, status=HTTPStatus.ACCEPTED)
+            return
+        if path == "/api/leaderboard/reset":
+            board = self.service.reset_leaderboard()
+            self._send_json({"ok": True, "leaderboard": board})
             return
 
         self._send_json({"error": "not found"}, status=HTTPStatus.NOT_FOUND)

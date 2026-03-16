@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-03-14T15:46:24Z",
+  "updated_at": "2026-03-16T03:02:39Z",
   "models": [
     {
       "model_id": "mock/rtl-strong-v1",
@@ -36,18 +36,34 @@
     {
       "model_id": "gemini-3.1-pro-preview",
       "provider": "gemini",
-      "score": 1.0,
-      "pass_rate": 1.0,
+      "score": 0.8333,
+      "pass_rate": 0.8333,
       "lint_pass_rate": 1.0,
-      "sim_pass_rate": 1.0,
+      "sim_pass_rate": 0.8333,
       "synth_pass_rate": 1.0,
-      "avg_mutation_kill_rate": null,
-      "cases": 1,
-      "runs": 10,
-      "last_run_id": "20260314T154624288892Z",
-      "last_scope": "selected_problems",
-      "last_problem_count": 1,
-      "updated_at": "2026-03-14T15:46:24Z"
+      "avg_mutation_kill_rate": 1.0,
+      "cases": 12,
+      "runs": 1,
+      "last_run_id": "20260316T030239840098Z",
+      "last_scope": "suite",
+      "last_problem_count": 11,
+      "updated_at": "2026-03-16T03:02:39Z"
+    },
+    {
+      "model_id": "openrouter/hunter-alpha",
+      "provider": "openrouter",
+      "score": 0.7143,
+      "pass_rate": 0.7143,
+      "lint_pass_rate": 1.0,
+      "sim_pass_rate": 0.8571,
+      "synth_pass_rate": 1.0,
+      "avg_mutation_kill_rate": 0.0,
+      "cases": 14,
+      "runs": 1,
+      "last_run_id": "20260316T023444391715Z",
+      "last_scope": "suite",
+      "last_problem_count": 11,
+      "updated_at": "2026-03-16T02:34:44Z"
     },
     {
       "model_id": "mock/rtl-weak-v1",

@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 .env
+.local_reports/
 results/runs/
 results/raw/
 .state/known_models.json

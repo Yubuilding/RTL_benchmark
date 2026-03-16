@@ -51,6 +51,9 @@ def update_leaderboard(
     scope: str = "suite",
     problem_ids: list[str] | None = None,
 ) -> dict:
+    if scope != "suite":
+        return load_json(leaderboard_path, default={"updated_at": "", "models": []})
+
     board = load_json(leaderboard_path, default={"updated_at": "", "models": []})
 
     index = {m["model_id"]: m for m in board.get("models", [])}
@@ -71,19 +74,26 @@ def update_leaderboard(
     return result
 
 
-def rebuild_leaderboard_from_raw_results(leaderboard_path: str, raw_results_dir: str) -> dict:
+def rebuild_leaderboard_from_raw_results(
+    leaderboard_path: str,
+    raw_results_dir: str,
+    reset_after: str = "",
+) -> dict:
     board = {"updated_at": "", "models": []}
     raw_dir = Path(raw_results_dir)
     runs: list[dict] = []
     for path in raw_dir.glob("*.json"):
         data = load_json(path, default={})
         summary = list(data.get("summary", []))
-        if not summary:
+        started_at = str(data.get("started_at", ""))
+        if not summary or str(data.get("scope", "suite")) != "suite":
+            continue
+        if reset_after and started_at and started_at < reset_after:
             continue
         runs.append(
             {
                 "run_id": str(data.get("run_id", path.stem)),
-                "started_at": str(data.get("started_at", "")),
+                "started_at": started_at,
                 "scope": str(data.get("scope", "suite")),
                 "problem_ids": list(data.get("problem_ids", [])),
                 "summary": summary,

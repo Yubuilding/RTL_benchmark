@@ -10,6 +10,9 @@ const state = {
   selectedRunId: "",
   selectedRun: null,
   selectedCaseKey: "",
+  compareModelA: "",
+  compareModelB: "",
+  leaderboardCompare: null,
   selectedProblemIds: new Set(),
   expandedModels: new Set(),
   artifactViewer: null,
@@ -26,6 +29,7 @@ const dom = {
   refreshButton: byId("refreshButton"),
   saveConfigButton: byId("saveConfigButton"),
   runButton: byId("runButton"),
+  resetLeaderboardButton: byId("resetLeaderboardButton"),
   temperatureInput: byId("temperatureInput"),
   maxTokensInput: byId("maxTokensInput"),
   generationTimeoutInput: byId("generationTimeoutInput"),
@@ -49,6 +53,13 @@ const dom = {
   resultsConsole: byId("resultsConsole"),
   resultsLeaderboardTable: byId("resultsLeaderboardTable"),
   resultsLeaderboardTimestamp: byId("resultsLeaderboardTimestamp"),
+  leaderboardHistoryList: byId("leaderboardHistoryList"),
+  leaderboardPageTable: byId("leaderboardPageTable"),
+  leaderboardPageTimestamp: byId("leaderboardPageTimestamp"),
+  leaderboardCompareRunMeta: byId("leaderboardCompareRunMeta"),
+  leaderboardCompareControls: byId("leaderboardCompareControls"),
+  leaderboardCompareSummary: byId("leaderboardCompareSummary"),
+  leaderboardCompareTable: byId("leaderboardCompareTable"),
 };
 
 const customInputs = {
@@ -107,7 +118,7 @@ async function loadState(options = {}) {
   }
   render();
 
-  if (page === "results") {
+  if (page === "results" || page === "leaderboard") {
     const desiredRunId = state.selectedRunId || currentRunFromUrl() || (state.history[0] && state.history[0].run_id) || "";
     if (desiredRunId) {
       await viewRun(desiredRunId, { pushHistory: false });
@@ -204,6 +215,8 @@ function render() {
     renderHomeRunDetail();
   } else if (page === "results") {
     renderResultsPage();
+  } else if (page === "leaderboard") {
+    renderLeaderboardPage();
   }
 }
 
@@ -411,7 +424,8 @@ function renderJobs() {
 }
 
 function renderHistory() {
-  const container = page === "results" ? dom.resultsHistoryList : dom.historyList;
+  const container =
+    page === "results" ? dom.resultsHistoryList : page === "leaderboard" ? dom.leaderboardHistoryList : dom.historyList;
   if (!container) {
     return;
   }
@@ -422,7 +436,7 @@ function renderHistory() {
 
   container.innerHTML = state.history
     .map((item) => {
-      const compact = page === "results";
+      const compact = page !== "home";
       const summary = item.summary || [];
       const top = summary[0] ? `${summary[0].model_id} ${formatRate(summary[0].score)}` : "no summary";
       const active = state.selectedRunId === item.run_id ? "history-card-active" : "";
@@ -439,7 +453,12 @@ function renderHistory() {
           <div class="stack-subtitle">${compact ? `Best: ${escapeHtml(top)}` : `Top row: ${escapeHtml(top)}`}</div>
           <div class="stack-actions">
             <button class="mini-button" data-view-run="${escapeHtml(item.run_id)}">${compact ? "Open" : "Preview"}</button>
-            ${page === "home" ? `<a class="mini-link" href="/results?run=${encodeURIComponent(item.run_id)}">Results Page</a>` : ""}
+            ${
+              page === "home"
+                ? `<a class="mini-link" href="/results?run=${encodeURIComponent(item.run_id)}">Results Page</a>
+                   <a class="mini-link" href="/leaderboard?run=${encodeURIComponent(item.run_id)}">Compare Page</a>`
+                : ""
+            }
           </div>
         </article>
       `;
@@ -448,17 +467,32 @@ function renderHistory() {
 }
 
 function renderLeaderboard() {
-  const table = page === "results" ? dom.resultsLeaderboardTable : dom.leaderboardTable;
-  const timestamp = page === "results" ? dom.resultsLeaderboardTimestamp : dom.leaderboardTimestamp;
+  const table =
+    page === "results" ? dom.resultsLeaderboardTable : page === "leaderboard" ? dom.leaderboardPageTable : dom.leaderboardTable;
+  const timestamp =
+    page === "results"
+      ? dom.resultsLeaderboardTimestamp
+      : page === "leaderboard"
+        ? dom.leaderboardPageTimestamp
+        : dom.leaderboardTimestamp;
   if (!table || !timestamp) {
     return;
   }
   const leaderboard = state.leaderboard || { models: [] };
-  timestamp.textContent = leaderboard.updated_at ? `Updated ${leaderboard.updated_at}` : "No leaderboard updates yet.";
+  const parts = [];
+  if (leaderboard.updated_at) {
+    parts.push(`Suite-only · Updated ${leaderboard.updated_at}`);
+  } else {
+    parts.push("No suite leaderboard updates yet.");
+  }
+  if (leaderboard.reset_at) {
+    parts.push(`Reset baseline ${leaderboard.reset_at}`);
+  }
+  timestamp.textContent = parts.join(" · ");
 
   const rows = leaderboard.models || [];
   if (!rows.length) {
-    table.innerHTML = `<div class="stack-card empty-state">Run a full suite benchmark to populate the local leaderboard.</div>`;
+    table.innerHTML = `<div class="stack-card empty-state">Run a full suite benchmark to populate the suite-only leaderboard.</div>`;
     return;
   }
 
@@ -474,6 +508,7 @@ function renderLeaderboard() {
           <th>Problems</th>
           <th>Runs</th>
           <th>Last Run</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -489,6 +524,13 @@ function renderLeaderboard() {
                 <td>${row.last_problem_count || row.cases || 0}</td>
                 <td>${row.runs || 0}</td>
                 <td class="mono">${escapeHtml(row.last_run_id || "")}</td>
+                <td>
+                  ${
+                    row.last_run_id
+                      ? `<a class="mini-link" href="/leaderboard?run=${encodeURIComponent(row.last_run_id)}">Compare</a>`
+                      : ""
+                  }
+                </td>
               </tr>
             `,
           )
@@ -569,6 +611,41 @@ function renderResultsPage() {
   dom.resultsRunMeta.textContent = `${payload.scope || "run"} · ${payload.started_at || ""} → ${payload.finished_at || ""}`;
   renderResultsModelSummary();
   renderCaseConsole();
+}
+
+function renderLeaderboardPage() {
+  if (!dom.leaderboardCompareControls || !dom.leaderboardCompareSummary || !dom.leaderboardCompareTable || !dom.leaderboardCompareRunMeta) {
+    return;
+  }
+  if (!state.selectedRun) {
+    dom.leaderboardCompareRunMeta.textContent = "";
+    dom.leaderboardCompareControls.innerHTML = `<div class="empty-state">Select a recorded run to compare two models.</div>`;
+    dom.leaderboardCompareSummary.innerHTML = "";
+    dom.leaderboardCompareTable.innerHTML = "";
+    return;
+  }
+
+  const modelRows = state.selectedRun.model_results || [];
+  const compare = state.leaderboardCompare;
+  dom.leaderboardCompareRunMeta.textContent = `${state.selectedRun.scope || "run"} · ${state.selectedRun.started_at || ""} → ${
+    state.selectedRun.finished_at || ""
+  }`;
+  dom.leaderboardCompareControls.innerHTML = renderLeaderboardCompareControls(modelRows);
+
+  if (!state.compareModelA || !state.compareModelB) {
+    dom.leaderboardCompareSummary.innerHTML = `<div class="empty-state">Pick two different models from this run.</div>`;
+    dom.leaderboardCompareTable.innerHTML = "";
+    return;
+  }
+
+  if (!compare) {
+    dom.leaderboardCompareSummary.innerHTML = `<div class="empty-state">Loading compare view for the selected models.</div>`;
+    dom.leaderboardCompareTable.innerHTML = "";
+    return;
+  }
+
+  dom.leaderboardCompareSummary.innerHTML = renderLeaderboardCompareSummary(compare);
+  dom.leaderboardCompareTable.innerHTML = renderLeaderboardCompareGroups(compare);
 }
 
 function renderResultsModelSummary() {
@@ -668,6 +745,7 @@ function renderCaseConsole() {
   const harness = item.task_type === "rtl" ? problem.testbench : problem.reference_tb;
   const reference = item.task_type === "rtl" ? problem.reference_rtl : problem.golden_rtl;
   const mutants = Array.isArray(problem.mutant_rtls) ? problem.mutant_rtls : [];
+  const apiTrace = item.api_trace || {};
   const viewer = state.artifactViewer && state.artifactViewer.caseKey === caseKey(item) ? state.artifactViewer : null;
 
   dom.resultsConsole.innerHTML = `
@@ -696,6 +774,10 @@ function renderCaseConsole() {
     ${renderTextSection("Problem Prompt", problem.prompt)}
     ${renderTextSection("Module Header", problem.module_header)}
     ${renderCodeSection("Model Answer", item.candidate_code)}
+    ${renderCodeSection("API Conversation Log", formatConversationLog(apiTrace.conversation))}
+    ${renderCodeSection("API Request Log", formatJsonBlock(apiTrace.request))}
+    ${renderCodeSection("API Response Log", formatJsonBlock(apiTrace.response))}
+    ${renderCodeSection("API Error", apiTrace.error)}
     ${renderCodeSection(item.task_type === "rtl" ? "Evaluation Testbench" : "Reference Testbench", harness)}
     ${renderCodeSection(item.task_type === "rtl" ? "Reference RTL" : "Golden RTL", reference)}
     ${mutants.length ? mutants.map((mutant, idx) => renderCodeSection(`Mutant RTL ${idx + 1}`, mutant)).join("") : ""}
@@ -840,6 +922,172 @@ function renderResultsOverview(payload) {
   `;
 }
 
+function renderLeaderboardCompareControls(models) {
+  const options = models
+    .map(
+      (item) =>
+        `<option value="${escapeHtml(item.model_id)}" ${item.model_id === state.compareModelA ? "selected" : ""}>${escapeHtml(
+          item.model_id,
+        )}</option>`,
+    )
+    .join("");
+  const secondOptions = models
+    .map(
+      (item) =>
+        `<option value="${escapeHtml(item.model_id)}" ${item.model_id === state.compareModelB ? "selected" : ""}>${escapeHtml(
+          item.model_id,
+        )}</option>`,
+    )
+    .join("");
+
+  return `
+    <div class="compare-toolbar">
+      <label>
+        Model A
+        <select id="compareModelASelect">${options}</select>
+      </label>
+      <button class="mini-button compare-swap-button" data-swap-compare-models="true">Swap</button>
+      <label>
+        Model B
+        <select id="compareModelBSelect">${secondOptions}</select>
+      </label>
+    </div>
+  `;
+}
+
+function renderLeaderboardCompareSummary(compare) {
+  const summary = compare.summary || {};
+  const labels = compareLabels(compare);
+  return `
+    <div class="metric-grid compare-metrics">
+      <div class="metric-card"><span class="metric-label">Comparable Cases</span><strong>${summary.comparable_cases || 0}</strong></div>
+      <div class="metric-card"><span class="metric-label">${escapeHtml(labels.aShort)} Passed</span><strong>${summary.model_a_passed || 0}</strong></div>
+      <div class="metric-card"><span class="metric-label">${escapeHtml(labels.bShort)} Passed</span><strong>${summary.model_b_passed || 0}</strong></div>
+      <div class="metric-card"><span class="metric-label">Same Outcome</span><strong>${summary.same_outcome_cases || 0}</strong></div>
+      <div class="metric-card compare-metric-highlight compare-metric-a"><span class="metric-label">${escapeHtml(labels.aShort)} Only Pass</span><strong>${summary.a_only_pass || 0}</strong></div>
+      <div class="metric-card compare-metric-highlight compare-metric-b"><span class="metric-label">${escapeHtml(labels.bShort)} Only Pass</span><strong>${summary.b_only_pass || 0}</strong></div>
+      <div class="metric-card"><span class="metric-label">Both Fail</span><strong>${summary.both_fail || 0}</strong></div>
+      <div class="metric-card"><span class="metric-label">Missing Cases</span><strong>${(summary.missing_a || 0) + (summary.missing_b || 0)}</strong></div>
+    </div>
+  `;
+}
+
+function renderLeaderboardCompareGroups(compare) {
+  const labels = compareLabels(compare);
+  const groups = [
+    { key: "a_only_pass", title: `${labels.a} passed but ${labels.b} failed` },
+    { key: "b_only_pass", title: `${labels.b} passed but ${labels.a} failed` },
+    { key: "both_fail", title: "Both models failed" },
+    { key: "both_pass", title: "Both models passed" },
+    { key: "missing", title: "Missing coverage" },
+  ];
+  const rows = compare.rows || [];
+  const rendered = groups
+    .map((group) => {
+      const items = rows.filter((row) => row.outcome === group.key);
+      if (!items.length) {
+        return "";
+      }
+      return `
+        <section class="compare-group">
+          <div class="compare-group-head">
+            <div>
+              <p class="eyebrow">Outcome Bucket</p>
+              <h3>${escapeHtml(group.title)}</h3>
+            </div>
+            <span class="problem-meta">${items.length} cases</span>
+          </div>
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>Problem</th>
+                  <th>Metadata</th>
+                  <th>${escapeHtml(labels.a)}</th>
+                  <th>${escapeHtml(labels.b)}</th>
+                  <th>Outcome</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map((row) => renderLeaderboardCompareRow(compare, row)).join("")}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    })
+    .join("");
+
+  return rendered || `<div class="empty-state">No comparable case rows for the current selection.</div>`;
+}
+
+function renderLeaderboardCompareRow(compare, row) {
+  return `
+    <tr>
+      <td class="mono">${escapeHtml(row.problem_id)}</td>
+      <td>
+        <div class="compare-meta">
+          <span>${escapeHtml(row.source || "n/a")}</span>
+          <span>${escapeHtml(row.category || "n/a")}</span>
+          <span>${escapeHtml(row.suite || "n/a")}</span>
+          <span>${escapeHtml(row.difficulty || "n/a")}</span>
+        </div>
+      </td>
+      <td>${renderCompareCaseCell(compare.run_id, row.model_a)}</td>
+      <td>${renderCompareCaseCell(compare.run_id, row.model_b)}</td>
+      <td>${renderCompareOutcome(row.outcome)}</td>
+    </tr>
+  `;
+}
+
+function renderCompareCaseCell(runId, entry) {
+  if (!entry || !entry.present) {
+    return `<div class="compare-case"><span class="status-chip status-skipped">missing</span></div>`;
+  }
+  const stageLine = `L ${shortStage({ status: entry.lint_status })} · S ${shortStage({ status: entry.simulation_status })} · Y ${shortStage({
+    status: entry.synthesis_status,
+  })}`;
+  const openLink = entry.case_key
+    ? `<a class="mini-link" href="/results?run=${encodeURIComponent(runId)}&case=${encodeURIComponent(entry.case_key)}">Open</a>`
+    : "";
+  return `
+    <div class="compare-case">
+      <div class="compare-case-top">
+        ${renderInlineStatus(entry.status)}
+        <span class="problem-meta">attempt ${entry.attempt || 0}</span>
+      </div>
+      <div class="problem-meta mono">${escapeHtml(stageLine)}</div>
+      <div class="compare-feedback">${escapeHtml(entry.feedback || "No feedback.")}</div>
+      ${openLink}
+    </div>
+  `;
+}
+
+function renderCompareOutcome(outcome) {
+  if (outcome === "a_only_pass") {
+    return `<span class="status-chip status-completed">A only</span>`;
+  }
+  if (outcome === "b_only_pass") {
+    return `<span class="status-chip status-completed">B only</span>`;
+  }
+  if (outcome === "both_pass") {
+    return `<span class="status-chip status-completed">both pass</span>`;
+  }
+  if (outcome === "both_fail") {
+    return `<span class="status-chip status-failed">both fail</span>`;
+  }
+  return `<span class="status-chip status-skipped">missing</span>`;
+}
+
+function compareLabels(compare) {
+  return {
+    a: compare.model_a || "Model A",
+    b: compare.model_b || "Model B",
+    aShort: shortenModelId(compare.model_a || "A"),
+    bShort: shortenModelId(compare.model_b || "B"),
+  };
+}
+
 function renderTextSection(title, text) {
   if (!text) {
     return "";
@@ -866,6 +1114,30 @@ function renderCodeSection(title, code) {
       <pre>${escapeHtml(code)}</pre>
     </section>
   `;
+}
+
+function formatConversationLog(messages) {
+  if (!Array.isArray(messages) || !messages.length) {
+    return "";
+  }
+  return messages
+    .map((message, index) => {
+      const role = String(message.role || "unknown").toUpperCase();
+      const content = typeof message.content === "string" ? message.content : formatJsonBlock(message.content);
+      return `[${index + 1}] ${role}\n${content || ""}`.trim();
+    })
+    .join("\n\n----------------------------------------\n\n");
+}
+
+function formatJsonBlock(value) {
+  if (!value) {
+    return "";
+  }
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch (error) {
+    return String(value);
+  }
 }
 
 function renderStageCard(title, stage) {
@@ -908,27 +1180,156 @@ function statusToChip(status) {
   return "skipped";
 }
 
-async function saveConfig() {
-  const uiConfig = collectUiConfig();
-  const payload = await apiPost("/api/config", uiConfig);
-  state.uiConfig = payload.uiConfig;
-  syncFormFromState();
-  renderProviders();
+function acknowledgeInteraction(element) {
+  if (!(element instanceof HTMLElement)) {
+    return;
+  }
+  element.classList.remove("button-ack");
+  void element.offsetWidth;
+  element.classList.add("button-ack");
+  window.setTimeout(() => element.classList.remove("button-ack"), 260);
 }
 
-async function runBenchmark() {
-  const request = collectRunRequest();
-  if (request.scope === "selected_problems" && !request.problemIds.length) {
-    window.alert("Pick at least one problem.");
+function setButtonState(button, label, className = "") {
+  if (!(button instanceof HTMLButtonElement)) {
     return;
   }
-  if (request.scope === "custom_problem" && !request.customProblem.prompt.trim()) {
-    window.alert("Paste a custom prompt first.");
-    return;
+  if (!button.dataset.defaultLabel) {
+    button.dataset.defaultLabel = button.textContent || "";
   }
+  button.textContent = label;
+  button.classList.remove("button-busy", "button-success");
+  if (className) {
+    button.classList.add(className);
+  }
+}
 
-  await apiPost("/api/run", request);
-  await loadState();
+function resetButtonState(button) {
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
+  }
+  button.disabled = false;
+  button.classList.remove("button-busy", "button-success");
+  button.textContent = button.dataset.defaultLabel || button.textContent || "";
+}
+
+function showToast(message, tone = "success") {
+  let stack = document.getElementById("toastStack");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.id = "toastStack";
+    stack.className = "toast-stack";
+    document.body.appendChild(stack);
+  }
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${tone}`;
+  toast.textContent = message;
+  stack.appendChild(toast);
+  window.requestAnimationFrame(() => toast.classList.add("toast-visible"));
+  window.setTimeout(() => {
+    toast.classList.remove("toast-visible");
+    window.setTimeout(() => toast.remove(), 180);
+  }, 1800);
+}
+
+async function saveConfig(button) {
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Saving...", "button-busy");
+  }
+  try {
+    const uiConfig = collectUiConfig();
+    const payload = await apiPost("/api/config", uiConfig);
+    state.uiConfig = payload.uiConfig;
+    syncFormFromState();
+    renderProviders();
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = false;
+      setButtonState(button, "Saved", "button-success");
+      window.setTimeout(() => resetButtonState(button), 1200);
+    }
+    showToast("Local config saved.", "success");
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
+async function runBenchmark(button) {
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Launching...", "button-busy");
+  }
+  try {
+    const request = collectRunRequest();
+    if (request.scope === "selected_problems" && !request.problemIds.length) {
+      resetButtonState(button);
+      window.alert("Pick at least one problem.");
+      return;
+    }
+    if (request.scope === "custom_problem" && !request.customProblem.prompt.trim()) {
+      resetButtonState(button);
+      window.alert("Paste a custom prompt first.");
+      return;
+    }
+
+    await apiPost("/api/run", request);
+    await loadState();
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = false;
+      setButtonState(button, "Queued", "button-success");
+      window.setTimeout(() => resetButtonState(button), 1200);
+    }
+    showToast("Benchmark job queued.", "success");
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
+async function refreshState(button) {
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Refreshing...", "button-busy");
+  }
+  try {
+    await loadState();
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = false;
+      setButtonState(button, "Refreshed", "button-success");
+      window.setTimeout(() => resetButtonState(button), 900);
+    }
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
+async function resetLeaderboardData(button) {
+  const confirmed = window.confirm("Reset the suite leaderboard to zero? Existing run history will be kept.");
+  if (!confirmed) {
+    return;
+  }
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Resetting...", "button-busy");
+  }
+  try {
+    const payload = await apiPost("/api/leaderboard/reset", {});
+    state.leaderboard = payload.leaderboard || { updated_at: "", models: [] };
+    state.leaderboardCompare = null;
+    renderLeaderboard();
+    renderLeaderboardPage();
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = false;
+      setButtonState(button, "Reset", "button-success");
+      window.setTimeout(() => resetButtonState(button), 1200);
+    }
+    showToast("Leaderboard reset. New suite runs will accumulate from now on.", "success");
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
 }
 
 async function viewRun(runId, options = {}) {
@@ -940,13 +1341,38 @@ async function viewRun(runId, options = {}) {
   if (payload.model_results && payload.model_results.length) {
     state.expandedModels.add(payload.model_results[0].model_id);
   }
-  if (page === "results" && options.pushHistory !== false) {
-    window.history.replaceState({}, "", `/results?run=${encodeURIComponent(runId)}`);
+  if (page === "leaderboard") {
+    syncCompareSelection();
   }
-  state.selectedCaseKey = "";
+  state.selectedCaseKey = page === "results" ? currentCaseFromUrl() : "";
   ensureSelectedCase();
+  if (page === "results") {
+    updateResultsUrl(options);
+  } else if (page === "leaderboard") {
+    updateLeaderboardUrl(options);
+    await loadLeaderboardCompare(options);
+  }
   render();
   revealSelectedRun();
+}
+
+async function loadLeaderboardCompare(options = {}) {
+  if (page !== "leaderboard") {
+    return;
+  }
+  if (!state.selectedRunId || !state.compareModelA || !state.compareModelB || state.compareModelA === state.compareModelB) {
+    state.leaderboardCompare = null;
+    renderLeaderboardPage();
+    return;
+  }
+  const payload = await apiGet(
+    `/api/leaderboard/compare?run=${encodeURIComponent(state.selectedRunId)}&a=${encodeURIComponent(
+      state.compareModelA,
+    )}&b=${encodeURIComponent(state.compareModelB)}`,
+  );
+  state.leaderboardCompare = payload;
+  updateLeaderboardUrl(options);
+  renderLeaderboardPage();
 }
 
 async function viewArtifact(path, name, caseKeyValue) {
@@ -980,13 +1406,79 @@ function caseKey(item) {
   return [item.model_id, item.problem_id, item.attempt].join("::");
 }
 
+function syncCompareSelection() {
+  const models = ((state.selectedRun && state.selectedRun.model_results) || []).map((item) => item.model_id);
+  const fromUrl = currentCompareModelsFromUrl();
+  if (!models.length) {
+    state.compareModelA = "";
+    state.compareModelB = "";
+    state.leaderboardCompare = null;
+    return;
+  }
+
+  if (!state.compareModelA || !models.includes(state.compareModelA)) {
+    state.compareModelA = models.includes(fromUrl.modelA) ? fromUrl.modelA : models[0];
+  }
+  if (!state.compareModelB || !models.includes(state.compareModelB) || state.compareModelB === state.compareModelA) {
+    state.compareModelB = models.includes(fromUrl.modelB) && fromUrl.modelB !== state.compareModelA ? fromUrl.modelB : models[1] || "";
+  }
+  if (state.compareModelA === state.compareModelB && models.length > 1) {
+    state.compareModelB = models.find((item) => item !== state.compareModelA) || "";
+  }
+}
+
 function currentRunFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("run") || "";
 }
 
+function currentCaseFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("case") || "";
+}
+
+function currentCompareModelsFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    modelA: params.get("a") || "",
+    modelB: params.get("b") || "",
+  };
+}
+
+function updateResultsUrl(options = {}) {
+  if (page !== "results" || options.pushHistory === false || !state.selectedRunId) {
+    return;
+  }
+  const params = new URLSearchParams();
+  params.set("run", state.selectedRunId);
+  if (state.selectedCaseKey) {
+    params.set("case", state.selectedCaseKey);
+  }
+  window.history.replaceState({}, "", `/results?${params.toString()}`);
+}
+
+function updateLeaderboardUrl(options = {}) {
+  if (page !== "leaderboard" || options.pushHistory === false || !state.selectedRunId) {
+    return;
+  }
+  const params = new URLSearchParams();
+  params.set("run", state.selectedRunId);
+  if (state.compareModelA) {
+    params.set("a", state.compareModelA);
+  }
+  if (state.compareModelB) {
+    params.set("b", state.compareModelB);
+  }
+  window.history.replaceState({}, "", `/leaderboard?${params.toString()}`);
+}
+
 function revealSelectedRun() {
-  const target = page === "results" ? dom.resultsConsole || dom.resultsOverview : dom.resultDetail;
+  const target =
+    page === "results"
+      ? dom.resultsConsole || dom.resultsOverview
+      : page === "leaderboard"
+        ? dom.leaderboardCompareSummary || dom.leaderboardCompareControls
+        : dom.resultDetail;
   if (!target) {
     return;
   }
@@ -1008,13 +1500,16 @@ function resetPolling() {
 
 function bindEvents() {
   if (dom.refreshButton) {
-    dom.refreshButton.addEventListener("click", () => loadState().catch(showError));
+    dom.refreshButton.addEventListener("click", (event) => refreshState(event.currentTarget).catch(showError));
   }
   if (dom.saveConfigButton) {
-    dom.saveConfigButton.addEventListener("click", () => saveConfig().catch(showError));
+    dom.saveConfigButton.addEventListener("click", (event) => saveConfig(event.currentTarget).catch(showError));
   }
   if (dom.runButton) {
-    dom.runButton.addEventListener("click", () => runBenchmark().catch(showError));
+    dom.runButton.addEventListener("click", (event) => runBenchmark(event.currentTarget).catch(showError));
+  }
+  if (dom.resetLeaderboardButton) {
+    dom.resetLeaderboardButton.addEventListener("click", (event) => resetLeaderboardData(event.currentTarget).catch(showError));
   }
   if (dom.problemSearchInput) {
     dom.problemSearchInput.addEventListener("input", (event) => {
@@ -1041,6 +1536,20 @@ function bindEvents() {
         state.selectedProblemIds.delete(problemId);
       }
       renderProblems();
+      return;
+    }
+
+    if (target.id === "compareModelASelect") {
+      state.compareModelA = target.value || "";
+      state.leaderboardCompare = null;
+      loadLeaderboardCompare().catch(showError);
+      return;
+    }
+
+    if (target.id === "compareModelBSelect") {
+      state.compareModelB = target.value || "";
+      state.leaderboardCompare = null;
+      loadLeaderboardCompare().catch(showError);
     }
   });
   document.addEventListener("click", (event) => {
@@ -1048,6 +1557,8 @@ function bindEvents() {
     if (!(target instanceof HTMLElement)) {
       return;
     }
+    const interactive = target.closest("button, a.nav-link, a.mini-link");
+    acknowledgeInteraction(interactive);
 
     const runId = target.dataset.viewRun;
     if (runId) {
@@ -1089,6 +1600,7 @@ function bindEvents() {
         state.expandedModels.add(target.dataset.modelId);
       }
       state.artifactViewer = null;
+      updateResultsUrl();
       renderCaseConsole();
       renderResultsModelSummary();
       return;
@@ -1097,6 +1609,15 @@ function bindEvents() {
     const artifactPath = target.dataset.viewArtifact;
     if (artifactPath) {
       viewArtifact(artifactPath, target.dataset.artifactName || "", target.dataset.caseKey || "").catch(showError);
+      return;
+    }
+
+    if (target.dataset.swapCompareModels) {
+      const current = state.compareModelA;
+      state.compareModelA = state.compareModelB;
+      state.compareModelB = current;
+      state.leaderboardCompare = null;
+      loadLeaderboardCompare().catch(showError);
     }
   });
 }
@@ -1163,6 +1684,14 @@ function formatBytes(value) {
     return `${(size / 1024).toFixed(1)} KB`;
   }
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function shortenModelId(value) {
+  const text = String(value || "");
+  if (text.length <= 18) {
+    return text;
+  }
+  return `${text.slice(0, 8)}...${text.slice(-7)}`;
 }
 
 function escapeHtml(value) {

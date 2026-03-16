@@ -353,7 +353,7 @@ def list_case_artifacts(case_dir: Path) -> list[dict[str, object]]:
 
 
 def artifact_kind(suffix: str) -> str:
-    if suffix in {".log", ".txt"}:
+    if suffix in {".log", ".txt", ".json"}:
         return "log"
     if suffix in {".sv", ".v"}:
         return "source"

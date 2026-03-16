@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTL Benchmark Leaderboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="leaderboard">
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Compare Surface</p>
+          <h1>Leaderboard And Model Compare</h1>
+          <p class="hero-copy">
+            Inspect the local leaderboard on a dedicated page, then compare any two models in the same run to see exactly
+            which benchmark cases each one passed, failed, or missed.
+          </p>
+          <nav class="top-nav">
+            <a class="nav-link" href="/">Benchmark</a>
+            <a class="nav-link" href="/config">Config</a>
+            <a class="nav-link nav-link-active" href="/leaderboard">Leaderboard</a>
+            <a class="nav-link" href="/results">Results</a>
+          </nav>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost">Refresh</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel span-4 results-history-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Runs</p>
+              <h2>History</h2>
+            </div>
+          </div>
+          <div id="leaderboardHistoryList" class="stack-list results-history-list"></div>
+        </section>
+
+        <section class="panel span-8">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Case Diff</p>
+              <h2>Two-Model Comparison</h2>
+            </div>
+            <p id="leaderboardCompareRunMeta" class="panel-note"></p>
+          </div>
+          <div id="leaderboardCompareControls"></div>
+          <div id="leaderboardCompareSummary"></div>
+          <div id="leaderboardCompareTable" class="compare-groups"></div>
+        </section>
+
+        <section class="panel span-12">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Local Benchmark</p>
+              <h2>Leaderboard Snapshot</h2>
+            </div>
+            <div class="stack-actions">
+              <button id="resetLeaderboardButton" class="ghost">Reset Leaderboard</button>
+              <p id="leaderboardPageTimestamp" class="panel-note"></p>
+            </div>
+          </div>
+          <div id="leaderboardPageTable" class="table-shell"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

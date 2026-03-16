@@ -4,8 +4,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from rtl_benchmark.webapp import WebAppService
+from rtl_benchmark.types import ModelDescriptor, Problem
+from rtl_benchmark.utils import save_json
 
 
 ROOT = Path("/Users/gary/RTL_benchmark")
@@ -155,7 +158,7 @@ class WebAppServiceTests(unittest.TestCase):
             self.assertIn("problem", detail["cases"][0])
             self.assertTrue(detail["cases"][0]["artifacts"])
 
-    def test_load_leaderboard_rebuilds_from_selected_problem_history(self) -> None:
+    def test_load_leaderboard_ignores_selected_problem_history(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             config_path = self._write_base_config(tmp_path)
@@ -185,11 +188,162 @@ class WebAppServiceTests(unittest.TestCase):
             service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
             board = service.load_leaderboard()
 
-            self.assertTrue(board["models"])
-            self.assertEqual(board["models"][0]["model_id"], "gemini-3.1-pro-preview")
-            self.assertEqual(board["models"][0]["last_scope"], "selected_problems")
-            self.assertEqual(board["models"][0]["last_problem_count"], 1)
-            self.assertEqual(board["updated_at"], "2026-03-14T14:22:33Z")
+            self.assertEqual(board["models"], [])
+            self.assertEqual(board["updated_at"], "")
+
+    def test_compare_models_uses_final_attempt_per_problem_and_groups_outcomes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            raw_dir = tmp_path / "raw"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            (raw_dir / "compare_run.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "compare_run",
+                        "started_at": "2026-03-15T09:00:00Z",
+                        "finished_at": "2026-03-15T09:04:00Z",
+                        "models": [
+                            {"id": "model_a", "provider": "mock"},
+                            {"id": "model_b", "provider": "mock"},
+                        ],
+                        "problem_ids": ["rtl_add8", "rtl_edge_detect", "industrial_rr_arb4"],
+                        "cases": [
+                            {
+                                "model_id": "model_a",
+                                "provider": "mock",
+                                "problem_id": "rtl_add8",
+                                "task_type": "rtl",
+                                "attempt": 1,
+                                "passed": False,
+                                "lint": {"status": "pass"},
+                                "simulation": {"status": "fail"},
+                                "synthesis": {"status": "skipped"},
+                                "feedback": "first attempt failed",
+                            },
+                            {
+                                "model_id": "model_a",
+                                "provider": "mock",
+                                "problem_id": "rtl_add8",
+                                "task_type": "rtl",
+                                "attempt": 2,
+                                "passed": True,
+                                "lint": {"status": "pass"},
+                                "simulation": {"status": "pass"},
+                                "synthesis": {"status": "pass"},
+                                "feedback": "fixed on retry",
+                            },
+                            {
+                                "model_id": "model_b",
+                                "provider": "mock",
+                                "problem_id": "rtl_add8",
+                                "task_type": "rtl",
+                                "attempt": 1,
+                                "passed": False,
+                                "lint": {"status": "pass"},
+                                "simulation": {"status": "fail"},
+                                "synthesis": {"status": "fail"},
+                                "feedback": "still broken",
+                            },
+                            {
+                                "model_id": "model_a",
+                                "provider": "mock",
+                                "problem_id": "rtl_edge_detect",
+                                "task_type": "rtl",
+                                "attempt": 1,
+                                "passed": False,
+                                "lint": {"status": "pass"},
+                                "simulation": {"status": "fail"},
+                                "synthesis": {"status": "pass"},
+                                "feedback": "edge case missed",
+                            },
+                            {
+                                "model_id": "model_b",
+                                "provider": "mock",
+                                "problem_id": "rtl_edge_detect",
+                                "task_type": "rtl",
+                                "attempt": 1,
+                                "passed": True,
+                                "lint": {"status": "pass"},
+                                "simulation": {"status": "pass"},
+                                "synthesis": {"status": "pass"},
+                                "feedback": "passes",
+                            },
+                            {
+                                "model_id": "model_b",
+                                "provider": "mock",
+                                "problem_id": "industrial_rr_arb4",
+                                "task_type": "rtl",
+                                "attempt": 1,
+                                "passed": True,
+                                "lint": {"status": "pass"},
+                                "simulation": {"status": "pass"},
+                                "synthesis": {"status": "pass"},
+                                "feedback": "present only on model_b",
+                            },
+                        ],
+                        "summary": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+            compare = service.compare_models("compare_run", "model_a", "model_b")
+
+            self.assertIsNotNone(compare)
+            assert compare is not None
+            self.assertEqual(compare["summary"]["total_cases"], 3)
+            self.assertEqual(compare["summary"]["comparable_cases"], 2)
+            self.assertEqual(compare["summary"]["a_only_pass"], 1)
+            self.assertEqual(compare["summary"]["b_only_pass"], 1)
+            self.assertEqual(compare["summary"]["missing_a"], 1)
+            self.assertEqual(compare["summary"]["model_a_passed"], 1)
+            self.assertEqual(compare["summary"]["model_b_passed"], 2)
+
+            add8_row = next(item for item in compare["rows"] if item["problem_id"] == "rtl_add8")
+            self.assertEqual(add8_row["outcome"], "a_only_pass")
+            self.assertEqual(add8_row["model_a"]["attempt"], 2)
+            self.assertEqual(add8_row["model_a"]["status"], "pass")
+            self.assertEqual(add8_row["model_b"]["status"], "fail")
+
+    def test_reset_leaderboard_sets_new_baseline_and_hides_older_suite_runs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            raw_dir = tmp_path / "raw"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            (raw_dir / "suite_old.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "suite_old",
+                        "started_at": "2026-03-14T09:00:00Z",
+                        "scope": "suite",
+                        "problem_ids": ["rtl_add8"],
+                        "summary": [
+                            {
+                                "model_id": "suite_model",
+                                "provider": "mock",
+                                "score": 1.0,
+                                "pass_rate": 1.0,
+                                "cases": 1,
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+            save_json(service.leaderboard_state_path, {"reset_at": "2026-03-15T00:00:00Z"})
+
+            board = service.load_leaderboard()
+            self.assertEqual(board["models"], [])
+            self.assertEqual(board["reset_at"], "2026-03-15T00:00:00Z")
+
+            reset_board = service.reset_leaderboard()
+            self.assertEqual(reset_board["models"], [])
+            self.assertTrue(reset_board["reset_at"])
 
     def test_custom_problem_without_harness_skips_evaluation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -211,7 +365,7 @@ class WebAppServiceTests(unittest.TestCase):
             self.assertFalse(can_evaluate)
             self.assertIn("testbench", reason)
 
-    def test_selected_problems_update_leaderboard_but_custom_problem_does_not(self) -> None:
+    def test_only_suite_runs_update_leaderboard(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             config_path = self._write_base_config(tmp_path)
@@ -222,7 +376,7 @@ class WebAppServiceTests(unittest.TestCase):
             )
             self.assertEqual(scope, "selected_problems")
             self.assertTrue(problems)
-            self.assertTrue(update_board)
+            self.assertFalse(update_board)
 
             custom, custom_scope, custom_update_board = service._resolve_requested_problems(
                 {"scope": "custom_problem", "customProblem": {"prompt": "Implement x", "top_module": "x"}}
@@ -230,6 +384,87 @@ class WebAppServiceTests(unittest.TestCase):
             self.assertEqual(custom_scope, "custom_problem")
             self.assertEqual(len(custom), 1)
             self.assertFalse(custom_update_board)
+
+            suite, suite_scope, suite_update_board = service._resolve_requested_problems({"scope": "suite"})
+            self.assertEqual(suite_scope, "suite")
+            self.assertTrue(suite)
+            self.assertTrue(suite_update_board)
+
+    def test_ui_config_clamps_excessive_max_tokens(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+
+            saved = service.save_ui_config(
+                {
+                    "providers": [],
+                    "generation": {"temperature": 0.0, "max_tokens": 1048576, "timeout_seconds": 15},
+                    "execution": {"mode": "docker", "timeout_seconds": 30},
+                }
+            )
+
+            self.assertEqual(saved["generation"]["max_tokens"], 8192)
+
+    def test_execute_run_persists_api_trace_for_case_console(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+            service._jobs["job-1"] = {"job_id": "job-1", "progress": {}, "status": "running"}
+
+            models = [ModelDescriptor(id="gpt-4.1-mini", provider="openai")]
+            problems = [
+                Problem(
+                    id="custom_prompt_only",
+                    task_type="rtl",
+                    language="verilog",
+                    prompt="Implement a simple adder.",
+                    top_module="adder",
+                )
+            ]
+
+            class FakeRunner:
+                def __init__(self, config: dict | None = None):
+                    self.last_error = ""
+                    self.last_trace = {}
+
+                def generate(self, model: ModelDescriptor, problem: Problem, feedback: str = "") -> str:
+                    self.last_trace = {
+                        "provider": model.provider,
+                        "model_id": model.id,
+                        "conversation": [
+                            {"role": "system", "content": "Return only code."},
+                            {"role": "user", "content": problem.prompt},
+                            {"role": "assistant", "content": "module adder; endmodule"},
+                        ],
+                        "request": {"url": "https://api.openai.com/v1/chat/completions", "payload": {"model": model.id}},
+                        "response": {"status_code": 200, "payload": {"choices": []}, "raw_text": "{\"choices\": []}"},
+                        "error": "",
+                    }
+                    return "module adder; endmodule"
+
+            with patch("rtl_benchmark.webapp.ModelRunner", FakeRunner):
+                result = service._execute_run(
+                    ui_config={"providers": [], "generation": {}, "execution": {}},
+                    models=models,
+                    problems=problems,
+                    scope="custom_problem",
+                    custom_problem=True,
+                    update_board=False,
+                    job_id="job-1",
+                )
+
+            self.assertEqual(len(result["cases"]), 1)
+            case = result["cases"][0]
+            self.assertIn("api_trace", case)
+            self.assertEqual(case["api_trace"]["conversation"][-1]["role"], "assistant")
+            self.assertTrue(case["artifact_dir"])
+            self.assertTrue(any(item["name"] == "api_trace.json" for item in case["artifacts"]))
+            trace_path = Path(case["artifact_dir"]) / "api_trace.json"
+            self.assertTrue(trace_path.exists())
+            saved_trace = json.loads(trace_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved_trace["request"]["payload"]["model"], "gpt-4.1-mini")
 
 
 if __name__ == "__main__":
