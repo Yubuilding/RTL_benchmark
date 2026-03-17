@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_fixed_point_adder",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "fixed_point_adder",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/other",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "other",
+    "medium"
+  ],
+  "module_header": "module fixed_point_adder #( //Parameterized values parameter Q = 15, parameter N = 32 ) ( input [N-1:0] a, input [N-1:0] b, output [N-1:0] c );",
+  "prompt": "Please act as a professional Verilog designer.\n\nImplement a module of a parameterized fixed-point adder for arithmetic operations with fixed precision.\n\nModule name:  \n    fixed_point_adder               \nInput parameters:\n    Q: Number of fractional bits (precision).\n    N: Total number of bits, including integer and fractional parts.\nInput ports:\n    a [N-1:0]: First N-bit fixed-point input operand.\n    b [N-1:0]: Second N-bit fixed-point input operand.\nOutput ports:\n    c [N-1:0]: N-bit output representing the result of the fixed-point addition.\n\nInternal Registers:\n    res [N-1:0]: N-bit register used to store the result of the addition or subtraction.\n\nImplementation:\n1. Absolute Value Addition:\n    - If the most significant bits (MSBs) of `a` and `b` are the same (both positive or both negative), their absolute values are added.\n    - The MSB of the result is set to match the MSBs of `a` and `b` (sign bit remains consistent).\n\n2. Absolute Value Subtraction:\n    - If the MSBs of `a` and `b` are different (one is positive, the other negative), the larger absolute value is determined.\n    - If `a` is greater than `b`, the result is `a - b` and the MSB of the result is set to 0 (positive).\n    - If `b` is greater than `a`, the result is `b - a`. The MSB of the result is set according to whether the result is zero or negative.\n\n3. Precision:\n    - The operands `a` and `b` consist of integer and fractional parts, with the fractional part determined by parameter `Q`.\n    - The precision is consistent across both inputs and the output to ensure accurate fixed-point arithmetic.\n\n4. Overflow Handling:\n    - Overflow is managed internally by observing the MSB to ensure the result fits within the N-bit range.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule testbench;\n    // Parameters\n    parameter Q = 15;\n    parameter N = 32;\n\n    // Inputs\n    reg [N-1:0] a;\n    reg [N-1:0] b;\n\n    // Output\n    wire [N-1:0] c;\n    reg [N-1:0] expected_result;\n    integer error = 0;\n\n    fixed_point_adder #(.Q(Q), .N(N)) fp_adder (\n        .a(a),\n        .b(b),\n        .c(c)\n    );\n\n    initial begin    \n        for (integer i = 0; i < 100; i = i + 1) begin\n            a = $random % (1 << N);\n            b = $random % (1 << N);\n\n            #10;\n\n            if ((a[N-1] == b[N-1]) || (a[N-1] == 0 && b[N-1] == 1 && a[N-2:0] >= b[N-2:0]) || (a[N-1] == 1 && b[N-1] == 0 && a[N-2:0] < b[N-2:0])) begin\n                expected_result = a + b;\n            end\n            else if (a[N-1] == 0 && b[N-1] == 1 && a[N-2:0] < b[N-2:0]) begin\n                expected_result = b - a;\n            end\n            else begin\n                expected_result = a - b;\n            end\n\n            if (c !== expected_result) begin\n                error = error + 1;\n                $display(\"Test failed: a = %b, b = %b, c = %b, expected_result = %b\", a, b, c, expected_result);\n            end\n        end\n\n        // Final test result summary\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n        end\n        else begin\n            $display(\"=========== Test completed with %d /100 failures ===========\", error);\n        end\n\n        // End simulation\n        $finish;\n    end\n\nendmodule",
+  "reference_rtl": "module fixed_point_adder #(\n\t//Parameterized values\n\tparameter Q = 15,\n\tparameter N = 32\n\t)\n\t(\n    input [N-1:0] a,\n    input [N-1:0] b,\n    output [N-1:0] c\n    );\n\nreg [N-1:0] res;\n\nassign c = res;\n\nalways @(a,b) begin\n\t// both negative or both positive\n\tif(a[N-1] == b[N-1]) begin\t\t\t\t\n\t\tres[N-2:0] = a[N-2:0] + b[N-2:0];\t \t\n\t\tres[N-1] = a[N-1];\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t  \n\t\tend\t\t\t\t\t\t\t\t\t\t\t\t\n\t//\tone of them is negative...\n\telse if(a[N-1] == 0 && b[N-1] == 1) begin\t\t\n\t\tif( a[N-2:0] > b[N-2:0] ) begin\t\t\t\t\t\n\t\t\tres[N-2:0] = a[N-2:0] - b[N-2:0];\t\t\t\n\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\telse begin\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\tres[N-2:0] = b[N-2:0] - a[N-2:0];\t\t\t\n\t\t\tif (res[N-2:0] == 0)\n\t\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\telse\n\t\t\t\tres[N-1] = 1;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\tend\n\telse begin\t\t\t\t\t\t\t\t\t\t\t\t\n\t\tif( a[N-2:0] > b[N-2:0] ) begin\t\t\t\t\t\n\t\t\tres[N-2:0] = a[N-2:0] - b[N-2:0];\t\t\t\n\t\t\tif (res[N-2:0] == 0)\n\t\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\telse\n\t\t\t\tres[N-1] = 1;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\telse begin\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\tres[N-2:0] = b[N-2:0] - a[N-2:0];\t\t\t\n\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\tend\n\tend\nendmodule"
+}

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import subprocess
 from pathlib import Path
 
 from rtl_benchmark.types import CaseResult, Problem, StageStatus
-from rtl_benchmark.utils import ensure_dir, tool_exists
+from rtl_benchmark.utils import ensure_dir, extract_hdl_code, tool_exists, validate_hdl_candidate
 
 
 class Evaluator:
@@ -15,6 +16,8 @@ class Evaluator:
         config = execution_config or {}
         self.execution_mode = str(config.get("mode", "local"))
         self.timeout_seconds = int(config.get("timeout_seconds", 20))
+        self.waveform_max_bytes = parse_byte_size(config.get("waveform_max_bytes"), 32 * 1024 * 1024)
+        self.cleanup_intermediate_artifacts = bool(config.get("cleanup_intermediate_artifacts", True))
         self.docker_image = str(config.get("docker_image", "rtl-benchmark-tools:latest"))
         self.docker_binary = str(config.get("docker_binary", "docker"))
         self.container_workdir = str(config.get("container_workdir", "/workspace"))
@@ -30,11 +33,15 @@ class Evaluator:
 
     def evaluate(self, model_id: str, problem: Problem, candidate_code: str, attempt: int) -> CaseResult:
         case_dir = ensure_dir(self.run_root / safe_name(model_id) / problem.id / f"attempt_{attempt}")
+        normalized_candidate = extract_hdl_code(candidate_code)
+        invalid_reason = validate_hdl_candidate(normalized_candidate)
+        if invalid_reason:
+            return self._invalid_candidate_result(model_id, problem, attempt, case_dir, invalid_reason)
 
         if problem.task_type == "rtl":
-            return self._eval_rtl(model_id, problem, candidate_code, attempt, case_dir)
+            return self._eval_rtl(model_id, problem, normalized_candidate, attempt, case_dir)
         if problem.task_type == "testbench":
-            return self._eval_tb(model_id, problem, candidate_code, attempt, case_dir)
+            return self._eval_tb(model_id, problem, normalized_candidate, attempt, case_dir)
 
         return CaseResult(
             model_id=model_id,
@@ -48,15 +55,42 @@ class Evaluator:
             feedback="Unsupported task type",
         )
 
+    def _invalid_candidate_result(
+        self,
+        model_id: str,
+        problem: Problem,
+        attempt: int,
+        case_dir: Path,
+        reason: str,
+    ) -> CaseResult:
+        skipped = StageStatus(status="skipped", reason="invalid candidate")
+        return CaseResult(
+            model_id=model_id,
+            problem_id=problem.id,
+            task_type=problem.task_type,
+            attempt=attempt,
+            passed=False,
+            lint=skipped,
+            simulation=skipped,
+            synthesis=skipped,
+            feedback=f"invalid HDL candidate: {reason}",
+            artifact_dir=str(case_dir.resolve()),
+            artifacts=list_case_artifacts(case_dir),
+        )
+
     def _eval_rtl(self, model_id: str, problem: Problem, rtl_code: str, attempt: int, case_dir: Path) -> CaseResult:
         dut = case_dir / "dut.sv"
         tb = case_dir / "tb.sv"
         dut.write_text(rtl_code, encoding="utf-8")
         tb.write_text(problem.testbench, encoding="utf-8")
         dump_scope = self._detect_module_name(tb)
+        compile_inputs = [dut.name, tb.name]
+        reference_file = self._write_reference_module(problem, case_dir)
+        if reference_file is not None:
+            compile_inputs.insert(1, reference_file.name)
 
-        lint = self._run_lint([dut.name, tb.name], case_dir)
-        sim = self._run_sim([dut.name, tb.name], case_dir, dump_scope=dump_scope)
+        lint = self._run_lint(compile_inputs, case_dir)
+        sim = self._run_sim(compile_inputs, case_dir, dump_scope=dump_scope)
         synth = self._run_synth(dut.name, problem.top_module, case_dir)
         artifacts = list_case_artifacts(case_dir)
 
@@ -147,18 +181,27 @@ class Evaluator:
         wave_support = self._write_wave_support(case_dir, dump_scope, output_name)
         if wave_support:
             compile_inputs.append(wave_support.name)
-        compile_cmd = ["iverilog", "-g2012", "-o", output_name, *compile_inputs]
-        compile_result = self._run_tool(
-            compile_cmd,
-            case_dir,
-            f"{output_name}_compile.log",
-            required_tools=["iverilog", "vvp"],
-        )
-        if compile_result.status != "pass":
-            return compile_result
+        wave_path = case_dir / f"{output_name}.vcd"
 
-        run_result = self._run_tool(["vvp", output_name], case_dir, f"{output_name}_run.log", required_tools=["vvp"])
-        return run_result
+        try:
+            compile_cmd = ["iverilog", "-g2012", "-o", output_name, *compile_inputs]
+            compile_result = self._run_tool(
+                compile_cmd,
+                case_dir,
+                f"{output_name}_compile.log",
+                required_tools=["iverilog", "vvp"],
+            )
+            if compile_result.status != "pass":
+                return compile_result
+
+            run_cmd = ["vvp", output_name]
+            if self.waveform_max_bytes > 0:
+                run_cmd = self._wrap_with_file_limit(run_cmd, self.waveform_max_bytes)
+            run_result = self._run_tool(run_cmd, case_dir, f"{output_name}_run.log", required_tools=["vvp"])
+            return self._annotate_waveform_limit(run_result, wave_path)
+        finally:
+            if self.cleanup_intermediate_artifacts:
+                self._cleanup_run_artifacts(case_dir, output_name)
 
     def _run_synth(self, dut_file: str, top_module: str, case_dir: Path) -> StageStatus:
         yosys_script = f"read_verilog -sv {dut_file}; synth -top {top_module}; stat"
@@ -254,10 +297,13 @@ class Evaluator:
 
     def _detect_module_name(self, source_path: Path) -> str:
         text = source_path.read_text(encoding="utf-8")
-        match = re.search(r"\bmodule\s+([A-Za-z_][A-Za-z0-9_$]*)\b", text)
-        if not match:
+        matches = re.findall(r"\bmodule\s+([A-Za-z_][A-Za-z0-9_$]*)\b", text)
+        if not matches:
             return ""
-        return match.group(1)
+        for module_name in matches:
+            if module_name.lower() in {"tb", "testbench"}:
+                return module_name
+        return matches[0]
 
     def _write_wave_support(self, case_dir: Path, dump_scope: str, output_name: str) -> Path | None:
         if not dump_scope:
@@ -276,6 +322,104 @@ class Evaluator:
             encoding="utf-8",
         )
         return helper
+
+    def _write_reference_module(self, problem: Problem, case_dir: Path) -> Path | None:
+        reference_module = self._detect_reference_module_name(problem)
+        if not reference_module:
+            return None
+
+        reference_rtl = problem.reference_rtl.strip()
+        if not reference_rtl:
+            return None
+        if not self._rtl_defines_module(reference_rtl, reference_module):
+            reference_rtl = self._rename_first_module(reference_rtl, reference_module)
+
+        reference_path = case_dir / f"{reference_module}.sv"
+        reference_path.write_text(reference_rtl, encoding="utf-8")
+        return reference_path
+
+    def _detect_reference_module_name(self, problem: Problem) -> str:
+        testbench_text = problem.testbench
+        if not testbench_text.strip():
+            return ""
+
+        ignored_module_names = {
+            "module",
+            "if",
+            "for",
+            "while",
+            "case",
+            "task",
+            "function",
+            "begin",
+            "end",
+            "always",
+            "initial",
+            "final",
+            "assign",
+            problem.top_module,
+        }
+        ignored_lower = {"tb", "testbench", "stimulus_gen"}
+
+        instantiation_re = re.compile(
+            r"(?ms)^\s*([A-Za-z_][A-Za-z0-9_$]*)\s+([A-Za-z_][A-Za-z0-9_$]*)\s*\(.*?\)\s*;"
+        )
+        for match in instantiation_re.finditer(testbench_text):
+            module_name = match.group(1)
+            instance_name = match.group(2).lower()
+            if module_name in ignored_module_names:
+                continue
+            if module_name.lower() in ignored_lower:
+                continue
+            if instance_name.startswith(("top_module", "dut", "uut", "stim")):
+                continue
+            return module_name
+        return ""
+
+    def _rtl_defines_module(self, rtl_text: str, module_name: str) -> bool:
+        return bool(re.search(rf"\bmodule\s+{re.escape(module_name)}\b", rtl_text))
+
+    def _rename_first_module(self, rtl_text: str, module_name: str) -> str:
+        return re.sub(
+            r"(\bmodule\s+)([A-Za-z_][A-Za-z0-9_$]*)",
+            rf"\1{module_name}",
+            rtl_text,
+            count=1,
+        )
+
+    def _wrap_with_file_limit(self, cmd: list[str], max_bytes: int) -> list[str]:
+        blocks = max(1, (max_bytes + 511) // 512)
+        shell_cmd = f"ulimit -f {blocks}; exec {shlex.join(cmd)}"
+        return ["/bin/sh", "-lc", shell_cmd]
+
+    def _annotate_waveform_limit(self, result: StageStatus, wave_path: Path) -> StageStatus:
+        if result.status == "pass" or self.waveform_max_bytes <= 0 or not wave_path.exists():
+            return result
+        try:
+            size = wave_path.stat().st_size
+        except OSError:
+            return result
+        if size < self.waveform_max_bytes:
+            return result
+
+        reason = f"waveform exceeded size limit ({format_byte_size(self.waveform_max_bytes)})"
+        return StageStatus(
+            status="fail",
+            returncode=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
+            reason=reason,
+        )
+
+    def _cleanup_run_artifacts(self, case_dir: Path, output_name: str) -> None:
+        for path in (
+            case_dir / output_name,
+            case_dir / f"{output_name}_wave_dump.sv",
+        ):
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                continue
 
 
 def run_cmd(cmd: list[str], cwd: Path, log_name: str, timeout_seconds: int = 20) -> StageStatus:
@@ -333,6 +477,44 @@ def trim_feedback(prefix: str, stage: StageStatus) -> str:
 
 def safe_name(value: str) -> str:
     return value.replace("/", "__").replace(":", "_")
+
+
+def parse_byte_size(value: object, default: int) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int):
+        return max(0, value)
+
+    text = str(value).strip().lower()
+    if not text:
+        return default
+    match = re.fullmatch(r"(\d+)\s*([kmgt]?)(?:i)?(?:b)?", text)
+    if not match:
+        return default
+    number = int(match.group(1))
+    suffix = match.group(2)
+    multipliers = {
+        "": 1,
+        "k": 1024,
+        "m": 1024**2,
+        "g": 1024**3,
+        "t": 1024**4,
+    }
+    return max(0, number * multipliers[suffix])
+
+
+def format_byte_size(value: int) -> str:
+    if value < 1024:
+        return f"{value} B"
+    units = ["KiB", "MiB", "GiB", "TiB"]
+    size = float(value)
+    for unit in units:
+        size /= 1024.0
+        if size < 1024.0 or unit == units[-1]:
+            return f"{size:.1f} {unit}"
+    return f"{value} B"
 
 
 def list_case_artifacts(case_dir: Path) -> list[dict[str, object]]:

@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_accu",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "accu",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/accumulator",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "accumulator",
+    "medium"
+  ],
+  "module_header": "module accu( input clk , input rst_n , input [7:0] data_in , input valid_in , output reg valid_out , output reg [9:0] data_out );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module to achieve serial input data accumulation output, input is 8bit data. The valid_in will be set to 1 before the first data comes in. Whenever the module receives 4 input data, the data_out outputs 4 received data accumulation results and sets the valid_out to be 1 (will last only 1 cycle).\n\nModule name:  \n    accu               \nInput ports:\n\tclk: Clock input for synchronization.\n\trst_n: Active-low reset signal.\n\tdata_in[7:0]: 8-bit input data for addition.\n\tvalid_in: Input signal indicating readiness for new data.   \nOutput ports:\n    valid_out: Output signal indicating when 4 input data accumulation is reached.\n\tdata_out[9:0]: 10-bit output data representing the accumulated sum.\n\nImplementation:\nWhen valid_in is 1, data_in is a valid input. Accumulate four valid input data_in values and calculate the output data_out by adding these four values together. \nThere is no output when there are fewer than four data_in inputs in the interim. Along with the output data_out, a cycle of valid_out=1 will appear as a signal. \nThe valid_out signal is set to 1 when the data_out outputs 4 received data accumulation results. Otherwise, it is set to 0.\n\nGive me the complete code.",
+  "testbench": "`timescale  1ns / 1ps\n\nmodule tb_valid_ready;\n\n\nparameter PERIOD  = 10;\nreg   clk                                  = 0 ;\nreg   rst_n                                = 0 ;\nreg   [7:0]  data_in                       = 0 ;\nreg   valid_in                             = 0 ;\n\nwire  valid_out                              ;\nwire  [9:0]  data_out                       ;\n\n\ninitial\nbegin\n    forever #(PERIOD/2)  clk=~clk;\nend\n\ninitial\nbegin\n    #(PERIOD*2) rst_n  =  1;\nend\n\naccu  uut (\n    .clk                     ( clk             ),\n    .rst_n                   ( rst_n           ),\n    .data_in                 ( data_in   [7:0] ),\n    .valid_in                ( valid_in        ),\n\n    .valid_out               ( valid_out       ),\n    .data_out                ( data_out  [9:0] )\n);\n\ninitial\nbegin\n    #(PERIOD*1+0.01); \n    #(PERIOD)   data_in = 8'd1;valid_in = 1;\n    #(PERIOD)   data_in = 8'd2;\n    #(PERIOD)   data_in = 8'd3;\n    #(PERIOD)   data_in = 8'd14;\n\n    #(PERIOD)   data_in = 8'd5;\n    #(PERIOD)   data_in = 8'd2;\n    #(PERIOD)   data_in = 8'd103;\n    #(PERIOD)   data_in = 8'd4;\n\n    #(PERIOD)   data_in = 8'd5;\n    #(PERIOD)   data_in = 8'd6;\n    #(PERIOD)   data_in = 8'd3;\n    #(PERIOD)   data_in = 8'd54;\n    #(PERIOD*2);\n    $finish;\nend\n\nreg [9:0] result [0:2];\ninitial begin\n    result[0] = 9'd20;\n    result[1] = 9'd114;\n    result[2] = 9'd68;\nend\n\ninteger i;\ninteger casenum = 0;\ninteger error = 0;\n\ninitial\nbegin\n    for (i = 0; i < 15; i = i + 1) begin\n        #((PERIOD) * 1);         \n        if (valid_out) begin\n            error = (data_out == result[casenum]) ? error : error + 1;\n            casenum = casenum + 1;\n        end        \n    end\n    if(error==0 && casenum==3)\n\tbegin\n\t\t$display(\"===========Your Design Passed===========\");\n        end\n\telse\n\tbegin\n\t\t$display(\"===========Error===========\");\n\tend\n    $finish;\nend\n\n\nendmodule",
+  "reference_rtl": "`timescale 1ns/1ns\n\nmodule accu(\n    input               clk         ,   \n    input               rst_n       ,\n    input       [7:0]   data_in     ,\n    input               valid_in     ,\n \n    output  reg         valid_out     ,\n    output  reg [9:0]   data_out\n);\n    \n   reg [1:0] count;\n   wire add_cnt;\n   wire ready_add;\n   wire end_cnt;\n   reg [9:0]   data_out_reg;\n\n   assign add_cnt = ready_add;\n   assign end_cnt = ready_add && (count == 'd3);\n   \n   //count\n   always @(posedge clk or negedge rst_n) begin\n       if(!rst_n) begin\n          count <= 0;\n       end\n       else if(end_cnt) begin\n          count <= 0;\n       end\n       else if(add_cnt) begin\n          count <= count + 1;\n       end\n   end\n\n    //data_out_reg\n   always @(posedge clk or negedge rst_n) begin\n      if(!rst_n) begin\n        data_out_reg <= 0;\n      end\n      else if (add_cnt && count == 0) begin\n          data_out_reg <= data_in;\n      end\n      else if (add_cnt) begin\n          data_out_reg <= data_out_reg + data_in;\n      end\n   end\n\n    //data_out\n   always @(posedge clk or negedge rst_n) begin\n      if(!rst_n) begin\n        data_out <= 0;\n      end\n      else if (add_cnt && count == 0) begin\n          data_out <= data_in;\n      end\n      else if (add_cnt) begin\n          data_out <= data_out + data_in;\n      end\n   end\n\n   //ready_add\n   assign ready_add = !valid_out | valid_in;\n\n   //valid_out\n   always @(posedge clk or negedge rst_n) begin\n       if(!rst_n) begin\n           valid_out <= 0;\n       end\n       else if(end_cnt) begin\n           valid_out <= 1;\n       end\n       else begin\n           valid_out <= 0;\n       end\n   end  \n     \nendmodule"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_div_16bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "div_16bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/divider",
+  "track": "arithmetic",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "divider",
+    "hard"
+  ],
+  "module_header": "module div_16bit( input wire [15:0] A, input wire [7:0] B, output wire [15:0] result, output wire [15:0] odd );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a 16-bit divider module, the dividend is 16-bit and the divider is 8-bit in combinational logic. Extract the higher bits of the dividend, matching the bit width of the divisor. Compare these bits with the divisor: if the dividend bits are greater, set the quotient to 1, otherwise set it to 0, and use the difference as the remainder. Concatenate the remainder with the highest remaining 1-bit of the dividend, and repeat the process until all dividend bits are processed.\n\nModule name:\n    div_16bit\n\nInput ports:\n    A: 16-bit dividend.\n    B: 8-bit divisor.\n\nOutput ports:\n    result: 16-bit quotient.\n    odd: 16-bit remainder.\n\nImplementation:\nThe module uses two always blocks to perform the division operation.\nThe first always block is a combinational block triggered by any change in the input values A and B. It updates the values of two registers, a_reg and b_reg, with the values of A and B, respectively.\nThe second always block is also a combinational block triggered by any change in the input values A and B.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ps\nmodule tb_division();\n\nreg [15:0] A;\nreg [7:0] B;\nwire [15:0] result;\nwire [15:0] odd;\n\ninteger i; \ninteger error = 0; \nreg [15:0] expected_result;\nreg [15:0] expected_odd;\ninitial begin\n   for (i = 0; i < 100; i = i + 1) begin\n      A = $urandom_range(1'b0, 16'b1111_1111_1111_1111);\n      B = $urandom_range(1'b1, 8'b1111_1111);\n      expected_result = A/B;\n      expected_odd = A%B;\n      #10; \n      error = (expected_odd != odd || expected_result != result) ? error+1 : error;\n      // $display(\"A = %d, B = %d, Result = %d, odd = %d\", A, B, result, odd);\n   end\n   \n   if (error == 0) begin\n            $display(\"===========Your Design Passed===========\");\n    end\n    else begin\n    $display(\"===========Test completed with %d /100 failures===========\", error);\n    end\n    \n    $finish;\nend\n\ndiv_16bit uut (.A(A), .B(B), .result(result), .odd(odd));\n\nendmodule",
+  "reference_rtl": "module div_16bit(\n    input wire [15:0] A,\n    input wire [7:0] B,\n    output wire [15:0] result,\n    output wire [15:0] odd\n    );\n\nreg [15:0] a_reg;\nreg [15:0] b_reg;\nreg [31:0] tmp_a;\nreg [31:0] tmp_b;\ninteger i;\n\nalways@(*) begin\n    a_reg = A;\n    b_reg = B;\nend\n\nalways@(*) begin\n    begin\n        tmp_a = {16'b0, a_reg};\n        tmp_b = {b_reg, 16'b0};\n        for(i = 0;i < 16;i = i+1) begin\n            tmp_a = tmp_a << 1;\n            if (tmp_a >= tmp_b) begin\n                tmp_a = tmp_a - tmp_b + 1;\n            end\n            else begin\n                tmp_a = tmp_a;\n            end\n        end\n    end\nend\n\nassign odd = tmp_a[31:16];\nassign result = tmp_a[15:0];\n\nendmodule"
+}

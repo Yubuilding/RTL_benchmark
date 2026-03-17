@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_control_fsm",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "fsm",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "control/finite_state_machine",
+  "track": "control",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "control",
+    "finite_state_machine",
+    "hard"
+  ],
+  "module_header": "module fsm(IN,MATCH,CLK,RST);",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a Mealy FSM detection circuit that detects a single-bit input IN. When the input is 10011, output MATCH is 1, and MATCH is 0 in other cases. Support for continuous input and loop detection. \n\nModule name:  \n    fsm               \nInput ports:\n    IN: Input signal to the FSM.\n    CLK: Clock signal used for synchronous operation.\n    RST: Reset signal to initialize the FSM.\nOutput ports:\n    MATCH: Output signal indicating a match condition based on the FSM state.\n\nImplementation:\nThe module implements an FSM detection.\nOn every change in the input signal (IN) or positive edge of CLK or RST, if RST is active, the output signal MATCH is set to 0.\nIf the sequence of inputs IN is 1, 0, 0, 1, 1, the MATCH signal is 1 at the same time as the last occurrence of IN=1. If the sequence of inputs IN is 1, 0, 0, 1, 1, 0, 0, 1, 1, the MATCH signal becomes 1 at the fifth and ninth of IN; otherwise, it is set to 0.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\n\nmodule main();\n\nreg clk,rst;\nreg IN;\nwire MATCH;\n\nfsm DUT(.CLK(clk),.RST(rst),.IN(IN),.MATCH(MATCH));\n\ninitial begin\n\tclk=0;\n\tforever #5 clk=~clk;\nend\n\ninteger error = 0;\ninitial begin\n\t#10;\n\trst =1;\n\t#28;\n\trst = 0;\n\tIN = 0;\n\t#10 IN=0;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//0\n        error = (MATCH==0)? error:error+1;\n        #10 IN=0;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//00\n        error = (MATCH==0)? error:error+1;\n        #10 IN=1;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//001\n        error = (MATCH==0)? error:error+1;\n        #10 IN=1;  \n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//0011\n        error = (MATCH==0)? error:error+1;\n        #10 IN=0;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//00110\n        error = (MATCH==0)? error:error+1;\n        #10 IN=0;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//001100\n        error = (MATCH==0)? error:error+1;\n        #10 IN=1;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//0011001\n        error = (MATCH==0)? error:error+1;\n        #10 IN=1;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//00110011\n        error = (MATCH==1)? error:error+1;\n        #10 IN=0;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//001100110\n        error = (MATCH==0)? error:error+1;\n        #10 IN=0;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//0011001100\n        error = (MATCH==0)? error:error+1;\n        #10 IN=1;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//00110011001\n        error = (MATCH==0)? error:error+1;\n        #10 IN=1;\n        // $display(\"%b, %b\", MATCH, DUT.ST_cr);//001100110011\n        error = (MATCH==1)? error:error+1;\n        if(error==0)begin\n                $display(\"===========Your Design Passed===========\");\n        end\n        else begin\n                $display(\"===========Error===========\");\n        end\n\t$finish;\nend\nendmodule",
+  "reference_rtl": "module fsm(IN,MATCH,CLK,RST);\ninput IN,CLK,RST;\noutput reg MATCH;\n\nreg [2:0] ST_cr,ST_nt;\n\nparameter s0 = 3'b000;\nparameter s1 = 3'b001;\nparameter s2 = 3'b010;\nparameter s3 = 3'b011;\nparameter s4 = 3'b100;\nparameter s5 = 3'b101;\n\nalways@(posedge CLK or posedge RST) begin\n\tif(RST)\n\t\tST_cr <= s0;\n\telse\n\t\tST_cr <= ST_nt;\nend\n\nalways@(*) begin\n\tcase(ST_cr)\n\t\ts0:begin\n\t\t\tif (IN==0)\n\t\t\t\tST_nt = s0;\n\t\t\telse\n\t\t\t\tST_nt = s1;\n\t\tend\n\t\t\n\t\ts1:begin\n                        if (IN==0)\n                                ST_nt = s2;\n                        else\n                                ST_nt = s1;\n                end\n\n                s2:begin\n                        if (IN==0)\n                                ST_nt = s3;\n                        else\n                                ST_nt = s1;\n                end\n\n                s3:begin\n                        if (IN==0)\n                                ST_nt = s0;\n                        else\n                                ST_nt = s4;\n                end\n\n                s4:begin\n                        if (IN==0)\n                                ST_nt = s2;\n                        else\n                                ST_nt = s5;\n                end\n\n                s5:begin\n                        if (IN==0)\n                                ST_nt = s2;\n                        else\n                                ST_nt = s1;\n                end\n\n\tendcase\nend\n\nalways@(*) begin\n        if(RST)\n                MATCH  <= 0;\n        else if (ST_cr == s4 && IN == 1)\n                MATCH  <= 1;\n\telse \n\t\tMATCH  <= 0;\nend\n\nendmodule"
+}

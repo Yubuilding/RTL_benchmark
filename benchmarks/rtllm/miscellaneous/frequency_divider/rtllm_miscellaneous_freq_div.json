@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_freq_div",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "freq_div",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/frequency_divider",
+  "track": "rtl_core",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "frequency_divider",
+    "hard"
+  ],
+  "module_header": "module freq_div (CLK_in,CLK_50,CLK_10,CLK_1,RST);",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a frequency divider that the input clock frequency of 100MHz signal, and the outputs are 3 clock frequencies: 50MHz, 10MHz, 1MHz.\n\nModule name:  \n    freq_div      \n\nInput ports:\n    CLK_in: Input clock signal\n    RST: Reset signal\n\nOutput ports:\n    CLK_50: Output clock signal with a frequency of CLK_in divided by 2.\n    CLK_10: Output clock signal with a frequency of CLK_in divided by 10.\n    CLK_1: Output clock signal with a frequency of CLK_in divided by 100.\n\nImplementation:\nThe module uses three counters to divide the input clock frequency. \nCLK_50 generation:\nOn every positive edge of CLK_in or RST, if RST is active, CLK_50 is set to 0.\nOtherwise, CLK_50 is toggled by inverting its current value.\nCLK_10 generation:\nOn every positive edge of CLK_in or RST, if RST is active, CLK_10 is set to 0, and the counter cnt_10 is reset to 0.\nIf the counter cnt_10 reaches a value of 4, CLK_10 is toggled by inverting its current value, and the counter cnt_10 is reset to 0.\nOtherwise, the counter cnt_10 is incremented by 1.\nCLK_1 generation:\nOn every positive edge of CLK_in or RST, if RST is active, CLK_1 is set to 0, and the counter cnt_100 is reset to 0.\nIf the counter cnt_100 reaches a value of 49, CLK_1 is toggled by inverting its current value, and the counter cnt_100 is reset to 0.\nOtherwise, the counter cnt_100 is incremented by 1.\n\nGive me the complete code.",
+  "testbench": "module test ();\n\nreg  clk,rst;\n\nwire out1;\nwire out2;\nwire out3;\n\nfreq_div dut(.CLK_in(clk),.RST(rst),.CLK_50(out1),.CLK_10(out2),.CLK_1(out3));\n\ninitial begin\n\tclk = 0;\n\tforever #5 clk = ~clk;\nend\n\ninteger error=0;\n\ninitial begin \n\t#10;\n\trst = 1;\n\t#35;\n\trst = 0;\n\t// 45, clk: 1, clk50: 0, rclk10: 0, clk1: 0\n\terror = (out1 != 0 || out2 != 0 || out3 !=0 ) ? error+1 : error;\n\t// 55, clk: 1, clk50: 1, rclk10: 0, clk1: 0\n\t#10;\n\terror = (out1 != 1 || out2 != 0 || out3 !=0 ) ? error+1 : error;\n\t// 95, clk50: 0, rclk10: 1, clk1: 0\n\t#40;\n\terror = (out1 != 1 || out2 != 1 || out3 !=0 ) ? error+1 : error;\n\t// 225, clk: 1, clk50: 0, rclk10: 1, clk1: 0\n\t#130;\n\terror = (out1 != 0 || out2 != 1 || out3 !=0 ) ? error+1 : error;\n\t// 625, clk: 1, clk50: 0, rclk10: 1, clk1: 1\n\t#400;\n\terror = (out1 != 0 || out2 != 1 || out3 !=1 ) ? error+1 : error;\n\t// 1035, clk: 1, clk50: 1, rclk10: 1, clk1: 1\n\t#410;\n\terror = (out1 != 1 || out2 != 1 || out3 !=1 ) ? error+1 : error;\n\tif (error == 0) begin\n            $display(\"===========Your Design Passed===========\");\n        end\n        else begin\n        $display(\"===========Error===========\", error);\n        end\n\t$finish;\nend\n\n// initial begin \n// \trepeat(500) begin\n// \t\t#5\n// \t\t$display(\"Time: %t, clk: %b, clk50: %b, rclk10: %b, clk1: %b\", $time, clk, out1, out2, out3);\n// \tend\n// end\n\nendmodule",
+  "reference_rtl": "module freq_div (CLK_in,CLK_50,CLK_10,CLK_1,RST);\ninput CLK_in,RST;\noutput reg CLK_50,CLK_10,CLK_1;\n\nreg [3:0] cnt_10;\nreg [6:0] cnt_100;\n\nalways @(posedge CLK_in or posedge RST) begin\n\tif (RST) begin\n\t\tCLK_50<= 1'b0;\n        end\n\telse begin\n\t\tCLK_50<= ~CLK_50;\n        end\nend\n\nalways @(posedge CLK_in or posedge RST) begin\n\tif (RST) begin\n\t\tCLK_10<= 1'b0;\n                cnt_10<=0;\n        end\n\telse if (cnt_10==4) begin\n\t\tCLK_10<= ~CLK_10;\n                cnt_10<=0;\n        end\n        else begin\n                cnt_10<=cnt_10+1;\n        end\nend\n\nalways @(posedge CLK_in or posedge RST) begin\n\tif (RST) begin\n\t\tCLK_1<= 1'b0;\n                cnt_100<=0;\n        end\n\telse if (cnt_100==49) begin\n\t\tCLK_1<= ~CLK_1;\n                cnt_100<=0;\n        end\n        else begin\n                cnt_100<=cnt_100+1;\n        end\nend\n\nendmodule"
+}

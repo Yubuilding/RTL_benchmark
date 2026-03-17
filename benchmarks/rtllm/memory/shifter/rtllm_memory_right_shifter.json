@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_memory_right_shifter",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "right_shifter",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "memory/shifter",
+  "track": "memory",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "memory",
+    "shifter",
+    "hard"
+  ],
+  "module_header": "module right_shifter(clk, q,d);",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a right shifter. The module performs an 8-bit right shift on a 1-bit input by first initializing the q register to 0. On each rising edge of the clock, the module shifts the contents of the q register to the right by one bit and inserts the new input bit d into the most significant position of the register.\n\nModule name:  \n    right_shifter    \n\nInput ports:\n    clk: Clock signal used for synchronous operation.\n    d: Input signal to be right-shifted.\n\nOutput ports:\n    q: Output signal representing the result of the right shift operation.\n\nImplementation:\nThe register is defined as reg [7:0] q and initialized to 0 using the initial statement. The value of q is right-shifted by 1 bit using the >> operator: q <= (q >> 1).\nThe most significant bit (q[7]) of the register is assigned the value of the input signal (d): q[7] <= d.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\nmodule right_shifter_tb;\n  reg clk;\n  reg d;\n  wire [7:0] q;\n\n  // Instantiate the DUT (Design Under Test)\n  right_shifter dut (\n    .clk(clk),\n    .d(d),\n    .q(q)\n  );\n\n  // Generate clock\n  always #5 clk = ~clk;\n\n  initial begin\n    // Initialize inputs\n    clk = 0;\n    d = 0;\n    #20;\n    d = 1;\n    #10;\n    d = 0;\n    #10;\n    d = 1;\n    #10;\n    d = 0;\n    #10;\n    d = 1;\n    #10;\n    d = 1;\n    #10;\n    d = 1;\n    #10;\n    \n    // Check the output\n    if(q==8'b11101010) begin\n      $display(\"===========Your Design Passed===========\");\n    end\n    else begin\n      $display(\"===========Failed===========\");\n    end\n    // Finish simulation\n    $finish;\n  end\nendmodule",
+  "reference_rtl": "module right_shifter(clk, q,d);  \n\n    input  clk;  \n    input d;  \n    output  [7:0] q;  \n    reg   [7:0]  q; \n    initial q = 0;\n\n    always @(posedge clk)\n          begin\n            q <= (q >> 1);\n            q[7] <= d;\n          end  \n\nendmodule"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "verilogeval_025_reduction",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "TopModule",
+  "source": "verilogeval",
+  "suite": "verilogeval",
+  "category": "arithmetic",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "verilogeval",
+    "arithmetic",
+    "medium",
+    "reduction"
+  ],
+  "module_header": "module TopModule ( input [7:0] in, output parity );",
+  "prompt": "I would like you to implement a module named TopModule with the following\ninterface. All input and output ports are one bit unless otherwise\nspecified.\n\n - input  in     (8 bits)\n - output parity\n\nParity checking is often used as a simple method of detecting errors when\ntransmitting data through an imperfect channel. The module should compute\na parity bit for an 8-bit byte (which will add a 9th bit to the byte). We\nwill use \"even\" parity, where the parity bit is just the XOR of all 8\ndata bits.",
+  "testbench": "`timescale 1 ps/1 ps\n`define OK 12\n`define INCORRECT 13\n\n\nmodule stimulus_gen (\n\tinput clk,\n\toutput logic [7:0] in\n);\n\n\tinitial begin\n\t\trepeat(100) @(posedge clk, negedge clk)\n\t\t\tin <= $random;\n\t\t$finish;\n\tend\n\t\nendmodule\n\nmodule tb();\n\n\ttypedef struct packed {\n\t\tint errors;\n\t\tint errortime;\n\t\tint errors_parity;\n\t\tint errortime_parity;\n\n\t\tint clocks;\n\t} stats;\n\t\n\tstats stats1;\n\t\n\t\n\twire[511:0] wavedrom_title;\n\twire wavedrom_enable;\n\tint wavedrom_hide_after_time;\n\t\n\treg clk=0;\n\tinitial forever\n\t\t#5 clk = ~clk;\n\n\tlogic [7:0] in;\n\tlogic parity_ref;\n\tlogic parity_dut;\n\n\tinitial begin \n\t\t$dumpfile(\"wave.vcd\");\n\t\t$dumpvars(1, stim1.clk, tb_mismatch ,in,parity_ref,parity_dut );\n\tend\n\n\n\twire tb_match;\t\t// Verification\n\twire tb_mismatch = ~tb_match;\n\t\n\tstimulus_gen stim1 (\n\t\t.clk,\n\t\t.* ,\n\t\t.in );\n\tRefModule good1 (\n\t\t.in,\n\t\t.parity(parity_ref) );\n\t\t\n\tTopModule top_module1 (\n\t\t.in,\n\t\t.parity(parity_dut) );\n\n\t\n\tbit strobe = 0;\n\ttask wait_for_end_of_timestep;\n\t\trepeat(5) begin\n\t\t\tstrobe <= !strobe;  // Try to delay until the very end of the time step.\n\t\t\t@(strobe);\n\t\tend\n\tendtask\t\n\n\t\n\tfinal begin\n\t\tif (stats1.errors_parity) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"parity\", stats1.errors_parity, stats1.errortime_parity);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"parity\");\n\n\t\t$display(\"Hint: Total mismatched samples is %1d out of %1d samples\\n\", stats1.errors, stats1.clocks);\n\t\t$display(\"Simulation finished at %0d ps\", $time);\n\t\t$display(\"Mismatches: %1d in %1d samples\", stats1.errors, stats1.clocks);\n\tend\n\t\n\t// Verification: XORs on the right makes any X in good_vector match anything, but X in dut_vector will only match X.\n\tassign tb_match = ( { parity_ref } === ( { parity_ref } ^ { parity_dut } ^ { parity_ref } ) );\n\t// Use explicit sensitivity list here. @(*) causes NetProc::nex_input() to be called when trying to compute\n\t// the sensitivity list of the @(strobe) process, which isn't implemented.\n\talways @(posedge clk, negedge clk) begin\n\n\t\tstats1.clocks++;\n\t\tif (!tb_match) begin\n\t\t\tif (stats1.errors == 0) stats1.errortime = $time;\n\t\t\tstats1.errors++;\n\t\tend\n\t\tif (parity_ref !== ( parity_ref ^ parity_dut ^ parity_ref ))\n\t\tbegin if (stats1.errors_parity == 0) stats1.errortime_parity = $time;\n\t\t\tstats1.errors_parity = stats1.errors_parity+1'b1; end\n\n\tend\n\n   // add timeout after 100K cycles\n   initial begin\n     #1000000\n     $display(\"TIMEOUT\");\n     $finish();\n   end\n\nendmodule",
+  "reference_rtl": "module TopModule (\n  input [7:0] in,\n  output parity\n);\n\n  assign parity = ^in;\n\nendmodule"
+}

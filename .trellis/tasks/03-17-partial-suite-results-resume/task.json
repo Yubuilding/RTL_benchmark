@@ -1,0 +1,48 @@
+{
+  "id": "partial-suite-results-resume",
+  "name": "partial-suite-results-resume",
+  "title": "Persist partial suite results and resume failed jobs",
+  "description": "Persist partial failed-suite results into the leaderboard, keep failed jobs across restarts, and allow resume/delete actions from the web UI.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "priority": "P2",
+  "creator": "gary",
+  "assignee": "gary",
+  "createdAt": "2026-03-17",
+  "completedAt": "2026-03-17",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 3,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "implement"
+    },
+    {
+      "phase": 2,
+      "action": "check"
+    },
+    {
+      "phase": 3,
+      "action": "finish"
+    },
+    {
+      "phase": 4,
+      "action": "create-pr"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "src/rtl_benchmark/webapp.py",
+    "src/rtl_benchmark/webui/app.js",
+    "tests/test_webapp.py"
+  ],
+  "notes": "Implemented persistent web job storage in .state/web_jobs.json, same-run resume that skips completed model/problem pairs, delete-job cleanup that rebuilds the leaderboard, and UI actions for continue/delete. Verified with PYTHONPATH=src python3 -m unittest tests.test_webapp and tests.test_core.",
+  "meta": {}
+}

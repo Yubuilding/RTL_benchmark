@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_width_8to16",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "width_8to16",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/others",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "others",
+    "medium"
+  ],
+  "module_header": "module width_8to16( input clk , input rst_n , input valid_in , input [7:0] data_in , output reg valid_out, output reg [15:0] data_out );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a data width conversion circuit that converts 8-bit data input to 16-bit data output. The module provides two output ports: valid_out, which indicates the validity of the output data, and data_out, which represents the converted 16-bit output data. The first arriving 8-bit data should be placed in the higher 8 bits of the 16-bit data output. The valid_out and data_out signals are generated in the next clock cycle after the two data inputs. When there is only one data input, valid_out and data_out are not generated immediately. Instead, they wait for the arrival of the next data input to complete the concatenation of the two data inputs before generating valid_out and data_out. \n\nModule name:  \n    width_8to16   \n\nInput ports:\n    clk: Clock signal used for synchronous operation.\n    rst_n: Active-low reset signal. Defined as 0 for reset and 1 for reset signal inactive.\n    valid_in: Input signal indicating the validity of the input data.\n    data_in: 8-bit input data to be converted.\n\nOutput ports:\n    valid_out: Output signal indicating the validity of the output data.\n    data_out: 16-bit output data resulting from the width conversion.\n\nImplementation:\nThe data_out register is triggered on the positive edge of the clock signal (posedge clk) or the negative edge of the reset signal (negedge rst_n).\nOn reset, indicated by !rst_n, the data_out register is cleared to 0.\nIf the input data is valid (valid_in) and the flag signal is active, the data_out register is updated by concatenating the contents of the data_lock register (8 bits) and the data_in register (8 bits) to form a 16-bit output. The first valid data is temporarily stored, and when the second valid data is inputted, they are concatenated to produce the output valid_out and data_out.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\nmodule testbench();\n    reg rst,valid_in;\n\treg clk=1;\n\treg[7:0] data_in;\n\twire valid_out;\n\twire [15:0] data_out;\n\nwidth_8to16 dut(\n\t.clk (clk),   \n\t.rst_n(rst),\n\t.valid_in(valid_in),\n\t.data_in(data_in),\n\t.valid_out(valid_out),\n\t.data_out(data_out)\n);\n\talways #5 clk = ~clk;  \n\ninteger error = 0;\ninitial \nbegin\n\trst=0;valid_in=0;\n \t#10 rst=1;valid_in=1;data_in=8'b10100000;\n\t// $display(\"data_out = %b\", data_out);\n\t// $display(\"valid_out = %b\", valid_out);\n\terror = valid_out ==0 ? error : error+1; \n\t#10 data_in=8'b10100001; \n\t// $display(\"data_out = %b\", data_out); \n\t#10 data_in=8'b10110000;\n\t// $display(\"data_out = %b\", data_out); \n\t// $display(\"valid_out = %b\", valid_out);\n\terror = (data_out == 16'b1010000010100001 && valid_out ==1 )? error : error+1;\n\t#10 valid_in=0;\n\t#20 valid_in=1;data_in=8'b10110001; \n\t#10 valid_in=0;\n\t// $display(\"data_out = %b\", data_out); \n\t// $display(\"valid_out = %b\", valid_out);\n\terror = (data_out == 16'b1011000010110001 && valid_out ==1 )? error : error+1;\n\t#30\n\n\tif (error == 0) begin\n\t\t$display(\"===========Your Design Passed===========\");\n\tend\n\telse begin\n\t$display(\"===========Test completed with %d / 3 failures===========\", error);\n\tend\n\n\t$finish;\nend  \n\nendmodule",
+  "reference_rtl": "`timescale 1ns/1ns\nmodule width_8to16(\n\tinput \t\t\t\t   clk \t\t,   \n\tinput \t\t\t\t   rst_n\t\t,\n\tinput\t\t\t\t      valid_in\t,\n\tinput\t   [7:0]\t\t   data_in\t,\n \n \toutput\treg\t\t\tvalid_out,\n\toutput   reg [15:0]\tdata_out\n);\nreg \t[7:0]\t\tdata_lock;  //data buffer\nreg \t\t\t\tflag\t   ;\n//input data buff in data_lock\nalways @(posedge clk or negedge rst_n ) begin\n\tif(!rst_n) \n\t\tdata_lock <= 'd0;\n\telse if(valid_in && !flag)\n\t\tdata_lock <= data_in;\nend\n//generate flag\nalways @(posedge clk or negedge rst_n ) begin\n\tif(!rst_n) \n\t\tflag <= 'd0;\n\telse if(valid_in)\n\t\tflag <= ~flag;\nend\n//generate valid_out\nalways @(posedge clk or negedge rst_n ) begin\n\tif(!rst_n) \n\t\tvalid_out <= 'd0;\n\telse if(valid_in && flag)\n\t\tvalid_out <= 1'd1;\n\telse\n\t\tvalid_out <= 'd0;\nend\n//data stitching \nalways @(posedge clk or negedge rst_n ) begin\n\tif(!rst_n) \n\t\tdata_out <= 'd0;\n\telse if(valid_in && flag)\n\t\tdata_out <= {data_lock, data_in};\nend\n\nendmodule"
+}

@@ -39,7 +39,8 @@ Inferred when omitted:
 - `benchmarks/testbench`: mutation-scored verification tasks
 - `benchmarks/hdlbits/<category>`: public HDLBits-style practice tasks
 - `benchmarks/industrial/<category>`: curated higher-difficulty control/protocol tasks
-- `benchmarks/rtllm/<category>`: imported open-source RTLLM tasks converted into local JSON
+- `benchmarks/rtllm/<category>/<subcategory>`: imported open-source RTLLM tasks converted into local JSON
+- `benchmarks/verilogeval/<category>`: imported VerilogEval spec-to-RTL tasks converted into local JSON
 
 The loader still infers `source` and `category` from the path, so `benchmarks/hdlbits/sequential/foo.json` becomes `source=hdlbits`, `category=sequential`.
 

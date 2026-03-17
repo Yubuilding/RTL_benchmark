@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_memory_lifobuffer",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "LIFObuffer",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "memory/lifo",
+  "track": "memory",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "memory",
+    "lifo",
+    "hard"
+  ],
+  "module_header": "module LIFObuffer ( input [3:0] dataIn, input RW, input EN, input Rst, input Clk, output reg EMPTY, output reg FULL, output reg [3:0] dataOut );",
+  "prompt": "Please act as a professional Verilog designer.\n\nA Last-In-First-Out (LIFO) buffer for temporary data storage. This 4-bit wide buffer can hold up to 4 entries, allowing for push and pop operations controlled by read/write (RW) signals.\n\nModule name:\n    LIFObuffer\n\nInput ports:\n    dataIn [3:0]: 4-bit input data to be pushed onto the buffer.\n    RW: Read/Write control signal (1 for read, 0 for write).\n    EN: Enable signal to activate buffer operations.\n    Rst: Active high reset signal to initialize the buffer.\n    Clk: Clock signal for synchronous operations.\n\nOutput ports:\n    EMPTY: Flag indicating whether the buffer is empty.\n    FULL: Flag indicating whether the buffer is full.\n    dataOut [3:0]: 4-bit output data retrieved from the buffer.\n\nImplementation:\n    The buffer uses a stack memory array (stack_mem) to store the data. A stack pointer (SP) tracks the current position in the stack.\n    On the rising edge of the clock (Clk), if the enable (EN) signal is high:\n    If the reset (Rst) signal is high, the stack is cleared, the stack pointer is set to 4 (indicating an empty buffer), and all memory locations are initialized to 0.\n    If the reset signal is low, the buffer checks if it is full or empty and processes data accordingly:\n    If RW is low (write operation) and the buffer is not full, data from dataIn is pushed onto the stack, and the stack pointer is decremented.\n    If RW is high (read operation) and the buffer is not empty, data is popped from the stack into dataOut, the corresponding stack memory is cleared, and the stack pointer is incremented.\n    Flags for EMPTY and FULL are updated based on the stack pointer status.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule LIFObuffer_tb;\n\n// Inputs\nreg [3:0] dataIn;\nreg RW;\nreg EN;\nreg Rst;\nreg Clk;\n\n// Outputs\nwire [3:0] dataOut;\nwire EMPTY;\nwire FULL;\n\n// Instantiate the Unit Under Test (UUT)\nLIFObuffer uut (\n    .dataIn(dataIn),\n    .dataOut(dataOut),\n    .RW(RW),\n    .EN(EN),\n    .Rst(Rst),\n    .EMPTY(EMPTY),\n    .FULL(FULL),\n    .Clk(Clk)\n);\ninteger error = 0;\ninitial begin\n    // Initialize Inputs\n    dataIn = 4'h0;\n    RW = 1'b0;\n    EN = 1'b0;\n    Rst = 1'b1;\n    Clk = 1'b0;\n\n    // Wait 100 ns for global reset to finish\n    #100;\n\n    // Add stimulus here\n    EN = 1'b1;\n    Rst = 1'b1;\n    #40;\n    Rst = 1'b0;\n    RW = 1'b0;\n    dataIn = 4'h0;\n    #20;\n    dataIn = 4'h2;\n    #20;\n    dataIn = 4'h4;\n    #20;\n    dataIn = 4'h6;\n    #20;\n    RW = 1'b1;\n    #5;\n    // $display(FULL,EMPTY);\n    error = (FULL && !EMPTY) ? error : error+1;\n    #20;\n    // $display(dataOut);\n    error = (dataOut==6) ? error : error+1;\n    #20;\n    // $display(dataOut);\n    error = (dataOut==4) ? error : error+1;\n    if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n            end\n        else begin\n            $display(\"=========== Test completed with %d/20 failures ===========\", error);\n    end\n    $finish;\nend\n\nalways #10 Clk = ~Clk;\n\nendmodule",
+  "reference_rtl": "module LIFObuffer (\n    input [3:0] dataIn,\n    input RW,\n    input EN,\n    input Rst,\n    input Clk,\n    output reg EMPTY,\n    output reg FULL,\n    output reg [3:0] dataOut\n);\n\n    reg [3:0] stack_mem[0:3];\n    reg [2:0] SP;\n    integer i;\n\n    always @ (posedge Clk) begin\n        if (EN == 0) begin\n            // Do nothing if EN is 0\n        end else begin\n            if (Rst == 1) begin\n                SP = 3'd4;\n                EMPTY = SP[2];\n                dataOut = 4'h0;\n                for (i = 0; i < 4; i = i + 1) begin\n                    stack_mem[i] = 0;\n                end\n            end else if (Rst == 0) begin\n                FULL = SP ? 0 : 1;\n                EMPTY = SP[2];\n                dataOut = 4'hx;\n                \n                if (FULL == 1'b0 && RW == 1'b0) begin\n                    SP = SP - 1'b1;\n                    FULL = SP ? 0 : 1;\n                    EMPTY = SP[2];\n                    stack_mem[SP] = dataIn;\n                end else if (EMPTY == 1'b0 && RW == 1'b1) begin\n                    dataOut = stack_mem[SP];\n                    stack_mem[SP] = 0;\n                    SP = SP + 1;\n                    FULL = SP ? 0 : 1;\n                    EMPTY = SP[2];\n                end else begin\n                    // Do nothing if neither condition is met\n                end\n            end else begin\n                // Do nothing if neither condition is met\n            end\n        end\n    end\nendmodule"
+}

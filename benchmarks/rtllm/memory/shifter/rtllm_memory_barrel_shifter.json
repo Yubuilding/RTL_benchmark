@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_memory_barrel_shifter",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "barrel_shifter",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "memory/shifter",
+  "track": "memory",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "memory",
+    "shifter",
+    "hard"
+  ],
+  "module_header": "module barrel_shifter (in, ctrl, out);",
+  "prompt": "Please act as a professional verilog designer.\n\nModule name: \n    barrel_shifter\n\nFunction:\n    A barrel shifter for rotating bits efficiently. This 8-bit barrel shifter takes an 8-bit input and shifts or rotates the bits based on a 3-bit control signal.\n\nInput ports:\n    in [7:0]: 8-bit input to be shifted.\n    ctrl [2:0]: 3-bit control signal that determines how many positions to shift. The control signal specifies the amount of shift, where each bit indicates a shift by 1, 2, or 4 positions.\n\nOutput ports:\n    out [7:0]: 8-bit shifted output.\n\nImplementation:\n    The barrel shifter shifts the input `in` based on the value of the `ctrl` signal. The shifting happens in stages, where each stage shifts by 4, 2, or 1 position, as controlled by `ctrl[2]`, `ctrl[1]`, and `ctrl[0]`, respectively.\n    The shifts are achieved using a series of 2-to-1 multiplexers (`mux2X1`) that select between the shifted input and the original input. Each stage of multiplexers performs the shift, and the result is passed to the next stage for further shifting if required.\n    - When `ctrl[2]` is high, the input is shifted by 4 positions.\n    - When `ctrl[1]` is high, the intermediate result is shifted by 2 positions.\n    - When `ctrl[0]` is high, the intermediate result is shifted by 1 position.\n    \n    The `mux2X1` submodule is used to select between two input values based on the `sel` signal, determining which bit is used in the shifted output at each stage.\n\nGive me the complete code.",
+  "testbench": "module barrel_shifter_tb;\n  reg [7:0] in;\n  reg [2:0] ctrl;\n  wire [7:0] out; \n  \nbarrel_shifter uut(.in(in), .ctrl(ctrl), .out(out));\n\ninteger error = 0;\n\ninitial \n    begin\n        in= 8'd0;  ctrl=3'd0; //no shift\n        #10 in=8'd128; ctrl= 3'd4; //shift 4 bit\n        #10 error = (out==8)?error : error+1;\n        #10 in=8'd128; ctrl= 3'd2; //shift 2 bit\n        #10 error = (out==32)?error : error+1;\n        #10 in=8'd128; ctrl= 3'd1; //shift by 1 bit\n        #10 error = (out==64)?error : error+1;\n        #10 in=8'd255; ctrl= 3'd7; //shift by 7bit\n        #10 error = (out==1)?error : error+1;\n    // end\n    // initial begin\n    //     $monitor(\"Input=%d, Control=%d, Output=%d\",in,ctrl,out);\n    // end\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n            end\n        else begin\n            $display(\"=========== Test completed with %d failures ===========\", error);\n        end\n        $finish;\n    end\nendmodule",
+  "reference_rtl": "module barrel_shifter (in, ctrl, out);\n  input  [7:0] in;\n  input [2:0] ctrl;\n  output [7:0] out;\n  wire [7:0] x,y;\n \n//4bit shift right\nmux2X1  ins_17 (.in0(in[7]),.in1(1'b0),.sel(ctrl[2]),.out(x[7]));\nmux2X1  ins_16 (.in0(in[6]),.in1(1'b0),.sel(ctrl[2]),.out(x[6]));\nmux2X1  ins_15 (.in0(in[5]),.in1(1'b0),.sel(ctrl[2]),.out(x[5]));\nmux2X1  ins_14 (.in0(in[4]),.in1(1'b0),.sel(ctrl[2]),.out(x[4]));\nmux2X1  ins_13 (.in0(in[3]),.in1(in[7]),.sel(ctrl[2]),.out(x[3]));\nmux2X1  ins_12 (.in0(in[2]),.in1(in[6]),.sel(ctrl[2]),.out(x[2]));\nmux2X1  ins_11 (.in0(in[1]),.in1(in[5]),.sel(ctrl[2]),.out(x[1]));\nmux2X1  ins_10 (.in0(in[0]),.in1(in[4]),.sel(ctrl[2]),.out(x[0]));\n \n//2 bit shift right\n \nmux2X1  ins_27 (.in0(x[7]),.in1(1'b0),.sel(ctrl[1]),.out(y[7]));\nmux2X1  ins_26 (.in0(x[6]),.in1(1'b0),.sel(ctrl[1]),.out(y[6]));\nmux2X1  ins_25 (.in0(x[5]),.in1(x[7]),.sel(ctrl[1]),.out(y[5]));\nmux2X1  ins_24 (.in0(x[4]),.in1(x[6]),.sel(ctrl[1]),.out(y[4]));\nmux2X1  ins_23 (.in0(x[3]),.in1(x[5]),.sel(ctrl[1]),.out(y[3]));\nmux2X1  ins_22 (.in0(x[2]),.in1(x[4]),.sel(ctrl[1]),.out(y[2]));\nmux2X1  ins_21 (.in0(x[1]),.in1(x[3]),.sel(ctrl[1]),.out(y[1]));\nmux2X1  ins_20 (.in0(x[0]),.in1(x[2]),.sel(ctrl[1]),.out(y[0]));\n \n//1 bit shift right\nmux2X1  ins_07 (.in0(y[7]),.in1(1'b0),.sel(ctrl[0]),.out(out[7]));\nmux2X1  ins_06 (.in0(y[6]),.in1(y[7]),.sel(ctrl[0]),.out(out[6]));\nmux2X1  ins_05 (.in0(y[5]),.in1(y[6]),.sel(ctrl[0]),.out(out[5]));\nmux2X1  ins_04 (.in0(y[4]),.in1(y[5]),.sel(ctrl[0]),.out(out[4]));\nmux2X1  ins_03 (.in0(y[3]),.in1(y[4]),.sel(ctrl[0]),.out(out[3]));\nmux2X1  ins_02 (.in0(y[2]),.in1(y[3]),.sel(ctrl[0]),.out(out[2]));\nmux2X1  ins_01 (.in0(y[1]),.in1(y[2]),.sel(ctrl[0]),.out(out[1]));\nmux2X1  ins_00 (.in0(y[0]),.in1(y[1]),.sel(ctrl[0]),.out(out[0]));\n\nendmodule\n\nmodule mux2X1( in0,in1,sel,out);\ninput in0,in1;\ninput sel;\noutput out;\nassign out=(sel)?in1:in0;\nendmodule"
+}

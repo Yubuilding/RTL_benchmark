@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_multi_8bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "multi_8bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/multiplier",
+  "track": "arithmetic",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "multiplier",
+    "hard"
+  ],
+  "module_header": "module multi_8bit ( input [7:0] A, input [7:0] B, output reg [15:0] product );",
+  "prompt": "Please act as a professional Verilog designer.\n\nImplement a module of an 8-bit multiplier based on shifting and adding operations.\n\nModule name:  \n    multi_8bit               \nInput ports:\n    A [7:0]: First 8-bit input operand (representing a multiplicand).\n    B [7:0]: Second 8-bit input operand (representing a multiplier).\nOutput ports:\n    product [15:0]: 16-bit output representing the product of the two 8-bit inputs (A * B).\n\nImplementation:\nMultiplication: The module performs multiplication of A and B using the shift-and-add method.\n- The algorithm iterates through each bit of the multiplier (B). For each bit that is set (1), the multiplicand (A) is added to the product at the corresponding shifted position.\n- The process continues until all bits of the multiplier have been processed.\n\nShifting: After each addition, the multiplicand is logically shifted left by one bit to prepare for the next addition, simulating the traditional multiplication process.\n\nThe final product is stored in the output port, which is 16 bits wide to accommodate the maximum possible product of two 8-bit numbers.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule testbench;\n\n  reg [7:0] A;          // Input A (8 bits)\n  reg [7:0] B;          // Input B (8 bits)\n  wire [15:0] product;  // Product result (16 bits)\n  integer i;            // Loop variable\n  integer error = 0;    // Error count for failed tests\n\n  multi_8bit uut (\n    .A(A),\n    .B(B),\n    .product(product)\n  );\n\n  // Test cases\n  initial begin\n\n    for (i = 0; i < 100; i = i + 1) begin\n      // Generate random 8-bit inputs\n      A = $random;\n      B = $random;\n\n      // Wait for the operation to complete\n      #10;\n\n    //   $display(\"A = %d, B = %d, Expected Product = %d\", A, B, A * B);\n\n      // Check the result of the multiplication\n      if (product !== A * B) begin\n        error = error + 1;\n        $display(\"Test failed: A = %d, B = %d, Expected Product = %d, Got = %d\", A, B, A * B, product);\n      end\n    end\n\n    // Final test result summary\n    if (error == 0) begin\n      $display(\"=========== Your Design Passed ===========\");\n    end\n    else begin\n      $display(\"=========== Test completed with %d /100 failures ===========\", error);\n    end\n\n    $finish;\n  end\n\nendmodule",
+  "reference_rtl": "module multi_8bit (\n  input [7:0] A,\n  input [7:0] B,\n  output reg [15:0] product\n);\n\n  reg [7:0] multiplicand;\n  reg [3:0] shift_count;\n\n  always @* begin\n    product = 16'b0; \n    multiplicand = A; \n    shift_count = 0;  \n\n    for (int i = 0; i < 8; i = i + 1) begin\n      if (B[i] == 1) begin\n        product = product + (multiplicand << shift_count);\n      end\n      shift_count = shift_count + 1;\n    end\n  end\n\nendmodule"
+}

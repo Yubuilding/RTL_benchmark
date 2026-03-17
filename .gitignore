@@ -6,4 +6,5 @@ __pycache__/
 results/runs/
 results/raw/
 .state/known_models.json
+.state/web_jobs.json
 .state/webui_config.json

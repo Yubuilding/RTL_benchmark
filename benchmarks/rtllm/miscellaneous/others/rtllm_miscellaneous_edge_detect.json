@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_edge_detect",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "edge_detect",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/others",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "others",
+    "medium"
+  ],
+  "module_header": "module edge_detect( input clk, input rst_n, input a, output reg rise, output reg down );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module for edge detection. There is a slowly changing 1-bit signal a. When \"a\" changes from 0 to 1, the indicating signal rise is 1. When \"a\" changes from 1 to 0, the falling edge of signal a is shown, the indicating signal down is 1. rise or down will be set to 1 on the next clock when the corresponding edge appears, and then return to 0 until the corresponding edge appears again.\n\nModule name:  \n    edge_detect      \n\nInput ports:\n    clk: Clock signal.\n    rst_n: Reset signal (active low).\n    a: Input signal.\n\nOutput ports:\n    rise: Output signal indicating a rising edge.\n    down: Output signal indicating a falling edge.\n\nImplementation:\nThe edge_detect module detects rising and falling edges in the input signal a and generates corresponding output signals rise and down. The rising and falling edges are detected on the positive edge of the clock signal clk. If a rising edge is detected, the rise output signal is set to 1. If a falling edge is detected, the down output signal is set to 1. Otherwise, both output signals are set to 0. These output signals are synchronized with the clock and remain set to 1 until the corresponding edge appears again.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\n\nmodule testbench;\n    reg clk;\n    reg rst_n;\n    reg a;\n    wire rise;\n    wire down;\n\n    edge_detect dut (\n        .clk(clk),\n        .rst_n(rst_n),\n        .a(a),\n        .rise(rise),\n        .down(down)\n    );\n\n    integer error=0;\n    initial begin\n        // Initialize inputs\n        clk = 0;\n        rst_n = 1;\n        a = 0;\n\n        // Wait for a few clock cycles to ensure the module stabilizes\n        #5;\n\n        // Test scenario 1: No edge\n        a = 0;\n        #10;\n        a = 0;\n        #10;\n        // $display(\"rise: %b, down: %b\", rise, down);\n        error = (rise != 0 && down != 0) ? error+1 : error;\n        // Test scenario 2: Rising edge\n        a = 0;\n        #10;\n        a = 1;\n        #10;\n        a = 1;\n        // $display(\"rise: %b, down: %b\", rise, down);\n        error = (rise != 1 && down != 0) ? error+1 : error;\n        // Test scenario 3: Falling edge\n        a = 1;\n        #10;\n        a = 0;\n        #10;\n        a = 0;\n        // $display(\"rise: %b, down: %b\", rise, down);\n        error = (rise != 0 && down != 1) ? error+1 : error;\n       // Test scenario 4: Reset\n        rst_n = 0;\n        #10;\n        rst_n = 1;\n        #10;\n        // $display(\"rise: %b, down: %b\", rise, down);\n        error = (rise != 0 && down != 0) ? error+1 : error;\n        \n        if (error == 0) begin\n            $display(\"===========Your Design Passed===========\");\n        end\n        else begin\n        $display(\"===========Error===========\", error);\n        end\n\n        // Finish simulation\n        $finish;\n    end\n\n    always #5 clk = ~clk;\n    \nendmodule",
+  "reference_rtl": "`timescale 1ns/1ns\nmodule edge_detect(\n\tinput clk,\n\tinput rst_n,\n\tinput a,\n\t\n\toutput reg rise,\n\toutput reg down\n);\n\treg a0;\n    always@(posedge clk or negedge rst_n) begin\n        if(~rst_n) begin\n            rise <= 1'b0;\n            down <= 1'b0;\n        end \n        else begin\n            if(a & ~a0) begin\n                rise <= 1;\n                down <= 0;\n            end \n            else if (~a & a0) begin\n                rise <= 0;\n                down <= 1;\n            end else begin\n                rise <= 0;\n                down <= 0;\n            end\n        end\n    end\n    \n    always@(posedge clk or negedge rst_n) begin\n        if(~rst_n) \n            a0 <= 0;\n        else \n            a0 <= a;\n    end\nendmodule"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "verilogeval_076_always_case",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "TopModule",
+  "source": "verilogeval",
+  "suite": "verilogeval",
+  "category": "combinational",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "verilogeval",
+    "combinational",
+    "medium",
+    "always",
+    "case"
+  ],
+  "module_header": "module TopModule ( input [2:0] sel, input [3:0] data0, input [3:0] data1, input [3:0] data2, input [3:0] data3, input [3:0] data4, input [3:0] data5, output reg [3:0] out );",
+  "prompt": "I would like you to implement a module named TopModule with the following\ninterface. All input and output ports are one bit unless otherwise\nspecified.\n\n - input  sel   (3 bits)\n - input  data0 (4 bits)\n - input  data1 (4 bits)\n - input  data2 (4 bits)\n - input  data3 (4 bits)\n - input  data4 (4 bits)\n - input  data5 (4 bits)\n - output out   (4 bits)\n);\n\nThe module should implement a 6-to-1 multiplexer. When sel is between 0\nand 5, choose the corresponding data input. Otherwise, output 0. The data\ninputs and outputs are all 4 bits wide.",
+  "testbench": "`timescale 1 ps/1 ps\n`define OK 12\n`define INCORRECT 13\n\n\nmodule stimulus_gen (\n\tinput clk,\n\toutput logic [2:0] sel, \n\toutput logic [3:0] data0,\n\toutput logic [3:0] data1,\n\toutput logic [3:0] data2,\n\toutput logic [3:0] data3,\n\toutput logic [3:0] data4,\n\toutput logic [3:0] data5,\n\toutput reg[511:0] wavedrom_title,\n\toutput reg wavedrom_enable\t\n);\n\n\n// Add two ports to module stimulus_gen:\n//    output [511:0] wavedrom_title\n//    output reg wavedrom_enable\n\n\ttask wavedrom_start(input[511:0] title = \"\");\n\tendtask\n\t\n\ttask wavedrom_stop;\n\t\t#1;\n\tendtask\t\n\n\n\n\tinitial begin\n\t\tdata0 <= 4'ha;\n\t\tdata1 <= 4'hb;\n\t\tdata2 <= 4'hc;\n\t\tdata3 <= 4'hd;\n\t\tdata4 <= 4'he;\n\t\tdata5 <= 4'hf;\n\t\t{sel} <= 3'b111;\n\t\t@(negedge clk) wavedrom_start(\"<b>Sel</b> chooses one of the data inputs\");\n\t\t\trepeat(8) @(posedge clk) sel <= sel + 1;\n\t\t@(negedge clk) wavedrom_stop();\n\n\t\trepeat(100) @(posedge clk, negedge clk) begin\n\t\t\t{data0, data1, data2, data3} <= $urandom;\n\t\t\t{data4, data5, sel} <= $urandom;\n\t\tend\n\t\t$finish;\n\tend\n\t\nendmodule\n\nmodule tb();\n\n\ttypedef struct packed {\n\t\tint errors;\n\t\tint errortime;\n\t\tint errors_out;\n\t\tint errortime_out;\n\n\t\tint clocks;\n\t} stats;\n\t\n\tstats stats1;\n\t\n\t\n\twire[511:0] wavedrom_title;\n\twire wavedrom_enable;\n\tint wavedrom_hide_after_time;\n\t\n\treg clk=0;\n\tinitial forever\n\t\t#5 clk = ~clk;\n\n\tlogic [2:0] sel;\n\tlogic [3:0] data0;\n\tlogic [3:0] data1;\n\tlogic [3:0] data2;\n\tlogic [3:0] data3;\n\tlogic [3:0] data4;\n\tlogic [3:0] data5;\n\tlogic [3:0] out_ref;\n\tlogic [3:0] out_dut;\n\n\tinitial begin \n\t\t$dumpfile(\"wave.vcd\");\n\t\t$dumpvars(1, stim1.clk, tb_mismatch ,sel,data0,data1,data2,data3,data4,data5,out_ref,out_dut );\n\tend\n\n\n\twire tb_match;\t\t// Verification\n\twire tb_mismatch = ~tb_match;\n\t\n\tstimulus_gen stim1 (\n\t\t.clk,\n\t\t.* ,\n\t\t.sel,\n\t\t.data0,\n\t\t.data1,\n\t\t.data2,\n\t\t.data3,\n\t\t.data4,\n\t\t.data5 );\n\tRefModule good1 (\n\t\t.sel,\n\t\t.data0,\n\t\t.data1,\n\t\t.data2,\n\t\t.data3,\n\t\t.data4,\n\t\t.data5,\n\t\t.out(out_ref) );\n\t\t\n\tTopModule top_module1 (\n\t\t.sel,\n\t\t.data0,\n\t\t.data1,\n\t\t.data2,\n\t\t.data3,\n\t\t.data4,\n\t\t.data5,\n\t\t.out(out_dut) );\n\n\t\n\tbit strobe = 0;\n\ttask wait_for_end_of_timestep;\n\t\trepeat(5) begin\n\t\t\tstrobe <= !strobe;  // Try to delay until the very end of the time step.\n\t\t\t@(strobe);\n\t\tend\n\tendtask\t\n\n\t\n\tfinal begin\n\t\tif (stats1.errors_out) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"out\", stats1.errors_out, stats1.errortime_out);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"out\");\n\n\t\t$display(\"Hint: Total mismatched samples is %1d out of %1d samples\\n\", stats1.errors, stats1.clocks);\n\t\t$display(\"Simulation finished at %0d ps\", $time);\n\t\t$display(\"Mismatches: %1d in %1d samples\", stats1.errors, stats1.clocks);\n\tend\n\t\n\t// Verification: XORs on the right makes any X in good_vector match anything, but X in dut_vector will only match X.\n\tassign tb_match = ( { out_ref } === ( { out_ref } ^ { out_dut } ^ { out_ref } ) );\n\t// Use explicit sensitivity list here. @(*) causes NetProc::nex_input() to be called when trying to compute\n\t// the sensitivity list of the @(strobe) process, which isn't implemented.\n\talways @(posedge clk, negedge clk) begin\n\n\t\tstats1.clocks++;\n\t\tif (!tb_match) begin\n\t\t\tif (stats1.errors == 0) stats1.errortime = $time;\n\t\t\tstats1.errors++;\n\t\tend\n\t\tif (out_ref !== ( out_ref ^ out_dut ^ out_ref ))\n\t\tbegin if (stats1.errors_out == 0) stats1.errortime_out = $time;\n\t\t\tstats1.errors_out = stats1.errors_out+1'b1; end\n\n\tend\n\n   // add timeout after 100K cycles\n   initial begin\n     #1000000\n     $display(\"TIMEOUT\");\n     $finish();\n   end\n\nendmodule",
+  "reference_rtl": "module TopModule (\n  input [2:0] sel,\n  input [3:0] data0,\n  input [3:0] data1,\n  input [3:0] data2,\n  input [3:0] data3,\n  input [3:0] data4,\n  input [3:0] data5,\n  output reg [3:0] out\n);\n\n  always @(*) begin\n    case (sel)\n      3'h0: out = data0;\n      3'h1: out = data1;\n      3'h2: out = data2;\n      3'h3: out = data3;\n      3'h4: out = data4;\n      3'h5: out = data5;\n      default: out = 4'b0;\n    endcase\n  end\n\nendmodule"
+}

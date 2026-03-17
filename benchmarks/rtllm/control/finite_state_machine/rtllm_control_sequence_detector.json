@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_control_sequence_detector",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "sequence_detector",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "control/finite_state_machine",
+  "track": "control",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "control",
+    "finite_state_machine",
+    "hard"
+  ],
+  "module_header": "module sequence_detector( input clk, input rst_n, input data_in, output sequence_detected );",
+  "prompt": "Please act as a professional Verilog designer.\n\nImplement a module of a sequence detector to detect a specific 4-bit binary sequence 1001.\n\nModule name:\n    sequence_detector\n\nInput ports:\n    clk: Clock signal to synchronize the detector.\n    reset_n: Reset signal to initialize the state machine.\n    data_in: 1-bit binary input signal to feed the bitstream for sequence detection.\n\nOutput ports:\n    sequence_detected: 1-bit output signal that is set high when the specific sequence is detected.\n    \nInternal logic:\n    State Machine: The sequence detector uses a finite state machine (FSM) with the following states:\n    IDLE: Waiting for the start of the sequence.\n    S1: The first bit of the desired sequence is detected.\n    S2: The second bit of the desired sequence is detected.\n    S3: The third bit of the desired sequence is detected.\n    S4: The fourth and final bit of the desired sequence is detected, and the output sequence_detected is set high.\n\nImplementation:\n    -FSM Design: The FSM transitions through states based on the bitstream data_in. On each clock cycle, the detector checks for a match of the specific sequence.\n\n    -Sequence Detection: The module checks the input data_in and transitions between states. Once the complete sequence is detected, sequence_detected is asserted.\n\n    -Reset Behavior: When reset is high, the state machine returns to the IDLE state, resetting the detection process.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule tb_sequence_detector();\n\n    reg clk, rst_n, data_in;\n    wire sequence_detected;\n\n    sequence_detector dut (\n        .clk(clk),\n        .rst_n(rst_n),\n        .data_in(data_in),\n        .sequence_detected(sequence_detected)\n    );\n    integer error = 0;  \n    // Clock generation\n    always #5 clk = ~clk;\n\n    initial begin\n        // Initialize signals\n        clk = 0;\n        rst_n = 0;\n        data_in = 1;\n        #2 rst_n = 1;\n\n\n        // Sending 1001\n        #6 data_in = 1;\n        #10 data_in = 1;\n        #10 data_in = 0;\n        #10 data_in = 0;\n        #10 data_in = 1;\n        #10;data_in = 1; \n        if (!sequence_detected)\n            error = error+1;\n        #10;data_in = 1;\n        #10 data_in = 0;\n        if (sequence_detected)\n            error = error+1;\n        #10 data_in = 0;\n        #10 data_in = 1;\n        #10;\n        if (!sequence_detected)\n            error = error+1;\n    if (error == 0) begin\n      $display(\"=========== Your Design Passed ===========\");\n    end\n    else begin\n      $display(\"=========== Test completed with %d /100 failures ===========\", error);\n    end           \n        $finish;\n    end\n\nendmodule",
+  "reference_rtl": "module sequence_detector(\n     input  clk, \n     input  rst_n,\n     input  data_in, \n     output sequence_detected\t\t\t\t\n     );\n\n       \nparameter        IDLE = 5'b00001;\nparameter        S1   = 5'b00010;\nparameter \t     S2   = 5'b00100;\nparameter        S3   = 5'b01000;\nparameter        S4   = 5'b10000; \n\n\nreg [4:0]\t\t curr_state;\nreg [4:0] \t\t next_state;\n\n\nalways@(posedge clk or negedge rst_n) begin\n    if(!rst_n) begin\n\t    curr_state <= IDLE;\n    end\n    else begin\n\t    curr_state <= next_state;\n    end\nend\n\n\nalways@(*) begin\n    if(!rst_n) begin\n\t    next_state <= IDLE;\n    end\n    else begin\n\t    case(curr_state)\n\t        IDLE  :next_state = data_in?S1:IDLE;\n\t        S1\t  :next_state = data_in?S1:S2;\n\t        S2\t  :next_state = data_in?S1:S3;\n\t        S3\t  :next_state = data_in?S4:IDLE;\n\t        S4\t  :next_state = data_in?S1:S2;\n\t        default:next_state = IDLE;\t\n\t    endcase\n    end\nend\n\nassign sequence_detected = (curr_state ==S4) ? 1'b1 : 1'b0;\n\nendmodule"
+}

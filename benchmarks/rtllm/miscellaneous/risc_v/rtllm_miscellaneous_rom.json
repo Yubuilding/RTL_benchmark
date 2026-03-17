@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_rom",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "ROM",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/risc_v",
+  "track": "rtl_core",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "risc_v",
+    "hard"
+  ],
+  "module_header": "module ROM ( input wire [7:0] addr, // 8-bit Address input output reg [15:0] dout // 16-bit Data output );",
+  "prompt": "Please act as a professional Verilog designer.\n\nA Read-Only Memory (ROM) module designed for storing fixed data. This module provides a way to access predefined data based on an 8-bit address input.\n\nModule name:\n    ROM\n\nInput ports:\n    addr [7:0]: 8-bit address input used to select the data location in memory.\n\nOutput ports:\n    dout [15:0]: 16-bit output that delivers the data stored in the ROM at the specified address.\nMemory Array:\n    reg [15:0] mem [0:255]: Defines a ROM with 256 locations, each 16 bits wide.\nInitial Block:\n    The initial block is used to pre-load the ROM with fixed data. In this example, memory locations 0 through 3 are initialized with specific values (16'hA0A0, 16'hB1B1, 16'hC2C2, 16'hD3D3). Other locations can be initialized as needed.\nBehavior:\n    The always @(*) block continuously outputs the data stored in the ROM at the memory location specified by addr.\nSince ROM is read-only, this module includes only read operations.\n\nGive me the complete code.",
+  "testbench": "module rom_tb;\n\n    reg [7:0] addr_tb;          // Address input for the ROM\n    wire [15:0] dout_tb;        // Data output from the ROM\n\n    ROM rom_inst (\n        .addr(addr_tb),\n        .dout(dout_tb)\n    );\n\n    integer error;\n\n    initial begin\n        // Initialize simulation\n        $display(\"Starting ROM Testbench...\");\n        error = 0;\n\n        // Test reading data from different memory locations\n        addr_tb = 8'h00;  // Read from address 0\n        #10;\n        if (dout_tb !== 16'hA0A0) begin\n            $display(\"Error: Data read from address 0 is incorrect\");\n            error = error + 1;\n        end\n\n        addr_tb = 8'h01;  // Read from address 1\n        #10;\n        if (dout_tb !== 16'hB1B1) begin\n            $display(\"Error: Data read from address 1 is incorrect\");\n            error = error + 1;\n        end\n\n        addr_tb = 8'h02;  // Read from address 2\n        #10;\n        if (dout_tb !== 16'hC2C2) begin\n            $display(\"Error: Data read from address 2 is incorrect\");\n            error = error + 1;\n        end\n\n        addr_tb = 8'h03;  // Read from address 3\n        #10;\n        if (dout_tb !== 16'hD3D3) begin\n            $display(\"Error: Data read from address 3 is incorrect\");\n            error = error + 1;\n        end\n\n        // Add more test cases here if needed\n\n        // Check for errors\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n        end else begin\n            $display(\"Test completed with %d errors.\", error);\n        end\n\n        $finish;\n    end\n\nendmodule",
+  "reference_rtl": "module ROM (\n    input wire [7:0] addr,        // 8-bit Address input\n    output reg [15:0] dout        // 16-bit Data output\n);\n\n    // Declare a memory array of 256 locations, each 16 bits wide, initialized with fixed data\n    reg [15:0] mem [0:255];\n\n    // Initial block to initialize the ROM with data\n    initial begin\n        mem[0] = 16'hA0A0;\n        mem[1] = 16'hB1B1;\n        mem[2] = 16'hC2C2;\n        mem[3] = 16'hD3D3;\n        // Initialize other memory locations as needed\n    end\n\n    // Combinational logic: Read data from the ROM at the specified address\n    always @(*) begin\n        dout = mem[addr];\n    end\nendmodule"
+}

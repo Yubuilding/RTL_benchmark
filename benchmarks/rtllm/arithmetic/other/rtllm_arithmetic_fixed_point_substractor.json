@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_fixed_point_substractor",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "fixed_point_subtractor",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/other",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "other",
+    "medium"
+  ],
+  "module_header": "module fixed_point_subtractor #( parameter Q = 15, parameter N = 32 ) ( input [N-1:0] a, input [N-1:0] b, output [N-1:0] c );",
+  "prompt": "Please act as a professional Verilog designer.\n\nImplement a module of a fixed-point subtractor for precise arithmetic operations with fixed precision.\n\nModule name:\n    fixed_point_subtractor\n\nParameterized values:\n    Q: Represents the number of fractional bits in the fixed-point representation.\n    N: Represents the total number of bits (both integer and fractional) used for inputs and outputs.\n\nInput ports:\n    a [N-1:0]: First N-bit fixed-point input operand.\n    b [N-1:0]: Second N-bit fixed-point input operand.\n\nOutput ports:\n\n    c [N-1:0]: N-bit output representing the result of the fixed-point subtraction.\nInternal registers:\n    res [N-1:0]: N-bit register used to store the result of the subtraction operation.\n\nImplementation:\n    Same Sign Subtraction: When the signs of a and b are the same, their fractional and integer parts are subtracted. The sign of the result will be the same as the inputs.\n\nDifferent Sign Subtraction:\n    If a is positive and b is negative, the absolute values of a and b are added. The result will have a positive sign if a is greater than b, and a negative sign otherwise.\n    If a is negative and b is positive, the same logic applies, with the result's sign depending on the relative sizes of a and b.\n\nHandling Zero: \n    When the result is zero, the sign bit is explicitly set to 0 to handle this edge case.\n\nPrecision: \n    The fixed-point precision is defined by the parameters Q (fractional bits) and N (total bits). This ensures that the subtraction is performed accurately while maintaining the necessary precision for both integer and fractional parts.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule tb_fixed_point_subtractor;\n\n    // Parameters\n    parameter Q = 15;\n    parameter N = 32;\n\n    // Inputs\n    reg [N-1:0] a;\n    reg [N-1:0] b;\n\n    // Output\n    wire [N-1:0] c;\n    integer error = 0;\n    reg [N-1:0] expected_result;\n\n    // Instantiate the fixed point subtractor module\n    fixed_point_subtractor #(.Q(Q), .N(N)) uut (\n        .a(a),\n        .b(b),\n        .c(c)\n    );\n\n    // Initial values for inputs\n    initial begin\n\n\n        for (integer i = 0; i < 100; i = i + 1) begin\n            // Generate random N-bit inputs\n            a = $random % (1 << N);\n            b = $random % (1 << N);\n\n            // Delay for the operation to complete\n            #10;\n\n            // Calculate expected results\n            if (a[N-1] == b[N-1]) begin\n                expected_result = a - b;\n            end\n            else if (a[N-1] == 0 && b[N-1] == 1) begin\n                if (a[N-2:0] > b[N-2:0]) begin\n                    expected_result = a + b;\n                end\n                else begin\n                    expected_result = b - a;\n                end\n            end\n            else begin\n                if (a[N-2:0] > b[N-2:0]) begin\n                    expected_result = a - b;\n                end\n                else begin\n                    expected_result = b - a;\n                end\n            end\n\n            if (c !== expected_result) begin\n                error = error + 1;\n                $display(\"Test failed: a = %b, b = %b, c = %b, expected_result = %b\", a, b, c, expected_result);\n            end\n        end\n\n        // Final test result summary\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n        end\n        else begin\n            $display(\"=========== Test completed with %d /100 failures ===========\", error);\n        end\n\n        // End simulation\n        $finish;\n    end\n\nendmodule",
+  "reference_rtl": "module fixed_point_subtractor #(\n\tparameter Q = 15,\n\tparameter N = 32\n\t)\n\t(\n    input [N-1:0] a,\n    input [N-1:0] b,\n    output [N-1:0] c\n    );\n\nreg [N-1:0] res;\n\nassign c = res;\n\nalways @(a,b) begin\n\t// both negative or both positive\n\tif(a[N-1] == b[N-1]) begin\t\t\t\t\t\n\t\tres[N-2:0] = a[N-2:0] - b[N-2:0];\t\t\n\t\tres[N-1] = a[N-1];\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\tend\t\t\t\t\t\t\t\t\t\t\t\t\n\t//\tone of them is negative\n\telse if(a[N-1] == 0 && b[N-1] == 1) begin\t\t\n\t\tif( a[N-2:0] > b[N-2:0] ) begin\t\t\t\t\t\n\t\t\tres[N-2:0] = a[N-2:0] + b[N-2:0];\t\t\t\n\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\telse begin\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\tres[N-2:0] = b[N-2:0] + a[N-2:0];\t\t\n\t\t\tif (res[N-2:0] == 0)\n\t\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\n\t\t\telse\n\t\t\t\tres[N-1] = 1;\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\tend\n\telse begin\t\t\t\t\t\t\t\t\t\t\t\t\n\t\tif( a[N-2:0] > b[N-2:0] ) begin\t\t\t\t\t\n\t\t\tres[N-2:0] = a[N-2:0] + b[N-2:0];\t\t\t\n\t\t\tif (res[N-2:0] == 0)\n\t\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\telse\n\t\t\t\tres[N-1] = 1;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\telse begin\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\tres[N-2:0] = b[N-2:0] + a[N-2:0];\t\t\t\n\t\t\tres[N-1] = 0;\t\t\t\t\t\t\t\t\t\t\n\t\t\tend\n\t\tend\n\tend\nendmodule"
+}

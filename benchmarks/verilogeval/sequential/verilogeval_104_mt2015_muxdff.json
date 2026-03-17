@@ -1,0 +1,30 @@
+{
+  "id": "verilogeval_104_mt2015_muxdff",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "TopModule",
+  "source": "verilogeval",
+  "suite": "verilogeval",
+  "category": "sequential",
+  "track": "memory",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "verilogeval",
+    "sequential",
+    "medium",
+    "mt2015",
+    "muxdff"
+  ],
+  "module_header": "module TopModule ( input clk, input L, input q_in, input r_in, output reg Q );",
+  "prompt": "I would like you to implement a module named TopModule with the following\ninterface. All input and output ports are one bit unless otherwise\nspecified.\n\n - input  clk\n - input  L\n - input  q_in\n - input  r_in\n - output Q\n\nConsider this Verilog module \"full_module\":\n\n  module full_module (\n      input [2:0] r,\n      input L,\n      input clk,\n      output reg [2:0] q);\n\n    always @(posedge clk) begin\n      if (L) begin\n        q <= r;\n      end else begin\n        q <= {q[1] ^ q[2], q[0], q[2]};\n      end\n    end\n\n  endmodule\n\nNote that q[2:0] is three bits wide, representing three flip-flops that can be\nloaded from r when L is asserted. You want to factor full_module into a hierarchical\ndesign, flipflop and 2:1 multiplexer are in a submodule \"TopModule\", and that submodule\nwill be instantiated three times in full_module code. Create the submodule called \"TopModule\".\nYou do not have to provide the revised full_module.",
+  "testbench": "`timescale 1 ps/1 ps\n`define OK 12\n`define INCORRECT 13\n/*\n\tMidterm 2015 Question 5a. Build a flip-flop with a 2-to-1 mux before it.\n*/\n\n\nmodule stimulus_gen (\n\tinput clk,\n\toutput logic L,\n\toutput logic r_in,\n\toutput logic q_in\n);\n\n\talways @(posedge clk, negedge clk)\n\t\t{L, r_in, q_in} <= $random % 8;\n\t\n\tinitial begin\n\t\trepeat(100) @(posedge clk);\n\t\t#1 $finish;\n\tend\n\t\nendmodule\n\nmodule tb();\n\n\ttypedef struct packed {\n\t\tint errors;\n\t\tint errortime;\n\t\tint errors_Q;\n\t\tint errortime_Q;\n\n\t\tint clocks;\n\t} stats;\n\t\n\tstats stats1;\n\t\n\t\n\twire[511:0] wavedrom_title;\n\twire wavedrom_enable;\n\tint wavedrom_hide_after_time;\n\t\n\treg clk=0;\n\tinitial forever\n\t\t#5 clk = ~clk;\n\n\tlogic L;\n\tlogic q_in;\n\tlogic r_in;\n\tlogic Q_ref;\n\tlogic Q_dut;\n\n\tinitial begin \n\t\t$dumpfile(\"wave.vcd\");\n\t\t$dumpvars(1, stim1.clk, tb_mismatch ,clk,L,q_in,r_in,Q_ref,Q_dut );\n\tend\n\n\n\twire tb_match;\t\t// Verification\n\twire tb_mismatch = ~tb_match;\n\t\n\tstimulus_gen stim1 (\n\t\t.clk,\n\t\t.* ,\n\t\t.L,\n\t\t.q_in,\n\t\t.r_in );\n\tRefModule good1 (\n\t\t.clk,\n\t\t.L,\n\t\t.q_in,\n\t\t.r_in,\n\t\t.Q(Q_ref) );\n\t\t\n\tTopModule top_module1 (\n\t\t.clk,\n\t\t.L,\n\t\t.q_in,\n\t\t.r_in,\n\t\t.Q(Q_dut) );\n\n\t\n\tbit strobe = 0;\n\ttask wait_for_end_of_timestep;\n\t\trepeat(5) begin\n\t\t\tstrobe <= !strobe;  // Try to delay until the very end of the time step.\n\t\t\t@(strobe);\n\t\tend\n\tendtask\t\n\n\t\n\tfinal begin\n\t\tif (stats1.errors_Q) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"Q\", stats1.errors_Q, stats1.errortime_Q);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"Q\");\n\n\t\t$display(\"Hint: Total mismatched samples is %1d out of %1d samples\\n\", stats1.errors, stats1.clocks);\n\t\t$display(\"Simulation finished at %0d ps\", $time);\n\t\t$display(\"Mismatches: %1d in %1d samples\", stats1.errors, stats1.clocks);\n\tend\n\t\n\t// Verification: XORs on the right makes any X in good_vector match anything, but X in dut_vector will only match X.\n\tassign tb_match = ( { Q_ref } === ( { Q_ref } ^ { Q_dut } ^ { Q_ref } ) );\n\t// Use explicit sensitivity list here. @(*) causes NetProc::nex_input() to be called when trying to compute\n\t// the sensitivity list of the @(strobe) process, which isn't implemented.\n\talways @(posedge clk, negedge clk) begin\n\n\t\tstats1.clocks++;\n\t\tif (!tb_match) begin\n\t\t\tif (stats1.errors == 0) stats1.errortime = $time;\n\t\t\tstats1.errors++;\n\t\tend\n\t\tif (Q_ref !== ( Q_ref ^ Q_dut ^ Q_ref ))\n\t\tbegin if (stats1.errors_Q == 0) stats1.errortime_Q = $time;\n\t\t\tstats1.errors_Q = stats1.errors_Q+1'b1; end\n\n\tend\n\n   // add timeout after 100K cycles\n   initial begin\n     #1000000\n     $display(\"TIMEOUT\");\n     $finish();\n   end\n\nendmodule",
+  "reference_rtl": "module TopModule (\n  input clk,\n  input L,\n  input q_in,\n  input r_in,\n  output reg Q\n);\n\n  initial Q=0;\n  always @(posedge clk)\n    Q <= L ? r_in : q_in;\n\nendmodule"
+}

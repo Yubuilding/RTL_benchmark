@@ -15,10 +15,39 @@
     ]
   },
   {
+    "name": "VerilogEval",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/NVlabs/verilog-eval",
+    "license": "Apache-2.0",
+    "license_status": "verified",
+    "problem_style": ["spec_to_rtl", "code_completion"],
+    "coverage": ["combinational", "sequential", "fsm", "hdlbits_style"],
+    "problem_count": 156,
+    "mirror_policy": "eligible_for_import",
+    "notes": [
+      "Main branch README describes VerilogEval v2 with a plain-text `dataset_spec-to-rtl` task set.",
+      "The official repository ships 156 spec-to-RTL problems and matching self-checking testbenches."
+    ]
+  },
+  {
+    "name": "RealBench",
+    "kind": "benchmark_repo",
+    "url": "https://github.com/IPRC-DIP/RealBench",
+    "license": "MIT",
+    "license_status": "verified",
+    "problem_style": ["spec_to_rtl", "system_level", "module_level", "multimodal"],
+    "coverage": ["complex_ip", "formal_verification", "system_context"],
+    "mirror_policy": "manual_review_before_import",
+    "notes": [
+      "Repository README positions RealBench as a benchmark for complex real-world IP design tasks with syntax, function, and formal verification.",
+      "The benchmark documents are GPG-encrypted before use, so direct mirroring into this repo needs a separate review."
+    ]
+  },
+  {
     "name": "RTL-Repo",
     "kind": "benchmark_repo",
     "url": "https://github.com/AUCOHL/RTL-Repo",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "license_status": "verified",
     "problem_style": ["repo_level_completion", "contextual_generation"],
     "coverage": ["real_world_repositories"],
@@ -32,14 +61,16 @@
   {
     "name": "PyHDL-Eval",
     "kind": "benchmark_repo",
-    "url": "https://github.com/masc-ucsc/pyhdl-eval",
+    "url": "https://github.com/cornell-brg/pyhdl-eval",
     "license": "MIT",
     "license_status": "verified",
     "problem_style": ["python_to_hdl", "algorithm_to_hdl"],
     "coverage": ["pyhdl", "conversion"],
-    "mirror_policy": "eligible_for_import",
+    "problem_count": 168,
+    "mirror_policy": "manual_review_before_import",
     "notes": [
-      "Open-source benchmark focused on generating Python-based HDLs from problem statements."
+      "Official README describes 168 new problems spanning 19 RTL subclasses.",
+      "The public GitHub repo removes Verilog reference solutions, so this repo can catalog the source but cannot directly mirror complete RTL tasks from GitHub alone."
     ]
   },
   {
@@ -59,14 +90,16 @@
   {
     "name": "CorrectBench",
     "kind": "benchmark_repo",
-    "url": "https://github.com/Open-Verification/CorrectBench",
+    "url": "https://github.com/AutoBench/CorrectBench",
     "license": "MIT",
     "license_status": "verified",
-    "problem_style": ["spec_to_rtl", "self_correction"],
+    "problem_style": ["spec_to_testbench", "self_correction"],
     "coverage": ["verilog", "sv", "hls", "circuit_type_labels"],
-    "mirror_policy": "eligible_for_import",
+    "problem_count": 156,
+    "mirror_policy": "manual_review_before_import",
     "notes": [
-      "Open verification benchmark with labels useful for error analysis and self-correction workflows."
+      "Repository README says the dataset in `data/HDLBits` is extended from HDLBits data.",
+      "Useful for testbench-generation and self-correction workflows, but redistribution should be reviewed before mirroring."
     ]
   }
 ]

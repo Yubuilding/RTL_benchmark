@@ -14,6 +14,7 @@ const state = {
   compareModelB: "",
   leaderboardCompare: null,
   selectedProblemIds: new Set(),
+  selectedRunModelKeys: new Set(),
   expandedModels: new Set(),
   artifactViewer: null,
   problemSearch: "",
@@ -37,6 +38,7 @@ const dom = {
   executionTimeoutInput: byId("executionTimeoutInput"),
   dockerImageInput: byId("dockerImageInput"),
   dockerBinaryInput: byId("dockerBinaryInput"),
+  runModelPicker: byId("runModelPicker"),
   problemPicker: byId("problemPicker"),
   problemSearchInput: byId("problemSearchInput"),
   problemStats: byId("problemStats"),
@@ -93,6 +95,10 @@ function apiPost(path, body) {
   }).then(checkResponse);
 }
 
+function apiDelete(path) {
+  return fetch(path, { method: "DELETE" }).then(checkResponse);
+}
+
 function checkResponse(response) {
   if (!response.ok) {
     return response.json().catch(() => ({})).then((payload) => {
@@ -112,6 +118,8 @@ async function loadState(options = {}) {
   state.leaderboard = payload.leaderboard || { updated_at: "", models: [] };
   state.jobs = payload.jobs || [];
   pruneSelectedProblems();
+
+  syncRunModelSelection({ reset: !preserveInputs });
 
   if (!preserveInputs) {
     syncFormFromState();
@@ -188,9 +196,13 @@ function collectUiConfig() {
 
 function collectRunRequest() {
   const scope = scopeValue();
+  const selectedModels = availableRunModels()
+    .filter((item) => state.selectedRunModelKeys.has(item.key))
+    .map((item) => ({ provider: item.provider, model_id: item.modelId }));
   return {
     scope,
     uiConfig: collectUiConfig(),
+    selectedModels,
     problemIds: scope === "selected_problems" ? Array.from(state.selectedProblemIds) : [],
     customProblem:
       scope === "custom_problem"
@@ -204,8 +216,42 @@ function pruneSelectedProblems() {
   state.selectedProblemIds = new Set(Array.from(state.selectedProblemIds).filter((problemId) => validIds.has(problemId)));
 }
 
+function availableRunModels() {
+  const providers = (((state.uiConfig || {}).providers) || []).filter((provider) => provider.enabled);
+  return providers.flatMap((provider) =>
+    (provider.models || [])
+      .map((modelId) => String(modelId || "").trim())
+      .filter(Boolean)
+      .map((modelId) => ({
+        key: runModelKey(provider.provider, modelId),
+        provider: provider.provider,
+        providerLabel: provider.label || provider.provider,
+        modelId,
+      })),
+  );
+}
+
+function runModelKey(provider, modelId) {
+  return `${String(provider || "").trim()}::${String(modelId || "").trim()}`;
+}
+
+function syncRunModelSelection(options = {}) {
+  const reset = Boolean(options.reset);
+  const models = availableRunModels();
+  const validKeys = new Set(models.map((item) => item.key));
+  if (reset || !state.selectedRunModelKeys.size) {
+    state.selectedRunModelKeys = new Set(models.map((item) => item.key));
+    return;
+  }
+  state.selectedRunModelKeys = new Set(Array.from(state.selectedRunModelKeys).filter((key) => validKeys.has(key)));
+  if (!state.selectedRunModelKeys.size && models.length) {
+    state.selectedRunModelKeys = new Set(models.map((item) => item.key));
+  }
+}
+
 function render() {
   renderProviders();
+  renderRunModelPicker();
   renderProblems();
   renderScope();
   renderJobs();
@@ -271,6 +317,74 @@ function renderProviders() {
       `;
     })
     .join("");
+}
+
+function renderRunModelPicker() {
+  if (!dom.runModelPicker) {
+    return;
+  }
+  const models = availableRunModels();
+  if (!models.length) {
+    dom.runModelPicker.innerHTML = `
+      <div class="empty-state">
+        No enabled models are available for runs. Configure models on the <a class="inline-link" href="/config">Config</a> page first.
+      </div>
+    `;
+    return;
+  }
+
+  const grouped = groupBy(models, (item) => item.providerLabel);
+  const selectedCount = Array.from(state.selectedRunModelKeys).filter((key) => models.some((item) => item.key === key)).length;
+
+  dom.runModelPicker.innerHTML = `
+    <div class="run-model-toolbar">
+      <div class="problem-stats">
+        <span>Selected <strong>${selectedCount}</strong> / ${models.length}</span>
+        <span>${Object.keys(grouped).length} providers</span>
+        <span>Jobs with different model selections can run in parallel.</span>
+      </div>
+      <div class="stack-actions">
+        <button class="mini-button" data-select-all-run-models="true">Select All</button>
+        <button class="mini-button" data-clear-all-run-models="true">Clear All</button>
+      </div>
+    </div>
+    <div class="run-model-groups">
+      ${Object.entries(grouped)
+        .map(
+          ([providerLabel, items]) => `
+            <section class="run-model-group">
+              <div class="source-head">
+                <div>
+                  <p class="problem-title">${escapeHtml(providerLabel)}</p>
+                  <div class="problem-meta">${items.length} models</div>
+                </div>
+                <div class="stack-actions">
+                  <button class="mini-button" data-select-run-provider="${escapeHtml(items[0].provider)}">Select Provider</button>
+                  <button class="mini-button" data-clear-run-provider="${escapeHtml(items[0].provider)}">Clear Provider</button>
+                </div>
+              </div>
+              <div class="token-list run-model-token-list">
+                ${items
+                  .map(
+                    (item) => `
+                      <label class="run-model-chip ${state.selectedRunModelKeys.has(item.key) ? "run-model-chip-active" : ""}">
+                        <input
+                          type="checkbox"
+                          data-run-model-key="${escapeHtml(item.key)}"
+                          ${state.selectedRunModelKeys.has(item.key) ? "checked" : ""}
+                        />
+                        <span class="mono">${escapeHtml(item.modelId)}</span>
+                      </label>
+                    `,
+                  )
+                  .join("")}
+              </div>
+            </section>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 function renderProblems() {
@@ -399,7 +513,22 @@ function renderJobs() {
   dom.jobsList.innerHTML = state.jobs
     .map((job) => {
       const progress = job.progress || {};
-      const summary = job.result && job.result.summary ? `${job.result.summary.length} models summarised` : "pending";
+      const hasResult = Boolean(job.result && job.result.run_id);
+      const progressText = renderJobProgressText(progress);
+      const etaText = renderJobEtaText(progress);
+      const summary =
+        job.status === "failed"
+          ? hasResult
+            ? `partial result · ${(job.result.summary || []).length} models summarised`
+            : "failed before result was saved"
+          : job.status === "paused"
+            ? hasResult
+              ? `paused · ${(job.result.summary || []).length} models summarised`
+              : "paused before result was saved"
+          : hasResult
+            ? `${job.result.summary.length} models summarised`
+            : "pending";
+      const errorSummary = summarizeError(job.error || "");
       return `
         <article class="stack-card">
           <div class="stack-head">
@@ -408,12 +537,41 @@ function renderJobs() {
           </div>
           <div class="stack-subtitle">${escapeHtml(progress.message || "")}</div>
           <div class="stack-subtitle mono">${escapeHtml(progress.model_id || "")} ${escapeHtml(progress.problem_id || "")}</div>
+          ${renderJobProgressBar(progress)}
+          <div class="stack-subtitle">${escapeHtml(progressText)}</div>
+          ${etaText ? `<div class="stack-subtitle">${escapeHtml(etaText)}</div>` : ""}
           <div class="stack-subtitle">Submitted ${escapeHtml(job.submitted_at || "")} · ${escapeHtml(summary)}</div>
+          ${
+            job.status === "failed" && errorSummary
+              ? `
+                <div class="job-error-summary">${escapeHtml(errorSummary)}</div>
+                <details class="job-error-details">
+                  <summary>Show failure details</summary>
+                  <pre>${escapeHtml(job.error || "")}</pre>
+                </details>
+              `
+              : ""
+          }
           <div class="stack-actions">
             ${
-              job.result
+              hasResult
                 ? `<button class="mini-button" data-view-run="${escapeHtml(job.result.run_id)}">Preview Result</button>
                    <a class="mini-link" href="/results?run=${encodeURIComponent(job.result.run_id)}">Open Results Page</a>`
+                : ""
+            }
+            ${
+              job.status === "failed" || job.status === "paused"
+                ? `<button class="mini-button" data-resume-job="${escapeHtml(job.job_id)}">Continue Run</button>`
+                : ""
+            }
+            ${
+              job.status === "running" || job.status === "queued"
+                ? `<button class="mini-button" data-pause-job="${escapeHtml(job.job_id)}">Pause</button>`
+                : ""
+            }
+            ${
+              job.status !== "running" && job.status !== "queued"
+                ? `<button class="mini-button" data-delete-job="${escapeHtml(job.job_id)}">Delete Job</button>`
                 : ""
             }
           </div>
@@ -440,6 +598,7 @@ function renderHistory() {
       const summary = item.summary || [];
       const top = summary[0] ? `${summary[0].model_id} ${formatRate(summary[0].score)}` : "no summary";
       const active = state.selectedRunId === item.run_id ? "history-card-active" : "";
+      const runStatus = item.status || "completed";
       const meta = compact
         ? `${escapeHtml(item.started_at || "")} · ${item.model_count} models · ${item.case_count} cases`
         : `${escapeHtml(item.started_at || "")} · ${item.model_count} models · ${item.case_count} cases`;
@@ -447,10 +606,15 @@ function renderHistory() {
         <article class="stack-card ${active} ${compact ? "history-compact-card" : ""}">
           <div class="stack-head">
             <strong class="mono">${escapeHtml(item.run_id)}</strong>
-            <span class="status-chip status-completed">${escapeHtml(item.scope || "suite")}</span>
+            <span class="status-chip status-${escapeHtml(statusToChip(runStatus))}">${escapeHtml(runStatus)}</span>
           </div>
-          <div class="stack-subtitle">${meta}</div>
+          <div class="stack-subtitle">${meta} · ${escapeHtml(item.scope || "suite")}</div>
           <div class="stack-subtitle">${compact ? `Best: ${escapeHtml(top)}` : `Top row: ${escapeHtml(top)}`}</div>
+          ${
+            runStatus === "failed" && item.error
+              ? `<div class="job-error-summary">${escapeHtml(summarizeError(item.error))}</div>`
+              : ""
+          }
           <div class="stack-actions">
             <button class="mini-button" data-view-run="${escapeHtml(item.run_id)}">${compact ? "Open" : "Preview"}</button>
             ${
@@ -481,9 +645,9 @@ function renderLeaderboard() {
   const leaderboard = state.leaderboard || { models: [] };
   const parts = [];
   if (leaderboard.updated_at) {
-    parts.push(`Suite-only · Updated ${leaderboard.updated_at}`);
+    parts.push(`Updated ${leaderboard.updated_at}`);
   } else {
-    parts.push("No suite leaderboard updates yet.");
+    parts.push("No leaderboard updates yet.");
   }
   if (leaderboard.reset_at) {
     parts.push(`Reset baseline ${leaderboard.reset_at}`);
@@ -492,20 +656,21 @@ function renderLeaderboard() {
 
   const rows = leaderboard.models || [];
   if (!rows.length) {
-    table.innerHTML = `<div class="stack-card empty-state">Run a full suite benchmark to populate the suite-only leaderboard.</div>`;
+    table.innerHTML = `<div class="stack-card empty-state">Run benchmark problems to populate the leaderboard.</div>`;
     return;
   }
 
-  table.innerHTML = `
+  const mainTable = `
     <table>
       <thead>
         <tr>
           <th>Model</th>
           <th>Provider</th>
-          <th>Pass Rate</th>
+          <th>Weighted Score</th>
+          <th>Raw Pass</th>
+          <th>Quality</th>
           <th>Cases</th>
-          <th>Last Scope</th>
-          <th>Problems</th>
+          <th>Profile</th>
           <th>Runs</th>
           <th>Last Run</th>
           <th>Actions</th>
@@ -516,12 +681,22 @@ function renderLeaderboard() {
           .map(
             (row) => `
               <tr>
-                <td class="mono">${escapeHtml(row.model_id)}</td>
+                <td>
+                  <div class="mono">${escapeHtml(row.model_id)}</div>
+                  ${renderHighlightTokens(row.top_tags || [])}
+                </td>
                 <td>${escapeHtml(row.provider || "")}</td>
+                <td>${formatRate(row.score)}</td>
                 <td>${formatRate(row.pass_rate)}</td>
+                <td>${formatRate(row.quality_score)}</td>
                 <td>${row.cases || 0}</td>
-                <td>${escapeHtml(row.last_scope || "suite")}</td>
-                <td>${row.last_problem_count || row.cases || 0}</td>
+                <td>
+                  <div class="leaderboard-profile-summary">${escapeHtml(row.profile_summary || "n/a")}</div>
+                  <details class="leaderboard-breakdown">
+                    <summary>Open Slice Breakdown</summary>
+                    ${renderLeaderboardBreakdown(row)}
+                  </details>
+                </td>
                 <td>${row.runs || 0}</td>
                 <td class="mono">${escapeHtml(row.last_run_id || "")}</td>
                 <td>
@@ -538,6 +713,8 @@ function renderLeaderboard() {
       </tbody>
     </table>
   `;
+  const sliceSections = renderSliceRankingSections(leaderboard.slice_rankings || {});
+  table.innerHTML = mainTable + sliceSections;
 }
 
 function renderHomeRunDetail() {
@@ -684,7 +861,10 @@ function renderResultsModelSummary() {
                 <span>${model.failed} fail</span>
                 <span>${formatRate(model.pass_rate)}</span>
                 <span>${model.cases} cases</span>
+                <span>W ${formatRate(model.weighted_pass_score)}</span>
+                <span>Q ${formatRate(model.quality_score)}</span>
               </div>
+              <div class="stack-subtitle">${escapeHtml(model.profile_summary || "")}</div>
               ${expanded ? renderModelCasesTable(model) : ""}
             </article>
           `;
@@ -969,6 +1149,7 @@ function renderLeaderboardCompareSummary(compare) {
       <div class="metric-card"><span class="metric-label">Both Fail</span><strong>${summary.both_fail || 0}</strong></div>
       <div class="metric-card"><span class="metric-label">Missing Cases</span><strong>${(summary.missing_a || 0) + (summary.missing_b || 0)}</strong></div>
     </div>
+    ${renderLeaderboardSliceComparisons(compare)}
   `;
 }
 
@@ -1021,6 +1202,67 @@ function renderLeaderboardCompareGroups(compare) {
   return rendered || `<div class="empty-state">No comparable case rows for the current selection.</div>`;
 }
 
+function renderLeaderboardSliceComparisons(compare) {
+  const groups = [
+    { key: "sources", title: "Source Comparison" },
+    { key: "difficulties", title: "Difficulty Comparison" },
+    { key: "tags", title: "Tag Comparison" },
+  ];
+  const content = groups
+    .map((group) => {
+      const rows = (compare.slice_comparison || {})[group.key] || [];
+      if (!rows.length) {
+        return "";
+      }
+      return `
+        <section class="compare-group">
+          <div class="compare-group-head">
+            <div>
+              <p class="eyebrow">Slice View</p>
+              <h3>${escapeHtml(group.title)}</h3>
+            </div>
+            <span class="problem-meta">${rows.length} slices</span>
+          </div>
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>Slice</th>
+                  <th>A Score</th>
+                  <th>B Score</th>
+                  <th>Delta</th>
+                  <th>Coverage</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows
+                  .map(
+                    (row) => `
+                      <tr>
+                        <td>${escapeHtml(row.label || row.value || "n/a")}</td>
+                        <td>${formatRate(row.model_a_score)}</td>
+                        <td>${formatRate(row.model_b_score)}</td>
+                        <td>${formatSignedRate(row.delta)}</td>
+                        <td>
+                          <div class="compare-meta">
+                            <span>A ${row.model_a_cases || 0} / ${formatRate(row.model_a_weight)}</span>
+                            <span>B ${row.model_b_cases || 0} / ${formatRate(row.model_b_weight)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    `,
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    })
+    .join("");
+  return content ? `<div class="compare-slice-shell">${content}</div>` : "";
+}
+
 function renderLeaderboardCompareRow(compare, row) {
   return `
     <tr>
@@ -1029,8 +1271,10 @@ function renderLeaderboardCompareRow(compare, row) {
         <div class="compare-meta">
           <span>${escapeHtml(row.source || "n/a")}</span>
           <span>${escapeHtml(row.category || "n/a")}</span>
+          <span>${escapeHtml(row.track || "n/a")}</span>
           <span>${escapeHtml(row.suite || "n/a")}</span>
           <span>${escapeHtml(row.difficulty || "n/a")}</span>
+          ${(row.tags || []).length ? `<span>${escapeHtml((row.tags || []).slice(0, 3).join(", "))}</span>` : ""}
         </div>
       </td>
       <td>${renderCompareCaseCell(compare.run_id, row.model_a)}</td>
@@ -1086,6 +1330,146 @@ function compareLabels(compare) {
     aShort: shortenModelId(compare.model_a || "A"),
     bShort: shortenModelId(compare.model_b || "B"),
   };
+}
+
+function renderLeaderboardBreakdown(row) {
+  const groups = [
+    { key: "sources", title: "Sources" },
+    { key: "tracks", title: "Tracks" },
+    { key: "difficulties", title: "Difficulties" },
+    { key: "tags", title: "Tags" },
+  ];
+  return groups
+    .map((group) => {
+      const entries = (((row || {}).breakdowns || {})[group.key] || []).slice(0, group.key === "tags" ? 8 : 6);
+      if (!entries.length) {
+        return "";
+      }
+      return `
+        <section class="leaderboard-breakdown-group">
+          <div class="leaderboard-breakdown-title">${escapeHtml(group.title)}</div>
+          <div class="leaderboard-breakdown-items">
+            ${entries
+              .map(
+                (entry) => `
+                  <article class="leaderboard-breakdown-item">
+                    <div class="leaderboard-breakdown-label">${escapeHtml(displaySliceLabel(entry))}</div>
+                    <div class="leaderboard-breakdown-metrics">
+                      <span>${formatRate(entry.slice_weighted_pass_rate)}</span>
+                      <span>Q ${formatRate(entry.slice_quality_score)}</span>
+                      <span>${formatSignedRate(entry.lift_vs_model_overall)}</span>
+                    </div>
+                    <div class="leaderboard-breakdown-meta">${entry.cases || 0} cases · weight ${formatRate(entry.global_weight_mass)}</div>
+                  </article>
+                `,
+              )
+              .join("")}
+          </div>
+        </section>
+      `;
+    })
+    .join("");
+}
+
+function renderSliceRankingSections(sliceRankings) {
+  const groups = [
+    { key: "sources", title: "Source Leaderboards" },
+    { key: "tracks", title: "Track Leaderboards" },
+    { key: "difficulties", title: "Difficulty Leaderboards" },
+    { key: "tags", title: "Tag Leaderboards" },
+  ];
+  const sections = groups
+    .map((group) => {
+      const values = sliceRankings[group.key] || {};
+      const keys = Object.keys(values);
+      if (!keys.length) {
+        return "";
+      }
+      return `
+        <section class="compare-group" style="margin-top: 18px;">
+          <div class="compare-group-head">
+            <div>
+              <p class="eyebrow">Slice Leaderboard</p>
+              <h3>${escapeHtml(group.title)}</h3>
+            </div>
+          </div>
+          ${keys
+            .slice(0, group.key === "tags" ? 8 : 12)
+            .map(
+              (value) => `
+                <div class="table-shell" style="margin-top: 12px;">
+                  <div class="stack-subtitle"><strong>${escapeHtml(value)}</strong></div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Score</th>
+                        <th>Quality</th>
+                        <th>Cases</th>
+                        <th>Weight</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(values[value] || [])
+                        .slice(0, 5)
+                        .map(
+                          (row) => `
+                            <tr>
+                              <td class="mono">${escapeHtml(row.model_id || "")}</td>
+                              <td>${formatRate(row.weighted_pass_score)}</td>
+                              <td>${formatRate(row.quality_score)}</td>
+                              <td>${row.cases || 0}</td>
+                              <td>${formatRate(row.global_weight_mass)}</td>
+                            </tr>
+                          `,
+                        )
+                        .join("")}
+                    </tbody>
+                  </table>
+                </div>
+              `,
+            )
+            .join("")}
+        </section>
+      `;
+    })
+    .join("");
+  return sections ? `<div class="leaderboard-slice-sections">${sections}</div>` : "";
+}
+
+function renderHighlightTokens(items) {
+  if (!items || !items.length) {
+    return `<div class="leaderboard-tag-list"><span class="token">n/a</span></div>`;
+  }
+  return `
+    <div class="leaderboard-tag-list">
+      ${items
+        .slice(0, 4)
+        .map((item) => `<span class="token leaderboard-tag-token">${escapeHtml(displaySliceLabel(item))}</span>`)
+        .join("")}
+    </div>
+  `;
+}
+
+function displaySliceLabel(item) {
+  const raw = String((item && (item.value || item.label)) || item || "").trim();
+  if (!raw) {
+    return "n/a";
+  }
+  return raw
+    .replace(/^标签\s+/u, "")
+    .replace(/^题源\s+/u, "")
+    .replace(/^能力\s+/u, "")
+    .replace(/^难度\s+/u, "")
+    .replace(/^类别\s+/u, "");
+}
+
+function formatSignedRate(value) {
+  if (value == null || Number.isNaN(Number(value))) {
+    return "n/a";
+  }
+  const numeric = Number(value);
+  return `${numeric >= 0 ? "+" : ""}${(numeric * 100).toFixed(1)}%`;
 }
 
 function renderTextSection(title, text) {
@@ -1171,6 +1555,9 @@ function statusToChip(status) {
   if (status === "fail" || status === "failed") {
     return "failed";
   }
+  if (status === "paused") {
+    return "paused";
+  }
   if (status === "running") {
     return "running";
   }
@@ -1178,6 +1565,45 @@ function statusToChip(status) {
     return "queued";
   }
   return "skipped";
+}
+
+function renderJobProgressBar(progress) {
+  const total = Number(progress.total_cases || 0);
+  if (!total) {
+    return "";
+  }
+  const percent = Math.max(0, Math.min(100, Number(progress.percent || 0)));
+  return `
+    <div class="job-progress">
+      <div class="job-progress-bar">
+        <span class="job-progress-fill" style="width:${percent.toFixed(1)}%"></span>
+      </div>
+      <div class="job-progress-stats">
+        <span>${Math.round(percent)}%</span>
+        <span>${progress.completed_cases || 0}/${total} cases</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderJobProgressText(progress) {
+  const total = Number(progress.total_cases || 0);
+  const completed = Number(progress.completed_cases || 0);
+  const remaining = Number(progress.remaining_cases || 0);
+  if (!total) {
+    return "Preparing run plan.";
+  }
+  return `Completed ${completed}/${total} cases · Remaining ${remaining} · Attempt ${progress.attempt || 0}`;
+}
+
+function renderJobEtaText(progress) {
+  const eta = progress.eta || {};
+  if (!eta.label) {
+    return "";
+  }
+  const confidence = eta.confidence ? ` · ${eta.confidence} confidence` : "";
+  const basis = eta.basis ? ` · ${eta.basis}` : "";
+  return `ETA ${eta.label}${confidence}${basis}`;
 }
 
 function acknowledgeInteraction(element) {
@@ -1242,7 +1668,9 @@ async function saveConfig(button) {
     const payload = await apiPost("/api/config", uiConfig);
     state.uiConfig = payload.uiConfig;
     syncFormFromState();
+    syncRunModelSelection({ reset: true });
     renderProviders();
+    renderRunModelPicker();
     if (button instanceof HTMLButtonElement) {
       button.disabled = false;
       setButtonState(button, "Saved", "button-success");
@@ -1262,6 +1690,11 @@ async function runBenchmark(button) {
   }
   try {
     const request = collectRunRequest();
+    if (!request.selectedModels.length) {
+      resetButtonState(button);
+      window.alert("Select at least one enabled model for this run.");
+      return;
+    }
     if (request.scope === "selected_problems" && !request.problemIds.length) {
       resetButtonState(button);
       window.alert("Pick at least one problem.");
@@ -1274,7 +1707,7 @@ async function runBenchmark(button) {
     }
 
     await apiPost("/api/run", request);
-    await loadState();
+    await loadState({ preserveInputs: true });
     if (button instanceof HTMLButtonElement) {
       button.disabled = false;
       setButtonState(button, "Queued", "button-success");
@@ -1293,12 +1726,61 @@ async function refreshState(button) {
     setButtonState(button, "Refreshing...", "button-busy");
   }
   try {
-    await loadState();
+    await loadState({ preserveInputs: true });
     if (button instanceof HTMLButtonElement) {
       button.disabled = false;
       setButtonState(button, "Refreshed", "button-success");
       window.setTimeout(() => resetButtonState(button), 900);
     }
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
+async function resumeJob(jobId, button) {
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Resuming...", "button-busy");
+  }
+  try {
+    await apiPost(`/api/jobs/${encodeURIComponent(jobId)}/resume`, {});
+    await loadState({ preserveInputs: true });
+    showToast("Job resumed.", "success");
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
+async function pauseJob(jobId, button) {
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Pausing...", "button-busy");
+  }
+  try {
+    await apiPost(`/api/jobs/${encodeURIComponent(jobId)}/pause`, {});
+    await loadState({ preserveInputs: true });
+    showToast("Pause requested. The job will stop after the current case.", "success");
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
+async function deleteJob(jobId, button) {
+  const confirmed = window.confirm("Delete this job and remove its saved run snapshot?");
+  if (!confirmed) {
+    return;
+  }
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Deleting...", "button-busy");
+  }
+  try {
+    await apiDelete(`/api/jobs/${encodeURIComponent(jobId)}`);
+    await loadState({ preserveInputs: true });
+    showToast("Job deleted.", "success");
   } catch (error) {
     resetButtonState(button);
     throw error;
@@ -1539,6 +2021,20 @@ function bindEvents() {
       return;
     }
 
+    if (target.matches("input[data-run-model-key]")) {
+      const modelKey = target.dataset.runModelKey;
+      if (!modelKey) {
+        return;
+      }
+      if (target.checked) {
+        state.selectedRunModelKeys.add(modelKey);
+      } else {
+        state.selectedRunModelKeys.delete(modelKey);
+      }
+      renderRunModelPicker();
+      return;
+    }
+
     if (target.id === "compareModelASelect") {
       state.compareModelA = target.value || "";
       state.leaderboardCompare = null;
@@ -1566,6 +2062,24 @@ function bindEvents() {
       return;
     }
 
+    const resumeJobId = target.dataset.resumeJob;
+    if (resumeJobId) {
+      resumeJob(resumeJobId, target).catch(showError);
+      return;
+    }
+
+    const pauseJobId = target.dataset.pauseJob;
+    if (pauseJobId) {
+      pauseJob(pauseJobId, target).catch(showError);
+      return;
+    }
+
+    const deleteJobId = target.dataset.deleteJob;
+    if (deleteJobId) {
+      deleteJob(deleteJobId, target).catch(showError);
+      return;
+    }
+
     const sourceToSelect = target.dataset.selectSource;
     if (sourceToSelect) {
       state.problems.filter((problem) => problem.source === sourceToSelect).forEach((problem) => state.selectedProblemIds.add(problem.id));
@@ -1579,6 +2093,36 @@ function bindEvents() {
         .filter((problem) => problem.source === sourceToClear)
         .forEach((problem) => state.selectedProblemIds.delete(problem.id));
       renderProblems();
+      return;
+    }
+
+    if (target.dataset.selectAllRunModels) {
+      state.selectedRunModelKeys = new Set(availableRunModels().map((item) => item.key));
+      renderRunModelPicker();
+      return;
+    }
+
+    if (target.dataset.clearAllRunModels) {
+      state.selectedRunModelKeys = new Set();
+      renderRunModelPicker();
+      return;
+    }
+
+    const providerToSelect = target.dataset.selectRunProvider;
+    if (providerToSelect) {
+      availableRunModels()
+        .filter((item) => item.provider === providerToSelect)
+        .forEach((item) => state.selectedRunModelKeys.add(item.key));
+      renderRunModelPicker();
+      return;
+    }
+
+    const providerToClear = target.dataset.clearRunProvider;
+    if (providerToClear) {
+      availableRunModels()
+        .filter((item) => item.provider === providerToClear)
+        .forEach((item) => state.selectedRunModelKeys.delete(item.key));
+      renderRunModelPicker();
       return;
     }
 
@@ -1694,6 +2238,15 @@ function shortenModelId(value) {
   return `${text.slice(0, 8)}...${text.slice(-7)}`;
 }
 
+function summarizeError(value) {
+  const text = String(value || "").trim();
+  if (!text) {
+    return "";
+  }
+  const [firstLine] = text.split("\n");
+  return firstLine.trim();
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replaceAll("&", "&amp;")
@@ -1705,6 +2258,17 @@ function escapeHtml(value) {
 function showError(error) {
   console.error(error);
   window.alert(error.message || String(error));
+}
+
+function groupBy(items, getKey) {
+  return items.reduce((groups, item) => {
+    const key = getKey(item);
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(item);
+    return groups;
+  }, {});
 }
 
 bindEvents();

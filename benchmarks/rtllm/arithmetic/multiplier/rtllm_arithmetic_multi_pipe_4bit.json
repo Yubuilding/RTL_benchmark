@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_multi_pipe_4bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "multi_pipe_4bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/multiplier",
+  "track": "arithmetic",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "multiplier",
+    "hard"
+  ],
+  "module_header": "module multi_pipe_4bit#( parameter size = 4 )( input clk , input rst_n , input [size-1:0] mul_a , input [size-1:0] mul_b , output reg [size*2-1:0] mul_out );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement the design of 4bit unsigned number pipeline multiplier. It consists of two levels of registers to store intermediate values and control the multiplication process.\n\nModule name:  \n    multi_pipe_4bit \n\nInput ports:\n    clk: Clock signal used for synchronous operation.\n    rst_n: Active-low reset signal. Defined as 0 for chip reset and 1 for reset signal inactive.\n    mul_a: Input signal representing the multiplicand with a data width of \"size\" bits.\n    mul_b: Input signal representing the multiplier with a data width of \"size\" bits.\t\n\nOutput ports:\n    mul_out: Product output signal with a data width of 2*size bits.\n\nParameter:\n    size = 4\n\nImplementation:\nExtension of input signals:\nThe input signals (mul_a and mul_b) are extended by adding \"size\" number of zero bits at the most significant bit positions.\nMultiplication operation:\nThe module uses a generate block to perform multiplication for each bit position of the multiplier (mul_b) and generate the partial products.\nFor each bit position i from 0 to size-1, the partial product is calculated as follows:\nIf the corresponding bit in the multiplier is 1, the multiplicand is left-shifted by i positions.\nIf the corresponding bit in the multiplier is 0, the partial product is set to 0 ('d0).\nAdd of partial products:\nThe module uses registers to store the intermediate sum values.\nOn the positive edge of the clock signal (clk) or the falling edge of the reset signal (rst_n), the module performs add operations.\nIf the reset signal (rst_n) is low, indicating a reset condition, the registers are set to 0.\nIf the reset signal (rst_n) is high, the registers are updated with the sum of the corresponding partial products.\nFinal product calculation:\nOn the positive edge of the clock signal (clk) or the falling edge of the reset signal (rst_n), the module calculates the final product.\nIf the reset signal (rst_n) is low, indicating a reset condition, the product output (mul_out) is set to 0.\nIf the reset signal (rst_n) is high, the product output (mul_out) is updated with the sum of registers.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\n\nmodule multi_pipe_tb;\n  reg clk;\n  reg rst_n;\n  reg [3:0] mul_a;\n  reg [3:0] mul_b;\n  wire [7:0] mul_out;\n  wire signed [7:0] perfect = mul_a*mul_b;\n  // Instantiate the DUT (Design Under Test)\n  multi_pipe_4bit #(.size(4)) dut (\n    .clk(clk),\n    .rst_n(rst_n),\n    .mul_a(mul_a),\n    .mul_b(mul_b),\n    .mul_out(mul_out)\n  );\n\n  // Generate clock\n  always #5 clk = ~clk;\n\n  integer fail_count =0;\n  integer i=0;\n  initial begin\n    // Initialize inputs\n    clk = 0;\n    rst_n = 0;\n    mul_a = 4'b0;\n    mul_b = 4'b0;\n\n    // Wait for a few clock cycles for reset to settle\n    #10;\n\n    // Apply reset\n    rst_n = 1;\n  \n    // Perform test case\n    for (i = 0; i < 100; i = i + 1) begin\n      mul_a =  $random;\n      mul_b =  $random;\n      #10;\n      // without pipeline\n      fail_count = (perfect == mul_out)? fail_count+1:fail_count;\n      #20;\n      // $display(\"%d, %d, %d, %d\", mul_a, mul_b, perfect, mul_out);\n      fail_count = (perfect == mul_out)? fail_count:fail_count+1;\n    end\n\n    if (fail_count == 0) begin\n        $display(\"===========Your Design Passed===========\");\n    end\n    else begin\n    $display(\"===========Test completed with %d / 100 failures===========\", fail_count);\n    end\n    $finish;\n  end\nendmodule",
+  "reference_rtl": "`timescale 1ns/1ns\nmodule multi_pipe_4bit#(\n\tparameter size = 4\n)(\n\tinput \t\t\t\t\t\tclk \t\t,   \n\tinput \t\t\t\t\t\trst_n\t\t,\n\tinput\t[size-1:0]\t\t\tmul_a\t\t,\n\tinput\t[size-1:0]\t\t\tmul_b\t\t,\n \n \toutput\treg\t[size*2-1:0]\tmul_out\t\t\n);\n\nparameter N = 2 * size;\n\nreg     [N-1:0]     sum_tmp1                ;\nreg     [N-1:0]     sum_tmp2                ;\nwire    [N-1:0]     mul_a_extend            ;\nwire    [N-1:0]     mul_b_extend            ;\n\nwire    [N-1:0]     mul_result[size-1:0]    ;\n\ngenvar i;\ngenerate\n    for(i = 0; i < size; i = i + 1) begin:add\n        assign mul_result[i] = mul_b[i] ? mul_a_extend << i : 'd0;\n    end\nendgenerate\n\nassign mul_a_extend = {{size{1'b0}}, mul_a};\nassign mul_b_extend = {{size{1'b0}}, mul_b};\n\nalways @(posedge clk or negedge rst_n) begin\n    if(!rst_n) begin\n        sum_tmp1 <= 'd0;\n        sum_tmp2 <= 'd0;\n    end\n    else begin\n        sum_tmp1 <= mul_result[0] + mul_result[1];\n        sum_tmp2 <= mul_result[2] + mul_result[3];\n    end\nend\n\nalways @(posedge clk or negedge rst_n) begin\n    if(!rst_n) begin\n        mul_out <= 'd0;\n    end\n    else begin\n        mul_out <= sum_tmp1 + sum_tmp2;\n    end\nend\n\nendmodule"
+}

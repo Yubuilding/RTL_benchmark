@@ -4,7 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from rtl_benchmark.evaluator import Evaluator, list_case_artifacts, safe_name
-from rtl_benchmark.leaderboard import summarize_cases, update_leaderboard
+from rtl_benchmark.leaderboard import build_suite_leaderboard, update_leaderboard
 from rtl_benchmark.model_runner import ModelRunner
 from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.problem_bank import load_problems
@@ -92,7 +92,13 @@ class BenchmarkPipeline:
                 )
                 case_records.append(row)
 
-        summary = summarize_cases(case_records)
+        scored = build_suite_leaderboard(
+            case_records,
+            problems=[asdict(problem) for problem in problems],
+            scoring_config=self.config.get("scoring", {}),
+        )
+        case_records = scored["cases"]
+        summary = scored["summary"]
 
         run_result = {
             "run_id": run_id,
@@ -106,6 +112,8 @@ class BenchmarkPipeline:
             "models": model_records,
             "cases": case_records,
             "summary": summary,
+            "slice_rankings": scored["slice_rankings"],
+            "scoring_policy": scored["scoring_policy"],
             "run_root": str(run_root.resolve()),
         }
 
@@ -118,6 +126,9 @@ class BenchmarkPipeline:
             summary,
             scope="suite",
             problem_ids=[problem.id for problem in problems],
+            slice_rankings=scored["slice_rankings"],
+            scoring_policy=scored["scoring_policy"],
+            raw_results_dir=self.config["raw_results_dir"],
         )
         return run_result
 

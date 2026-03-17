@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_freq_divbyfrac",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "freq_divbyfrac",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/frequency_divider",
+  "track": "rtl_core",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "frequency_divider",
+    "hard"
+  ],
+  "module_header": "module freq_divbyfrac( input rst_n , input clk, output clk_div );",
+  "prompt": "Please act as a professional Verilog designer.\n\nA frequency divider that divides the input clock frequency by fractional values. It generates a clock signal with a fractional frequency division (3.5x), using the double-edge clocking technique to achieve half-integer division while adjusting for duty cycle imbalance. By dividing uneven clock cycles and phase-shifting them, a smooth fractional clock output is produced.\n\nModule name: \n    freq_divbyfrac\n\nInput ports:\n    clk: Input clock signal.\n    rst_n: Active low reset signal to initialize the module.\n    \nOutput ports:\n    clk_div: Fractionally divided clock output.\n\nImplementation:\nThe module performs fractional frequency division by counting clock cycles and generating an intermediate divided clock signal. For 3.5x division:\nThe counter cycles through 7 clock cycles (MUL2_DIV_CLK = 7).\nIt generates two uneven clock periods: one with 4 source clock cycles and another with 3 source clock cycles.\nIn the next cycle, phase-shifted versions of the divided clock are generated. One phase is delayed by half a clock period, and the other is advanced by half a clock period.\nFinally, the two intermediate clocks are logically OR-ed to produce the final fractional divided clock output, ensuring the divided clock signal has a uniform period.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\nmodule freq_divbyfrac_tb;\n    // Inputs\n    reg clk;\n    reg rst_n;\n    // Outputs\n    wire clk_div;\n \n    // Instantiate the Unit Under Test (UUT)\n    freq_divbyfrac uut (\n        .clk(clk), \n        .rst_n(rst_n), \n        .clk_div(clk_div)\n    );\n    always #5 clk = ~clk;\n    \n    integer error = 0;\n    integer expected_value = 1;\n    integer i;\n    initial begin\n        // Initialize Inputs\n        clk = 1;\n        rst_n = 0;\n        # 10 rst_n = 1;\n        #120;\n\n        $finish;\n    end\n    initial begin\n        // $monitor(\"clk=%d, clk_div=%d\",clk,clk_div);\n        #15;\n        for (i = 0; i < 20; i = i + 1) begin\n            if (clk_div !== expected_value) begin\n                error = error + 1; \n                $display(\"Failed at%d: clk=%d, clk_div=%d (expected %d)\", i,clk, clk_div, expected_value);\n            end\n\n            if (i < 2) expected_value = 1; \n            else if (i < 6) expected_value = 0; \n            else if (i < 9) expected_value = 1; \n            else if (i < 13) expected_value = 0; \n            else if (i < 16) expected_value = 1; \n            else if (i < 20) expected_value = 0; \n            else expected_value = 1; // Last five pairs\n            #5;\n        end\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n            end\n        else begin\n            $display(\"=========== Test completed with %d/20 failures ===========\", error);\n        end\n    end\nendmodule",
+  "reference_rtl": "module freq_divbyfrac(\n    input               rst_n ,\n    input               clk,\n    output              clk_div\n    );\n\n   parameter            MUL2_DIV_CLK = 7 ;\n   reg [3:0]            cnt ;\n   always @(posedge clk or negedge rst_n) begin\n      if (!rst_n) begin\n         cnt    <= 'b0 ;\n      end\n      else if (cnt == MUL2_DIV_CLK-1) begin\n         cnt    <= 'b0 ;\n      end\n      else begin\n         cnt    <= cnt + 1'b1 ;\n      end\n   end\n\n   reg                  clk_ave_r ;\n   always @(posedge clk or negedge rst_n) begin\n      if (!rst_n) begin\n         clk_ave_r <= 1'b0 ;\n      end\n      //first cycle: 4 source clk cycle\n      else if (cnt == 0) begin\n         clk_ave_r <= 1 ;\n      end\n      //2nd cycle: 3 source clk cycle\n      else if (cnt == (MUL2_DIV_CLK/2)+1) begin\n         clk_ave_r <= 1 ;\n      end\n      else begin\n         clk_ave_r <= 0 ;\n      end\n   end\n\n   //adjust\n   reg                  clk_adjust_r ;\n   always @(negedge clk or negedge rst_n) begin\n      if (!rst_n) begin\n         clk_adjust_r <= 1'b0 ;\n      end\n      else if (cnt == 1) begin\n         clk_adjust_r <= 1 ;\n      end\n      else if (cnt == (MUL2_DIV_CLK/2)+1 ) begin\n         clk_adjust_r <= 1 ;\n      end\n      else begin\n         clk_adjust_r <= 0 ;\n      end\n   end\n\n   assign clk_div = clk_adjust_r | clk_ave_r ;\n\nendmodule"
+}

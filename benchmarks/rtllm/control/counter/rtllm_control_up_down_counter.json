@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_control_up_down_counter",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "up_down_counter",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "control/counter",
+  "track": "control",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "control",
+    "counter",
+    "hard"
+  ],
+  "module_header": "module up_down_counter ( input wire clk, input wire reset, input wire up_down, output reg [15:0] count );",
+  "prompt": "Please act as a professional Verilog designer.\n\nModule name: \n    up_down_counter\n\nFunction:\n    A 16-bit counter that can increment or decrement based on control signals.\n\nInput ports:\n    clk: Clock signal (1-bit), used to synchronize the counting process.\n    reset: Reset signal (1-bit), used to reset the counter to zero.\n    up_down: Control signal (1-bit), determines the counting direction. \n             If up_down = 1, the counter increments; if up_down = 0, it decrements.\n\nOutput ports:\n    count [15:0]: 16-bit output representing the current counter value.\n\nImplementation:\n    The module uses a synchronous process triggered by the rising edge of the clock signal (`clk`).\n    If the reset signal (`reset`) is active, the counter resets to zero.\n    If the `up_down` control signal is high, the counter increments on each clock cycle.\n    If the `up_down` control signal is low, the counter decrements on each clock cycle.\n    The `count` output reflects the current value of the counter, which can range from 0 to 65535.\n\nGive me the complete code.",
+  "testbench": "module testbench;\n\n    reg clk;\n    reg reset;\n    reg up_down;\n    wire [15:0] count;\n\n    // Instantiate the up_down_counter module\n    up_down_counter uut (\n        .clk(clk),\n        .reset(reset),\n        .up_down(up_down),\n        .count(count)\n    );\n\n    integer error = 0;\n    always begin\n        #5 clk <= ~clk;\n    end\n\n    // Initial \n    initial begin\n        clk = 0;\n        reset = 1;\n        up_down = 1; \n        #10 reset = 0;\n    end\n\n    // Monitor for displaying count\n    // always @(posedge clk) begin\n    //     $display(\"Count = %d\", count);\n    // end\n\n    // Test counting up\n    initial begin\n        #20 up_down = 1;\n        #100 up_down = 0; // Switch to counting down\n        // $display(\"Count = %d\", count);\n        error = (count==11)?error : error+1;\n        #200 up_down = 1; // Switch back to counting up\n        // $display(\"Count = %d\", count);\n        error = (count==65527)?error : error+1;\n        #300 ;\n        // $display(\"Count = %d\", count);\n        error = (count==21)?error : error+1;\n        if (error == 0) begin\n        $display(\"=========== Your Design Passed ===========\");\n        end\n        else begin\n        $display(\"=========== Test completed with %d failures ===========\", error);\n        end\n\n        $finish;\n    end\n\nendmodule",
+  "reference_rtl": "module up_down_counter (\n    input wire clk,\n    input wire reset,\n    input wire up_down,\n    output reg [15:0] count\n);\n\nalways @(posedge clk or posedge reset)\nbegin\n    if (reset) begin\n        count <= 16'b0; \n    end else begin\n        if (up_down) begin\n            // Increment the counter if up_down is high\n            if (count == 16'b1111_1111_1111_1111) begin\n                count <= 16'b0; \n            end else begin\n                count <= count + 1; \n            end\n        end else begin\n            // Decrement the counter if up_down is low\n            if (count == 16'b0) begin\n                count <= 16'b1111_1111_1111_1111; \n            end else begin\n                count <= count - 1; \n            end\n        end\n    end\nend\n\nendmodule"
+}

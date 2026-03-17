@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_memory_lfsr",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "LFSR",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "memory/shifter",
+  "track": "memory",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "memory",
+    "shifter",
+    "hard"
+  ],
+  "module_header": "module LFSR (out, clk, rst);",
+  "prompt": "Please act as a professional Verilog designer.\n\nA Linear Feedback Shift Register (LFSR) designed for generating pseudo-random sequences. This 4-bit LFSR uses a specific feedback mechanism to produce a sequence of bits that appears random.\n\nModule name:\n    LFSR\n\nInput ports:\n    clk: Clock signal to synchronize the shifting operation.\n    rst: Active high reset signal to initialize the register.\n\nOutput ports:\n    out [3:0]: 4-bit output representing the current state of the LFSR.\n\nImplementation:\nThe LFSR operates on the principle of shifting bits and applying feedback based on the XOR of specific bits in the register.\nThe feedback is calculated by XORing the most significant bit (out[3]) and the second most significant bit (out[2]). The result is inverted to produce the feedback signal.\nOn the rising edge of the clock (clk), if the reset (rst) is high, the register is initialized to zero. Otherwise, the bits in the register are shifted left, and the new feedback value is inserted at the least significant bit (LSB).",
+  "testbench": "module lfsr_tb();\nreg clk_tb;\nreg rst_tb;\nwire [3:0] out_tb;\n\nLFSR DUT(out_tb,clk_tb,rst_tb);\n\ninitial\nbegin\n    clk_tb = 0;\n    rst_tb = 1;\n    #15;\n    \n    rst_tb = 0;\n    #200;\n    // $display(\"Failed: out=%b (expected 1101)\", out_tb);\n    if (out_tb == 4'b1101) begin\n      $display(\"=========== Your Design Passed ===========\");\n    end\n    else begin\n      $display(\"=========== Failed ===========\");\n    end\n    $finish;\nend\n\nalways\nbegin\n    #5;\n    clk_tb = ~ clk_tb;\nend\n\n\nendmodule",
+  "reference_rtl": "module LFSR (out, clk, rst);\n  input clk, rst;\n  output reg [3:0] out;\n  wire feedback;\n\n  assign feedback = ~(out[3] ^ out[2]);\n\nalways @(posedge clk, posedge rst)\n  begin\n    if (rst)\n      out = 4'b0;\n    else\n      out = {out[2:0],feedback};\n  end\nendmodule"
+}

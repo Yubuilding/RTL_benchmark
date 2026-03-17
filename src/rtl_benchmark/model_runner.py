@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import copy
+import http.client
 import json
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
 from rtl_benchmark.types import ModelDescriptor, Problem
+from rtl_benchmark.utils import extract_hdl_code, now_utc_iso, validate_hdl_candidate
 
 
 DEFAULT_MAX_TOKENS = 1024
@@ -30,35 +33,26 @@ class ModelRunner:
         self.timeout_seconds = int(cfg.get("timeout_seconds", 60))
         self.last_error = ""
         self.last_trace: dict[str, object] = {}
+        self._trace_started_monotonic = 0.0
 
     def generate(self, model: ModelDescriptor, problem: Problem, feedback: str = "") -> str:
         self.last_error = ""
         self.last_trace = {}
         if model.provider == "openrouter":
-            generated = self._openrouter_generate(model.id, problem, feedback)
-            if generated:
-                return self._strip_markdown_fence(generated)
-            return ""
+            generated = self._openrouter_generate(model, problem, feedback)
+            return self._finalize_generated_output(generated)
         if model.provider == "huggingface":
-            generated = self._huggingface_generate(model.id, problem, feedback)
-            if generated:
-                return self._strip_markdown_fence(generated)
-            return ""
+            generated = self._huggingface_generate(model, problem, feedback)
+            return self._finalize_generated_output(generated)
         if model.provider in {"openai", "openai_compatible"}:
             generated = self._openai_generate(model, problem, feedback)
-            if generated:
-                return self._strip_markdown_fence(generated)
-            return ""
+            return self._finalize_generated_output(generated)
         if model.provider == "anthropic":
             generated = self._anthropic_generate(model, problem, feedback)
-            if generated:
-                return self._strip_markdown_fence(generated)
-            return ""
+            return self._finalize_generated_output(generated)
         if model.provider == "gemini":
             generated = self._gemini_generate(model, problem, feedback)
-            if generated:
-                return self._strip_markdown_fence(generated)
-            return ""
+            return self._finalize_generated_output(generated)
 
         return self._mock_generate(model, problem)
 
@@ -87,15 +81,15 @@ class ModelRunner:
             "endmodule\n"
         )
 
-    def _openrouter_generate(self, model_id: str, problem: Problem, feedback: str) -> str:
-        key = os.getenv("OPENROUTER_API_KEY", "")
+    def _openrouter_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
+        key = self._resolve_api_key(model, "OPENROUTER_API_KEY")
         if not key:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
 
         payload = {
-            "model": model_id,
+            "model": model.id,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "messages": [
@@ -106,7 +100,8 @@ class ModelRunner:
                 {"role": "user", "content": prompt},
             ],
         }
-        url = "https://openrouter.ai/api/v1/chat/completions"
+        base_url = str(model.raw.get("_base_url", "https://openrouter.ai/api/v1")).rstrip("/")
+        url = f"{base_url}/chat/completions"
         headers = {
             "Authorization": f"Bearer {key}",
             "Content-Type": "application/json",
@@ -115,7 +110,7 @@ class ModelRunner:
         }
         self._start_trace(
             provider="openrouter",
-            model_id=model_id,
+            model_id=model.id,
             url=url,
             payload=payload,
             headers=headers,
@@ -141,18 +136,18 @@ class ModelRunner:
             self._fail_trace(body=body, status_code=exc.code)
             self.last_error = self._describe_http_error(exc, body)
             return ""
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+        except (urllib.error.URLError, http.client.HTTPException, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
             self._fail_trace(error=self._describe_request_error(exc))
             self.last_error = self._describe_request_error(exc)
             return ""
 
-    def _huggingface_generate(self, model_id: str, problem: Problem, feedback: str) -> str:
-        token = os.getenv("HF_TOKEN", "")
+    def _huggingface_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
+        token = self._resolve_api_key(model, "HF_TOKEN")
         if not token:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
-        encoded_model = urllib.parse.quote(model_id, safe="")
+        encoded_model = urllib.parse.quote(model.id, safe="")
         url = f"https://api-inference.huggingface.co/models/{encoded_model}"
 
         payload = {
@@ -174,7 +169,7 @@ class ModelRunner:
         }
         self._start_trace(
             provider="huggingface",
-            model_id=model_id,
+            model_id=model.id,
             url=url,
             payload=payload,
             headers=headers,
@@ -197,7 +192,7 @@ class ModelRunner:
             self._fail_trace(body=body, status_code=exc.code)
             self.last_error = self._describe_http_error(exc, body)
             return ""
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        except (urllib.error.URLError, http.client.HTTPException, TimeoutError, json.JSONDecodeError) as exc:
             self._fail_trace(error=self._describe_request_error(exc))
             self.last_error = self._describe_request_error(exc)
             return ""
@@ -218,7 +213,7 @@ class ModelRunner:
     def _openai_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
         base_url = str(model.raw.get("_base_url", "https://api.openai.com/v1")).rstrip("/")
         api_key_env = str(model.raw.get("_api_key_env", "OPENAI_API_KEY"))
-        key = os.getenv(api_key_env, "")
+        key = self._resolve_api_key(model, api_key_env)
         if not key:
             return ""
 
@@ -267,7 +262,7 @@ class ModelRunner:
             self._fail_trace(body=body, status_code=exc.code)
             self.last_error = self._describe_http_error(exc, body)
             return ""
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+        except (urllib.error.URLError, http.client.HTTPException, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
             self._fail_trace(error=self._describe_request_error(exc))
             self.last_error = self._describe_request_error(exc)
             return ""
@@ -276,7 +271,7 @@ class ModelRunner:
         base_url = str(model.raw.get("_base_url", "https://api.anthropic.com")).rstrip("/")
         api_key_env = str(model.raw.get("_api_key_env", "ANTHROPIC_API_KEY"))
         api_version = str(model.raw.get("_anthropic_version", "2023-06-01"))
-        key = os.getenv(api_key_env, "")
+        key = self._resolve_api_key(model, api_key_env)
         if not key:
             return ""
 
@@ -320,7 +315,7 @@ class ModelRunner:
             self._fail_trace(body=body, status_code=exc.code)
             self.last_error = self._describe_http_error(exc, body)
             return ""
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+        except (urllib.error.URLError, http.client.HTTPException, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
             self._fail_trace(error=self._describe_request_error(exc))
             self.last_error = self._describe_request_error(exc)
             return ""
@@ -328,7 +323,7 @@ class ModelRunner:
     def _gemini_generate(self, model: ModelDescriptor, problem: Problem, feedback: str) -> str:
         base_url = str(model.raw.get("_base_url", "https://generativelanguage.googleapis.com/v1beta")).rstrip("/")
         api_key_env = str(model.raw.get("_api_key_env", "GEMINI_API_KEY"))
-        key = os.getenv(api_key_env, "")
+        key = self._resolve_api_key(model, api_key_env)
         if not key:
             return ""
 
@@ -377,7 +372,7 @@ class ModelRunner:
             self._fail_trace(body=body, status_code=exc.code)
             self.last_error = self._describe_http_error(exc, body)
             return ""
-        except (urllib.error.URLError, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
+        except (urllib.error.URLError, http.client.HTTPException, KeyError, IndexError, TimeoutError, json.JSONDecodeError) as exc:
             self._fail_trace(error=self._describe_request_error(exc))
             self.last_error = self._describe_request_error(exc)
             return ""
@@ -402,24 +397,24 @@ class ModelRunner:
 
         return base
 
-    def _strip_markdown_fence(self, text: str) -> str:
-        stripped = text.strip()
-        if not stripped.startswith("```"):
-            return stripped
+    def _resolve_api_key(self, model: ModelDescriptor, env_name: str) -> str:
+        inline_key = str(model.raw.get("_api_key", "")).strip()
+        if inline_key:
+            return inline_key
+        return os.getenv(env_name, "")
 
-        lines = stripped.splitlines()
-        if not lines:
-            return stripped
-
-        start = 1
-        if lines and lines[0].startswith("```"):
-            start = 1
-
-        end = len(lines)
-        if lines[-1].strip() == "```":
-            end -= 1
-
-        return "\n".join(lines[start:end]).strip()
+    def _finalize_generated_output(self, text: str) -> str:
+        if not text.strip():
+            return ""
+        extracted = extract_hdl_code(text)
+        issue = validate_hdl_candidate(extracted)
+        if issue:
+            if not self.last_error:
+                self.last_error = issue
+            if self.last_trace:
+                self.last_trace["error"] = self.last_error
+            return ""
+        return extracted
 
     def _extract_openai_message(self, payload: dict) -> str:
         choices = payload.get("choices", [])
@@ -478,9 +473,15 @@ class ModelRunner:
         headers: dict[str, str],
         conversation: list[dict[str, str]],
     ) -> None:
+        self._trace_started_monotonic = time.monotonic()
         self.last_trace = {
             "provider": provider,
             "model_id": model_id,
+            "timing": {
+                "started_at": now_utc_iso(),
+                "finished_at": "",
+                "duration_seconds": 0.0,
+            },
             "request": {
                 "url": url,
                 "headers": self._sanitize_headers(headers),
@@ -488,6 +489,7 @@ class ModelRunner:
             },
             "conversation": copy.deepcopy(conversation),
             "response": {},
+            "metrics": {},
             "error": "",
         }
 
@@ -500,6 +502,7 @@ class ModelRunner:
     ) -> None:
         if not self.last_trace:
             return
+        duration_seconds = self._trace_duration_seconds()
         response = {
             "status_code": status_code,
             "payload": payload,
@@ -511,11 +514,19 @@ class ModelRunner:
             if isinstance(conversation, list):
                 conversation.append({"role": "assistant", "content": assistant_output})
         self.last_trace["response"] = response
+        self.last_trace["timing"] = {
+            "started_at": str((self.last_trace.get("timing", {}) or {}).get("started_at", "")),
+            "finished_at": now_utc_iso(),
+            "duration_seconds": duration_seconds,
+        }
+        self.last_trace["metrics"] = self._build_trace_metrics(payload, assistant_output, duration_seconds)
         self.last_trace["error"] = ""
+        self._trace_started_monotonic = 0.0
 
     def _fail_trace(self, error: str = "", body: str = "", status_code: int | None = None) -> None:
         if not self.last_trace:
             return
+        duration_seconds = self._trace_duration_seconds()
         response_payload: object = {}
         if body.strip():
             try:
@@ -527,7 +538,81 @@ class ModelRunner:
             "payload": response_payload,
             "raw_text": body,
         }
+        self.last_trace["timing"] = {
+            "started_at": str((self.last_trace.get("timing", {}) or {}).get("started_at", "")),
+            "finished_at": now_utc_iso(),
+            "duration_seconds": duration_seconds,
+        }
+        self.last_trace["metrics"] = self._build_trace_metrics(response_payload, "", duration_seconds)
         self.last_trace["error"] = error
+        self._trace_started_monotonic = 0.0
+
+    def _trace_duration_seconds(self) -> float:
+        if self._trace_started_monotonic <= 0:
+            return 0.0
+        return round(max(0.0, time.monotonic() - self._trace_started_monotonic), 3)
+
+    def _build_trace_metrics(self, payload: object, assistant_output: str, duration_seconds: float) -> dict[str, object]:
+        metrics: dict[str, object] = {
+            "duration_seconds": round(max(0.0, float(duration_seconds or 0.0)), 3),
+            "output_chars": len(assistant_output or ""),
+        }
+        usage = self._extract_response_usage(payload)
+        metrics.update(usage)
+        completion_tokens = usage.get("completion_tokens")
+        token_rate_source = "provider"
+        if completion_tokens is None and assistant_output.strip():
+            completion_tokens = max(1, round(len(assistant_output) / 4))
+            metrics["estimated_completion_tokens"] = completion_tokens
+            token_rate_source = "estimated_chars"
+        if completion_tokens is not None and duration_seconds > 0:
+            metrics["output_tokens_per_second"] = round(float(completion_tokens) / duration_seconds, 2)
+            metrics["token_rate_source"] = token_rate_source
+        if assistant_output.strip() and duration_seconds > 0:
+            metrics["output_chars_per_second"] = round(len(assistant_output) / duration_seconds, 1)
+        return metrics
+
+    def _extract_response_usage(self, payload: object) -> dict[str, int]:
+        if not isinstance(payload, dict):
+            return {}
+        usage: dict[str, int] = {}
+        raw_usage = payload.get("usage")
+        if isinstance(raw_usage, dict):
+            prompt_tokens = self._coerce_usage_int(raw_usage.get("prompt_tokens"))
+            completion_tokens = self._coerce_usage_int(raw_usage.get("completion_tokens"))
+            total_tokens = self._coerce_usage_int(raw_usage.get("total_tokens"))
+            if prompt_tokens is None:
+                prompt_tokens = self._coerce_usage_int(raw_usage.get("input_tokens"))
+            if completion_tokens is None:
+                completion_tokens = self._coerce_usage_int(raw_usage.get("output_tokens"))
+            if total_tokens is None and prompt_tokens is not None and completion_tokens is not None:
+                total_tokens = prompt_tokens + completion_tokens
+            if prompt_tokens is not None:
+                usage["prompt_tokens"] = prompt_tokens
+            if completion_tokens is not None:
+                usage["completion_tokens"] = completion_tokens
+            if total_tokens is not None:
+                usage["total_tokens"] = total_tokens
+
+        usage_metadata = payload.get("usageMetadata")
+        if isinstance(usage_metadata, dict):
+            prompt_tokens = self._coerce_usage_int(usage_metadata.get("promptTokenCount"))
+            completion_tokens = self._coerce_usage_int(usage_metadata.get("candidatesTokenCount"))
+            total_tokens = self._coerce_usage_int(usage_metadata.get("totalTokenCount"))
+            if prompt_tokens is not None:
+                usage["prompt_tokens"] = prompt_tokens
+            if completion_tokens is not None:
+                usage["completion_tokens"] = completion_tokens
+            if total_tokens is not None:
+                usage["total_tokens"] = total_tokens
+        return usage
+
+    def _coerce_usage_int(self, value: object) -> int | None:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return None
+        return max(0, parsed)
 
     def _sanitize_headers(self, headers: dict[str, str]) -> dict[str, str]:
         redacted: dict[str, str] = {}
@@ -626,6 +711,8 @@ class ModelRunner:
             return self._describe_http_error(exc, self._read_http_error_body(exc))
         if isinstance(exc, urllib.error.URLError):
             return f"network error: {exc.reason}"
+        if isinstance(exc, http.client.HTTPException):
+            return f"network error: {exc}"
         if isinstance(exc, TimeoutError):
             return "request timed out"
         if isinstance(exc, json.JSONDecodeError):

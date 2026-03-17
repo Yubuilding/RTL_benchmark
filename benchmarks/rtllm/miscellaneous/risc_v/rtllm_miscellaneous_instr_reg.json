@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_instr_reg",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "instr_reg",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/risc_v",
+  "track": "rtl_core",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "risc_v",
+    "hard"
+  ],
+  "module_header": "module instr_reg ( input clk, input rst, input [1:0] fetch, input [7:0] data, output [2:0] ins, output [4:0] ad1, output [7:0] ad2 );",
+  "prompt": "Please act as a professional Verilog designer.\n\nAn instruction register module designed to hold and process CPU instructions. It captures incoming instructions from various sources and separates them into distinct fields for further processing.\n\nModule name:\n    instr_reg\n\nInput ports:\n    clk: Clock signal for synchronization.\n    rst: Active low reset signal to initialize the register.\n    fetch [1:0]: Control signal indicating the source of the instruction (1 for register, 2 for RAM/ROM).\n    data [7:0]: 8-bit data input representing the instruction to be fetched.\n\nOutput ports:\n    ins [2:0]: High 3 bits of the instruction, indicating the opcode or operation.\n    ad1 [4:0]: Low 5 bits of the instruction, representing the register address.\n    ad2 [7:0]: The full 8-bit data from the second source.\n\nImplementation:\n    The instruction register contains two 8-bit registers (ins_p1 and ins_p2) to store instructions from different sources.\n    On the rising edge of the clock (clk), if the reset (rst) signal is low, both registers are initialized to zero.\n    Based on the fetch signal:\n    If fetch is 2'b01, the instruction is fetched from the data input into ins_p1.\n    If fetch is 2'b10, the instruction is fetched from the data input into ins_p2.\n    If neither condition is met, the previous values in both registers are retained.\n    The outputs ins, ad1, and ad2 are derived from the stored instructions.\n\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule instr_reg_tb;\n\nreg clk;\nreg rst;\nreg [1:0] fetch;\nreg [7:0] data;\n\nwire [2:0] ins;\nwire [4:0] ad1;\nwire [7:0] ad2;\n\ninstr_reg uut (\n    .clk(clk),\n    .rst(rst),\n    .fetch(fetch),\n    .data(data),\n    .ins(ins),\n    .ad1(ad1),\n    .ad2(ad2)\n);\n\ninteger error;\ninteger expected_ins;\ninteger expected_ad1;\ninteger expected_ad2;\n\ninitial begin\n    // Initialize Inputs\n    clk = 0;\n    rst = 0;\n    fetch = 2'b00;\n    data = 8'h00;\n    error = 0;\n\n    // Wait 100 ns for initialization\n    #100;\n\n    // De-assert reset\n    rst = 1;\n    #10;\n\n    // Perform fetch operation 1 from register\n    fetch = 2'b01;\n    #5;\n    data = 8'b01011100;\n    expected_ins = 3'b010;\n    expected_ad1 = 5'b11100;\n    expected_ad2 = 8'b00;\n    #20;\n\n    // Check the values\n    if (ins !== expected_ins) begin\n        error = error + 1; \n        $display(\"Failed at fetch operation 1: clk=%d, ins=%b (expected %d)\", clk, ins, expected_ins);\n    end\n\n    if (ad1 !== expected_ad1) begin\n        error = error + 1; \n        $display(\"Failed at fetch operation 1: clk=%d, ad1=%b (expected %d)\", clk, ad1, expected_ad1);\n    end\n\n    if (ad2 !== expected_ad2) begin\n        error = error + 1; \n        $display(\"Failed at fetch operation 1: clk=%d, ad2=%b (expected %d)\", clk, ad2, expected_ad2);\n    end\n\n    // Additional test cases can be added here\n\n    // Finish simulation and display total errors\n    if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n            end\n    else begin\n        $display(\"=========== Test completed with %d failures ===========\", error);\n    end\n    $finish;\nend\n\nalways #5 clk = ~clk;\n\nendmodule",
+  "reference_rtl": "module instr_reg (\n    input clk,\n    input rst,\n    input [1:0] fetch,\n    input [7:0] data,\n    output [2:0] ins,\n    output [4:0] ad1,\n    output [7:0] ad2\n);\n\n    reg [7:0] ins_p1, ins_p2;\n    reg [2:0] state;\n\n    always @(posedge clk or negedge rst) begin\n        if (!rst) begin\n            ins_p1 <= 8'd0;\n            ins_p2 <= 8'd0;\n        end else begin\n            if (fetch == 2'b01) begin // Fetch operation 1, from REG\n                ins_p1 <= data;\n                ins_p2 <= ins_p2;\n            end else if (fetch == 2'b10) begin // Fetch operation 2, from RAM/ROM\n                ins_p1 <= ins_p1;\n                ins_p2 <= data;\n            end else begin\n                ins_p1 <= ins_p1;\n                ins_p2 <= ins_p2;\n            end\n        end\n    end\n\n    assign ins = ins_p1[7:5]; // High 3 bits, instructions\n    assign ad1 = ins_p1[4:0];  // Low 5 bits, register address\n    assign ad2 = ins_p2;\nendmodule"
+}

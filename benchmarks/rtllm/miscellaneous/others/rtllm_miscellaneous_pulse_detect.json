@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_pulse_detect",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "pulse_detect",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/others",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "others",
+    "medium"
+  ],
+  "module_header": "module pulse_detect( input clk, input rst_n, input data_in, output reg data_out );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module for pulse detection. The 1-bit input signal data_in is a continuous input, which is triggered by clk. When \"data_in\" changes from 0 to 1 to 0(3 cycles), this is considered as a \"pulse\". The indicating signal dataout is 1 at the end cycle of the \"pulse\", and then returns to 0 until the corresponding pulse appears again. For example, if data_in is 01010(5 cycles), the data_out is 00101.\n\n\nModule name:  \n    pulse_detect\n\nInput ports：\n    clk: Clock signal.\n    rst_n: Reset signal (active low).\n    data_in: One-bit input signal.\n\nOutput ports：\n    data_out: Output signal indicating the presence of pulses.\n\nImplementation:\nDeclare the module pulse_detect with input and output ports as specified in the ports statement.\nDeclare a register state to keep track of the current state of the pulse detection process.\nInside an always block, sensitive to the positive edge of the clk signal and the negative edge of the rst_n signal, implement the logic for pulse detection and output generation.\nIn the reset condition (~rst_n), set the state register to the initial state and set the data_out output to 0, indicating no pulse. Continue the detection process for the remaining states. For each state, check the value of data_in and transition to the next state accordingly. If the current state satisfies the last state of a \"pulse\", set data_out to 1, indicating the end of a pulse. Otherwise, set data_out to 0.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\n\nmodule pulse_detect_tb;\n  reg clk;\n  reg rst_n;\n  reg data_in;\n  wire data_out;\n\n  // Instantiate the DUT (Design Under Test)\n  pulse_detect dut (\n    .clk(clk),\n    .rst_n(rst_n),\n    .data_in(data_in),\n    .data_out(data_out)\n  );\n\n  // Generate clock\n  initial begin\n\tclk=0;\n\tforever #5 clk=~clk;\n  end\n\n  integer error = 0;\n  initial begin\n      // Initialize inputs\n      #10;\n      rst_n = 0;\n      data_in = 0;\n      #28;\n      rst_n = 1;\n      #10      data_in = 0;\n      #10      data_in = 0;  \n      #10      data_in = 0;\n      #10      data_in = 1;\n      #10      data_in = 0;\n      #10      data_in = 1;\n      #10      data_in = 0;\n      #10      data_in = 1;\n      #10      data_in = 1;\n      #10      data_in = 0;\n      #10;\n      // Finish simulation\n      $finish;\n  end\n\n  initial begin\n    #5;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 0) ? error : error+1;\n    #10;\n    error = (data_out == 1) ? error : error+1;\n    // $display(\"%b,%b,%b\", data_in, data_out, dut.pulse_level1);//1\n    #20;\n    error = (data_out == 1) ? error : error+1;\n    #10;\n    if (error == 0) begin\n        $display(\"===========Your Design Passed===========\");\n    end\n    else begin\n    $display(\"===========Error===========\");\n    end\n  end\nendmodule",
+  "reference_rtl": "`timescale 1ns/1ns\n\nmodule pulse_detect(    \n    input clk,\n    input rst_n,\n    input data_in,\n    output reg data_out\n);\n\nparameter s0 = 2'b00; // initial\nparameter s1 = 2'b01; // 0, 00\nparameter s2 = 2'b10; // 01\nparameter s3 = 2'b11; // 010\n\nreg [1:0] pulse_level1, pulse_level2;\n\nalways @(posedge clk or negedge rst_n) begin\n    if (!rst_n)\n        pulse_level1 <= s0;\n    else\n        pulse_level1 <= pulse_level2;\nend\n\nalways @(*) begin\n    case (pulse_level1)\n        s0: begin\n            if (data_in == 0)\n                pulse_level2 = s1;\n            else\n                pulse_level2 = s0;\n        end\n\n        s1: begin\n            if (data_in == 1)\n                pulse_level2 = s2;\n            else\n                pulse_level2 = s1;\n        end\n\n        s2: begin\n            if (data_in == 0)\n                pulse_level2 = s3;\n            else\n                pulse_level2 = s0;\n        end\n\n        s3: begin\n            if (data_in == 1)\n                pulse_level2 = s2;\n            else\n                pulse_level2 = s1;\n        end\n    endcase\nend\n\n// always @(posedge clk or negedge rst_n) begin\n//     if (~rst_n)\n//         data_out <= 0;\n//     else if (pulse_level1 == s2 && data_in == 0)\n//         begin\n//         data_out <= 1;\n//         end\n//     else\n//         data_out <= 0;\n// end\n\nalways @(*) begin\n    if (~rst_n)\n        data_out = 0;\n    else if (pulse_level1 == s2 && data_in == 0)\n        data_out = 1;\n    else\n        data_out = 0;\nend\n\nendmodule"
+}

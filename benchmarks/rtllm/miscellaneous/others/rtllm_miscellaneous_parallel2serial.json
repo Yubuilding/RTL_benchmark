@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_parallel2serial",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "parallel2serial",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/others",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "others",
+    "medium"
+  ],
+  "module_header": "module parallel2serial( input wire clk , input wire rst_n , input wire [3:0]d , output wire valid_out , output wire dout );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module for parallel-to-serial conversion, where every four input bits are converted to a serial one bit output (from MSB to LSB). The output signal valid_out is set to 1 to indicate the availability of valid serial output. When valid_out = 1, the most significant bit of d is output, and the remaining three bits are output sequentially in the following 3 cycles.\n\nModule name:  \n    parallel2serial     \n\nInput ports:\n    clk: Clock signal used for synchronous operations.\n    rst_n: Reset signal. Defined as 0 for reset and 1 for reset signal inactive.\n    d: 4-bit parallel data input.\n\nOutput ports:\n    valid_out: Valid signal indicating the availability of serial output.\n    dout: Serial output representing the converted data.\n\nImplementation:\nThe most significant bit of the parallel input is assigned to the serial output (dout). On each clock cycle, if the counter (cnt) is 3, indicating the last bit of the parallel input, the module updates the data register (data) with the parallel input (d), resets the counter (cnt) to 0, and sets the valid signal (valid) to 1.\nOtherwise, the module increments the counter (cnt) by 1, sets the valid signal (valid) to 0, and shifts the data register (data) one bit to the left, with the most significant bit shifted to the least significant bit.\nCounter Register: If the reset signal (rst_n) is high, the register (cnt) is incremented by 1.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\n\nmodule parallel2serial_tb;\n  reg clk;\n  reg rst_n;\n  reg [3:0] d;\n  wire valid_out;\n  wire dout;\n\n  // Instantiate the DUT (Design Under Test)\n  parallel2serial dut (\n    .clk(clk),\n    .rst_n(rst_n),\n    .d(d),\n    .valid_out(valid_out),\n    .dout(dout)\n  );\n\n  // Generate clock\n  always #5 clk = ~clk;\n  integer error = 0;\n  integer failcase = 0;\n  integer i = 0;\n  initial begin\n    for (i=0; i<100; i=i+1) begin\n        error = 0;\n        // Initialize inputs\n        clk = 0;\n        rst_n = 0;\n        d = 4'b0;\n\n        #10;\n        rst_n = 1;\n        #10;\n        d = $random;\n        while (valid_out == 0) begin\n            @(posedge clk); // Wait for one clock cycle\n        end\n        // $display(\"dout = %b, valid_out = %b\", dout, valid_out);\n        error = (dout == d[3] && valid_out==1) ? error : error+1;\n        #10;\n        // $display(\"dout = %b, valid_out = %b\", dout, valid_out);\n        error = (dout == d[2] && valid_out==0) ? error : error+1;\n        #10;\n        // $display(\"dout = %b, valid_out = %b\", dout, valid_out);\n        error = (dout == d[1] && valid_out==0) ? error : error+1;\n        #10;\n        // $display(\"dout = %b, valid_out = %b\", dout, valid_out);\n        error = (dout == d[0] && valid_out==0) ? error : error+1;\n        #10;\n        // $display(\"dout = %b, valid_out = %b\", dout, valid_out);\n        error = (valid_out==1) ? error : error+1;\n        #10;\n        failcase = (error==0)? failcase :failcase+1;\n\n    end\n    if(failcase==0) begin\n      $display(\"===========Your Design Passed===========\");\n    end\n    else begin\n      $display(\"===========Test completed with %d /100 failures===========\", failcase);\n    end\n    $finish; \n  end\n\nendmodule",
+  "reference_rtl": "`timescale 1ns/1ns\nmodule parallel2serial(\n\tinput wire clk  ,\n\tinput wire rst_n  ,\n\tinput wire [3:0]d ,\n\toutput wire valid_out ,\n\toutput wire dout\n\t);\n\n\nreg [3:0] data = 'd0;\nreg [1:0]cnt;\nreg valid;\nassign dout = data[3];\nassign valid_out =valid;\nalways @(posedge clk or negedge rst_n) begin\n    if(!rst_n)begin\n        data<= 'd0;\n        cnt <= 'd0;\n        valid <= 'd0;\n    end\n    else  begin\n                \n\t\tif (cnt == 'd3) begin\n\t\t\tdata <= d;\n\t\t\tcnt <= 'd0;\n\t\t\tvalid <= 1;\n\t\tend\n\t\telse begin\n\t\t\tcnt <= cnt + 'd1;\n\t\t\tvalid <= 0;\n\t\t\tdata  <= {data[2:0],data[3]};\n\t\tend\n    end\n\t\t\nend\n\n\nendmodule"
+}

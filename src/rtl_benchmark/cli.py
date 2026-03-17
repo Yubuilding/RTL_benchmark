@@ -7,7 +7,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from rtl_benchmark.evaluator import Evaluator
-from rtl_benchmark.importers import import_rtllm_repo
+from rtl_benchmark.importers import import_rtllm_repo, import_verilogeval_repo
 from rtl_benchmark.model_sources import discover_models
 from rtl_benchmark.pipeline import BenchmarkPipeline
 from rtl_benchmark.problem_bank import load_problems
@@ -63,6 +63,18 @@ def build_parser() -> argparse.ArgumentParser:
     import_rtllm.add_argument("--src", required=True, help="path to the local RTLLM repository snapshot")
     import_rtllm.add_argument("--dest", default="benchmarks/rtllm", help="output directory for converted JSON files")
     import_rtllm.add_argument("--overwrite", action="store_true", help="overwrite existing generated files")
+
+    import_verilogeval = sub.add_parser(
+        "import-verilogeval",
+        help="convert a local VerilogEval spec-to-rtl snapshot into benchmark JSON files",
+    )
+    import_verilogeval.add_argument("--src", required=True, help="path to the local VerilogEval repository snapshot")
+    import_verilogeval.add_argument(
+        "--dest",
+        default="benchmarks/verilogeval",
+        help="output directory for converted JSON files",
+    )
+    import_verilogeval.add_argument("--overwrite", action="store_true", help="overwrite existing generated files")
 
     return parser
 
@@ -176,11 +188,15 @@ def cmd_rank(leaderboard_path: str) -> int:
 
     print(f"leaderboard updated_at: {board.get('updated_at', 'n/a')}")
     for idx, row in enumerate(rows, start=1):
+        strengths = ", ".join(item.get("label", "") for item in row.get("strengths", [])[:2]) or "n/a"
+        weaknesses = ", ".join(item.get("label", "") for item in row.get("weaknesses", [])[:2]) or "n/a"
         print(
             f"{idx:>2}. {row['model_id']} [{row.get('provider', 'unknown')}] "
-            f"score={row.get('score', 0):.2f} pass_rate={row.get('pass_rate', 0):.2f} "
-            f"runs={row.get('runs', 0)}"
+            f"weighted_score={row.get('score', 0):.2f} pass_rate={row.get('pass_rate', 0):.2f} "
+            f"quality={row.get('quality_score', 0):.2f} runs={row.get('runs', 0)}"
         )
+        print(f"    strengths: {strengths}")
+        print(f"    weaknesses: {weaknesses}")
     return 0
 
 
@@ -241,6 +257,14 @@ def cmd_grade(
 
 def cmd_import_rtllm(src_root: str, dest_root: str, overwrite: bool) -> int:
     outputs = import_rtllm_repo(src_root=src_root, dest_root=dest_root, overwrite=overwrite)
+    print(f"imported problems: {len(outputs)}")
+    for path in outputs:
+        print(f"- {path}")
+    return 0
+
+
+def cmd_import_verilogeval(src_root: str, dest_root: str, overwrite: bool) -> int:
+    outputs = import_verilogeval_repo(src_root=src_root, dest_root=dest_root, overwrite=overwrite)
     print(f"imported problems: {len(outputs)}")
     for path in outputs:
         print(f"- {path}")
@@ -322,6 +346,8 @@ def main() -> None:
         )
     if args.cmd == "import-rtllm":
         raise SystemExit(cmd_import_rtllm(args.src, args.dest, args.overwrite))
+    if args.cmd == "import-verilogeval":
+        raise SystemExit(cmd_import_verilogeval(args.src, args.dest, args.overwrite))
 
     raise SystemExit(2)
 

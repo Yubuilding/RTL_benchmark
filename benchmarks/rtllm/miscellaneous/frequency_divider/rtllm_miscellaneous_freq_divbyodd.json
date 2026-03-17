@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_freq_divbyodd",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "freq_divbyodd",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/frequency_divider",
+  "track": "rtl_core",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "frequency_divider",
+    "hard"
+  ],
+  "module_header": "module freq_divbyodd( clk, rst_n, clk_div );",
+  "prompt": "Please act as a professional verilog designer.\n\nA frequency divider that divides the input clock frequency by odd numbers. The module generates a divided clock output by an odd divisor value provided as a parameter.\n\nModule name:\n    freq_divbyodd\n\nInput ports:\n    clk: Input clock signal.\n    rst_n: Active low reset signal that initializes the divider.\n    \nOutput ports:\n    clk_div: Divided clock output.  \n\nImplementation:\n\nThe module divides the input clock frequency by an odd number defined by the parameter NUM_DIV, which defaults to 5.\nTwo counters, cnt1 and cnt2, are used for tracking the rising and falling edges of the clock. Each counter counts up to NUM_DIV - 1.\nTwo separate clock dividers, clk_div1 and clk_div2, are used for positive and negative edges of the clock, respectively. These are toggled when the counters reach half of NUM_DIV.\nThe final divided clock output, clk_div, is derived by logically OR-ing clk_div1 and clk_div2 to account for both clock edges.\nThe active low reset signal rst_n initializes the counters and the clock divider outputs.\n\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\nmodule testb_div_odd;\n    // Inputs\n    reg clk;\n    reg rst_n;\n    // Outputs\n    wire clk_div;\n \n    // Instantiate the Unit Under Test (UUT)\n    freq_divbyodd uut (\n        .clk(clk), \n        .rst_n(rst_n), \n        .clk_div(clk_div)\n    );\n    always #5 clk = ~clk;\n    \n    integer error = 0;\n    integer expected_value = 1;\n    integer i;\n    initial begin\n        // Initialize Inputs\n        clk = 1;\n        rst_n = 0;\n        # 10 rst_n = 1;\n        #120;\n\n        $finish;\n    end\n    initial begin\n        // $monitor(\"clk=%d, clk_div=%d\",clk,clk_div);\n        #15;\n        for (i = 1; i < 20; i = i + 1) begin\n            if (clk_div !== expected_value) begin\n                error = error + 1; \n                $display(\"Failed at%d: clk=%d, clk_div=%d (expected %d)\", i,clk, clk_div, expected_value);\n            end\n\n            if (i < 5) expected_value = 1; \n            else if (i < 10) expected_value = 0; \n            else if (i < 15) expected_value = 1; \n            else expected_value = 0; \n            #5;\n        end\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n            end\n        else begin\n            $display(\"=========== Test completed with %d/20 failures ===========\", error);\n        end\n    end\nendmodule",
+  "reference_rtl": "module freq_divbyodd(\n    clk,\n    rst_n,\n    clk_div\n);\n    input clk;\n    input rst_n;\n    output clk_div;\n    reg clk_div;\n\n    parameter NUM_DIV = 5;\n    reg[2:0] cnt1;\n    reg[2:0] cnt2;\n    reg    clk_div1, clk_div2;\n\nalways @(posedge clk or negedge rst_n)\n    if(!rst_n)\n        cnt1 <= 0;\n    else if(cnt1 < NUM_DIV - 1)\n        cnt1 <= cnt1 + 1'b1;\n    else\n        cnt1 <= 0;\n\nalways @(posedge clk or negedge rst_n)\n    if(!rst_n)\n        clk_div1 <= 1'b1;\n    else if(cnt1 < NUM_DIV / 2)\n        clk_div1 <= 1'b1;\n    else\n        clk_div1 <= 1'b0;\n\nalways @(negedge clk or negedge rst_n)\n    if(!rst_n)\n       cnt2 <= 0;\n    else if(cnt2 < NUM_DIV - 1)\n       cnt2 <= cnt2 + 1'b1;\n    else\n       cnt2 <= 0;\n\nalways @(negedge clk or negedge rst_n)\n    if(!rst_n)\n        clk_div2 <= 1'b1;\n    else if(cnt2 < NUM_DIV / 2)\n        clk_div2 <= 1'b1;\n    else\n        clk_div2 <= 1'b0;\n\n    assign clk_div = clk_div1 | clk_div2;\nendmodule"
+}

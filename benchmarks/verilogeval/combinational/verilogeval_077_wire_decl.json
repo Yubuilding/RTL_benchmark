@@ -1,0 +1,30 @@
+{
+  "id": "verilogeval_077_wire_decl",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "TopModule",
+  "source": "verilogeval",
+  "suite": "verilogeval",
+  "category": "combinational",
+  "track": "rtl_core",
+  "difficulty": "easy",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "verilogeval",
+    "combinational",
+    "easy",
+    "wire",
+    "decl"
+  ],
+  "module_header": "module TopModule ( input a, input b, input c, input d, output out, output out_n );",
+  "prompt": "I would like you to implement a module named TopModule with the following\ninterface. All input and output ports are one bit unless otherwise\nspecified.\n\n - input  a\n - input  b\n - input  c\n - input  d\n - output out\n - output out_n\n\nThe module should implement the following circuit. Create two\nintermediate wires (named anything you want) to connect the AND and OR\ngates together. Note that the wire that feeds the NOT gate is really wire\n`out`, so you do not necessarily need to declare a third wire here.\nNotice how wires are driven by exactly one source (output of a gate), but\ncan feed multiple inputs.\n\nThe circuit is composed of two layers. The first layer, counting from the\ninput, is two AND gates: one whose input is connected to a and b, and the\nsecond is connected to c and d. The second layer there is an OR gate to\nOR the two AND outputs, connected the output 'out'. Additionally, there\nis an inverted output 'out_n'.",
+  "testbench": "`timescale 1 ps/1 ps\n`define OK 12\n`define INCORRECT 13\n// hdlbits_prop {len: 5}\n\n\nmodule stimulus_gen (\n\tinput clk,\n\toutput reg a,b,c,d,\n\toutput reg[511:0] wavedrom_title,\n\toutput reg wavedrom_enable\n);\n\n\n// Add two ports to module stimulus_gen:\n//    output [511:0] wavedrom_title\n//    output reg wavedrom_enable\n\n\ttask wavedrom_start(input[511:0] title = \"\");\n\tendtask\n\t\n\ttask wavedrom_stop;\n\t\t#1;\n\tendtask\t\n\n\n\n\tinitial begin\n\t\t{a,b,c,d} = 4'h0;\n\t\t@(negedge clk);\n\t\twavedrom_start(\"Exhaustive test\");\n\t\trepeat(20) @(posedge clk, negedge clk)\n\t\t\t{d,c,b,a} <= {d,c,b,a} + 1'b1;\n\t\twavedrom_stop();\n\t\trepeat(100) @(posedge clk, negedge clk) begin\n\t\t\t{a,b,c,d} <= $random;\n\t\tend\n\t\t\n\t\t#1 $finish;\n\tend\n\t\nendmodule\n\nmodule tb();\n\n\ttypedef struct packed {\n\t\tint errors;\n\t\tint errortime;\n\t\tint errors_out;\n\t\tint errortime_out;\n\t\tint errors_out_n;\n\t\tint errortime_out_n;\n\n\t\tint clocks;\n\t} stats;\n\t\n\tstats stats1;\n\t\n\t\n\twire[511:0] wavedrom_title;\n\twire wavedrom_enable;\n\tint wavedrom_hide_after_time;\n\t\n\treg clk=0;\n\tinitial forever\n\t\t#5 clk = ~clk;\n\n\tlogic a;\n\tlogic b;\n\tlogic c;\n\tlogic d;\n\tlogic out_ref;\n\tlogic out_dut;\n\tlogic out_n_ref;\n\tlogic out_n_dut;\n\n\tinitial begin \n\t\t$dumpfile(\"wave.vcd\");\n\t\t$dumpvars(1, stim1.clk, tb_mismatch ,a,b,c,d,out_ref,out_dut,out_n_ref,out_n_dut );\n\tend\n\n\n\twire tb_match;\t\t// Verification\n\twire tb_mismatch = ~tb_match;\n\t\n\tstimulus_gen stim1 (\n\t\t.clk,\n\t\t.* ,\n\t\t.a,\n\t\t.b,\n\t\t.c,\n\t\t.d );\n\tRefModule good1 (\n\t\t.a,\n\t\t.b,\n\t\t.c,\n\t\t.d,\n\t\t.out(out_ref),\n\t\t.out_n(out_n_ref) );\n\t\t\n\tTopModule top_module1 (\n\t\t.a,\n\t\t.b,\n\t\t.c,\n\t\t.d,\n\t\t.out(out_dut),\n\t\t.out_n(out_n_dut) );\n\n\t\n\tbit strobe = 0;\n\ttask wait_for_end_of_timestep;\n\t\trepeat(5) begin\n\t\t\tstrobe <= !strobe;  // Try to delay until the very end of the time step.\n\t\t\t@(strobe);\n\t\tend\n\tendtask\t\n\n\t\n\tfinal begin\n\t\tif (stats1.errors_out) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"out\", stats1.errors_out, stats1.errortime_out);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"out\");\n\t\tif (stats1.errors_out_n) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"out_n\", stats1.errors_out_n, stats1.errortime_out_n);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"out_n\");\n\n\t\t$display(\"Hint: Total mismatched samples is %1d out of %1d samples\\n\", stats1.errors, stats1.clocks);\n\t\t$display(\"Simulation finished at %0d ps\", $time);\n\t\t$display(\"Mismatches: %1d in %1d samples\", stats1.errors, stats1.clocks);\n\tend\n\t\n\t// Verification: XORs on the right makes any X in good_vector match anything, but X in dut_vector will only match X.\n\tassign tb_match = ( { out_ref, out_n_ref } === ( { out_ref, out_n_ref } ^ { out_dut, out_n_dut } ^ { out_ref, out_n_ref } ) );\n\t// Use explicit sensitivity list here. @(*) causes NetProc::nex_input() to be called when trying to compute\n\t// the sensitivity list of the @(strobe) process, which isn't implemented.\n\talways @(posedge clk, negedge clk) begin\n\n\t\tstats1.clocks++;\n\t\tif (!tb_match) begin\n\t\t\tif (stats1.errors == 0) stats1.errortime = $time;\n\t\t\tstats1.errors++;\n\t\tend\n\t\tif (out_ref !== ( out_ref ^ out_dut ^ out_ref ))\n\t\tbegin if (stats1.errors_out == 0) stats1.errortime_out = $time;\n\t\t\tstats1.errors_out = stats1.errors_out+1'b1; end\n\t\tif (out_n_ref !== ( out_n_ref ^ out_n_dut ^ out_n_ref ))\n\t\tbegin if (stats1.errors_out_n == 0) stats1.errortime_out_n = $time;\n\t\t\tstats1.errors_out_n = stats1.errors_out_n+1'b1; end\n\n\tend\n\n   // add timeout after 100K cycles\n   initial begin\n     #1000000\n     $display(\"TIMEOUT\");\n     $finish();\n   end\n\nendmodule",
+  "reference_rtl": "module TopModule (\n  input a,\n  input b,\n  input c,\n  input d,\n  output out,\n  output out_n\n);\n\n  wire w1, w2;\n  assign w1 = a&b;\n  assign w2 = c&d;\n  assign out = w1|w2;\n  assign out_n = ~out;\n\nendmodule"
+}

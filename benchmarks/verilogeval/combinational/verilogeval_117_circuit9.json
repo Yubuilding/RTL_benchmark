@@ -1,0 +1,29 @@
+{
+  "id": "verilogeval_117_circuit9",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "TopModule",
+  "source": "verilogeval",
+  "suite": "verilogeval",
+  "category": "combinational",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "verilogeval",
+    "combinational",
+    "medium",
+    "circuit9"
+  ],
+  "module_header": "module TopModule ( input clk, input a, output reg [2:0] q );",
+  "prompt": "I would like you to implement a module named TopModule with the following\ninterface. All input and output ports are one bit unless otherwise\nspecified.\n\n - input  clk\n - input  a\n - output q (3 bits)\n\nThe module implements a sequential circuit. Read the simulation waveforms\nto determine what the circuit does, then implement it.\n\n  time  clk a   q\n  0ns   0   1   x\n  5ns   1   1   4\n  10ns  0   1   4\n  15ns  1   1   4\n  20ns  0   1   4\n  25ns  1   1   4\n  30ns  0   1   4\n  35ns  1   1   4\n  40ns  0   1   4\n  45ns  1   0   4\n  50ns  0   0   4\n  55ns  1   0   5\n  60ns  0   0   5\n  65ns  1   0   6\n  70ns  0   0   6\n  75ns  1   0   0\n  80ns  0   0   0\n  85ns  1   0   1\n  90ns  0   0   1",
+  "testbench": "`timescale 1 ps/1 ps\n`define OK 12\n`define INCORRECT 13\n\n\nmodule stimulus_gen (\n\tinput clk,\n\toutput logic a,\n\toutput reg[511:0] wavedrom_title,\n\toutput reg wavedrom_enable\t\n);\n\n\n// Add two ports to module stimulus_gen:\n//    output [511:0] wavedrom_title\n//    output reg wavedrom_enable\n\n\ttask wavedrom_start(input[511:0] title = \"\");\n\tendtask\n\t\n\ttask wavedrom_stop;\n\t\t#1;\n\tendtask\t\n\n\n\n\tinitial begin\n\t\ta <= 1;\n\t\t@(negedge clk) {a} <= 1;\n\t\t@(negedge clk) wavedrom_start(\"Unknown circuit\");\n\t\t\trepeat(2) @(posedge clk);\n\t\t\t@(posedge clk) {a} <= 0;\n\t\t\trepeat(11) @(posedge clk);\n\t\t\t@(negedge clk) a <= 1;\n\t\t\trepeat(5) @(posedge clk, negedge clk);\n\t\t\ta <= 0;\n\t\t\trepeat(4) @(posedge clk);\n\t\twavedrom_stop();\n\n\t\trepeat(200) @(posedge clk, negedge clk)\n\t\t\ta <= &((5)'($urandom));\n\t\t$finish;\n\tend\n\t\nendmodule\n\nmodule tb();\n\n\ttypedef struct packed {\n\t\tint errors;\n\t\tint errortime;\n\t\tint errors_q;\n\t\tint errortime_q;\n\n\t\tint clocks;\n\t} stats;\n\t\n\tstats stats1;\n\t\n\t\n\twire[511:0] wavedrom_title;\n\twire wavedrom_enable;\n\tint wavedrom_hide_after_time;\n\t\n\treg clk=0;\n\tinitial forever\n\t\t#5 clk = ~clk;\n\n\tlogic a;\n\tlogic [2:0] q_ref;\n\tlogic [2:0] q_dut;\n\n\tinitial begin \n\t\t$dumpfile(\"wave.vcd\");\n\t\t$dumpvars(1, stim1.clk, tb_mismatch ,clk,a,q_ref,q_dut );\n\tend\n\n\n\twire tb_match;\t\t// Verification\n\twire tb_mismatch = ~tb_match;\n\t\n\tstimulus_gen stim1 (\n\t\t.clk,\n\t\t.* ,\n\t\t.a );\n\tRefModule good1 (\n\t\t.clk,\n\t\t.a,\n\t\t.q(q_ref) );\n\t\t\n\tTopModule top_module1 (\n\t\t.clk,\n\t\t.a,\n\t\t.q(q_dut) );\n\n\t\n\tbit strobe = 0;\n\ttask wait_for_end_of_timestep;\n\t\trepeat(5) begin\n\t\t\tstrobe <= !strobe;  // Try to delay until the very end of the time step.\n\t\t\t@(strobe);\n\t\tend\n\tendtask\t\n\n\t\n\tfinal begin\n\t\tif (stats1.errors_q) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"q\", stats1.errors_q, stats1.errortime_q);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"q\");\n\n\t\t$display(\"Hint: Total mismatched samples is %1d out of %1d samples\\n\", stats1.errors, stats1.clocks);\n\t\t$display(\"Simulation finished at %0d ps\", $time);\n\t\t$display(\"Mismatches: %1d in %1d samples\", stats1.errors, stats1.clocks);\n\tend\n\t\n\t// Verification: XORs on the right makes any X in good_vector match anything, but X in dut_vector will only match X.\n\tassign tb_match = ( { q_ref } === ( { q_ref } ^ { q_dut } ^ { q_ref } ) );\n\t// Use explicit sensitivity list here. @(*) causes NetProc::nex_input() to be called when trying to compute\n\t// the sensitivity list of the @(strobe) process, which isn't implemented.\n\talways @(posedge clk, negedge clk) begin\n\n\t\tstats1.clocks++;\n\t\tif (!tb_match) begin\n\t\t\tif (stats1.errors == 0) stats1.errortime = $time;\n\t\t\tstats1.errors++;\n\t\tend\n\t\tif (q_ref !== ( q_ref ^ q_dut ^ q_ref ))\n\t\tbegin if (stats1.errors_q == 0) stats1.errortime_q = $time;\n\t\t\tstats1.errors_q = stats1.errors_q+1'b1; end\n\n\tend\n\n   // add timeout after 100K cycles\n   initial begin\n     #1000000\n     $display(\"TIMEOUT\");\n     $finish();\n   end\n\nendmodule",
+  "reference_rtl": "module TopModule (\n  input clk,\n  input a,\n  output reg [2:0] q\n);\n\n  always @(posedge clk)\n    if (a)\n      q <= 4;\n    else if (q == 6)\n      q <= 0;\n    else\n      q <= q + 1'b1;\n\nendmodule"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_comparator_3bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "comparator_3bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/comparator",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "comparator",
+    "medium"
+  ],
+  "module_header": "module comparator_3bit ( input [2:0] A, input [2:0] B, output A_greater, output A_equal, output A_less );",
+  "prompt": "Please act as a professional Verilog designer.\n\nImplement a module of a 3-bit comparator for comparing binary numbers.\n\nModule name:  \n    comparator_3bit               \nInput ports:\n    A [2:0]: First 3-bit input operand (the first binary number to compare).\n    B [2:0]: Second 3-bit input operand (the second binary number to compare).\nOutput ports:\n    A_greater: 1-bit output indicating if A is greater than B.\n    A_equal: 1-bit output indicating if A is equal to B.\n    A_less: 1-bit output indicating if A is less than B.\n\nImplementation:\nComparison Logic: The module compares the two 3-bit binary numbers A and B using combinational logic.\n- The outputs A_greater, A_equal, and A_less are determined based on the comparison of A and B.\n- A_greater is set to 1 if A > B, A_equal is set to 1 if A == B, and A_less is set to 1 if A < B.\n\nOutput Encoding: The outputs are mutually exclusive, meaning only one of the three outputs will be high (1) at any given time, based on the comparison results.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule testbench;\n\n  reg [2:0] A;          // Input A (3 bits)\n  reg [2:0] B;          // Input B (3 bits)\n  wire A_greater;       \n  wire A_equal;         \n  wire A_less;          \n  integer i;            \n  integer error = 0;    \n\n  comparator_3bit uut (\n    .A(A),\n    .B(B),\n    .A_greater(A_greater),\n    .A_equal(A_equal),\n    .A_less(A_less)\n  );\n\n\n  initial begin\n\n    for (i = 0; i < 100; i = i + 1) begin\n      // Generate random 3-bit inputs\n      A = $random % 8;\n      B = $random % 8;\n\n      // Wait for the operation to complete\n      #10;\n\n      // Calculate expected results\n      if ((A > B && !A_greater) || (A == B && !A_equal) || (A < B && !A_less)) begin\n        error = error + 1;\n        $display(\"Test failed: A = %b, B = %b, A_greater = %b, A_equal = %b, A_less = %b\",\n                  A, B, A_greater, A_equal, A_less);\n      end\n    end\n\n    // Final test result summary\n    if (error == 0) begin\n      $display(\"=========== Your Design Passed ===========\");\n    end\n    else begin\n      $display(\"=========== Test completed with %d /100 failures ===========\", error);\n    end\n\n    $finish;\n  end\n\nendmodule",
+  "reference_rtl": "module comparator_3bit (\n    input [2:0] A,\n    input [2:0] B,\n    output A_greater,\n    output A_equal,\n    output A_less\n);\n\n    assign A_greater = (A > B) ? 1'b1 : 1'b0;\n    assign A_equal = (A == B) ? 1'b1 : 1'b0;\n    assign A_less = (A < B) ? 1'b1 : 1'b0;\n\nendmodule"
+}

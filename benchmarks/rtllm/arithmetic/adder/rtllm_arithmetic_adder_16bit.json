@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_adder_16bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "adder_16bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/adder",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "adder",
+    "medium"
+  ],
+  "module_header": "module adder_16bit ( input wire [15:0] a, input wire [15:0] b, input wire Cin, output wire [15:0] y, output wire Co );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module of a 16-bit full adder in combinational logic.\n\nModule name:  \n    adder_16bit               \nInput ports:\n    a[15:0]: 16-bit input operand A.\n    b[15:0]: 16-bit input operand B.\n    Cin: Carry-in input.\nOutput ports:\n    y[15:0]: 16-bit output representing the sum of A and B.\n    Co: Carry-out output.\n\nImplementation:\nIn the adder_16bit module, you need to design a small bit-width adder(8-bit adder), which will be instantiated multiple times.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ps\n\nmodule add16_tb();\n\n    reg [15:0] a;\n    reg [15:0] b;\n    reg Cin;\n\n    wire [15:0] y;\n    wire Co;\n\n    wire [16:0] tb_sum;\n    wire tb_co;\n\n    assign tb_sum = a + b;\n    assign tb_co = tb_sum[16];\n\n    integer i;\n    integer error = 0;\n\n    initial begin\n        for (i = 0; i < 100; i = i + 1) begin\n            a = {$random};\n            b = {$random};\n            Cin = 0;\n\n            #10;\n            error = (y !== tb_sum[15:0] || Co !== tb_co) ? error + 1 : error;\n        end\n\n        if (error == 0) begin\n            $display(\"===========Your Design Passed===========\");\n        end\n        else begin\n            $display(\"===========Test completed with %d / 100 failures===========\", error);\n        end\n    end\n\n    adder_16bit uut (\n        .a(a),\n        .b(b),\n        .Cin(Cin),\n\n        .y(y),\n        .Co(Co)\n    );\n\nendmodule",
+  "reference_rtl": "module adder_16bit (\n    input wire [15:0] a,\n    input wire [15:0] b,\n    input wire Cin,\n    output wire [15:0] y,\n    output wire Co\n);\n \n    wire Co_temp;\n \n    add8 add8_inst1 (\n        .a(a[15:8]),\n        .b(b[15:8]),\n        .Cin(Co_temp), \n        .y(y[15:8]),\n        .Co(Co)\n    );\n \n    add8 add8_inst2 (\n        .a(a[7:0]),\n        .b(b[7:0]),\n        .Cin(Cin),\n        .y(y[7:0]),\n        .Co(Co_temp)\n    ); \n \nendmodule\n\nmodule add8 (\n    input wire [7:0] a,\n    input wire [7:0] b,\n    input wire Cin,\n    output wire [7:0] y,\n    output wire Co\n);\n \n    wire Co_temp;\n \n    add4 add4_inst1 (\n        .a(a[7:4]),\n        .b(b[7:4]),\n        .Cin(Co_temp),\n        .y(y[7:4]),\n        .Co(Co)\n    );\n \n    add4 add4_inst2 (\n        .a(a[3:0]),\n        .b(b[3:0]),\n        .Cin(Cin),\n        .y(y[3:0]),\n        .Co(Co_temp)\n    );\n \nendmodule\n\nmodule add4 (\n    input wire [3:0] a,\n    input wire [3:0] b,\n    input wire Cin,\n    output wire [3:0] y,\n    output wire Co\n);\n \n    wire Co_temp;\n \n    add2 add2_inst1 (\n        .a(a[3:2]),\n        .b(b[3:2]),\n        .Cin(Co_temp),\n        .y(y[3:2]),\n        .Co(Co)\n    );\n \n    add2 add2_inst2 (\n        .a(a[1:0]),\n        .b(b[1:0]),\n        .Cin(Cin),\n        .y(y[1:0]),\n        .Co(Co_temp)\n    ); \n \nendmodule\n\nmodule add2 (\n    input wire [1:0] a,\n    input wire [1:0] b,\n    input wire Cin,\n    output wire [1:0] y,\n    output wire Co\n);\n \n    wire Co_temp;\n\n    add1 add1_inst1 (\n        .a(a[1]),\n        .b(b[1]),\n        .Cin(Co_temp),\n        .y(y[1]),\n        .Co(Co)\n    );\n \n    add1 add1_inst2 (\n        .a(a[0]),\n        .b(b[0]),\n        .Cin(Cin),\n        .y(y[0]),\n        .Co(Co_temp)\n    );\n         \nendmodule\n\nmodule add1 (\n    input wire a,\n    input wire b,\n    input wire Cin,\n    output wire y,\n    output wire Co\n);\n    assign y = ((~a) & (~b) & Cin | (~a) & b & (~Cin) | a & (~b) & (~Cin) | (a & b & Cin));\n    assign Co = ((~a & b & Cin) | (a & ~b & Cin) | (a & b & ~Cin) | (a & b & Cin));\n\nendmodule"
+}

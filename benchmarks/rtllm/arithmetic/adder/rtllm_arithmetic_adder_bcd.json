@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_adder_bcd",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "adder_bcd",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/adder",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "adder",
+    "medium"
+  ],
+  "module_header": "module adder_bcd ( input [3:0] A, // First BCD number (0-9) input [3:0] B, // Second BCD number (0-9) input Cin, // Input carry output [3:0] Sum, // BCD sum (0-9) output Cout // Output carry );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module of a 4-bit BCD adder for decimal arithmetic operations. \n\nModule name:  \n    adder_bcd               \nInput ports:\n    A [3:0]: First BCD input (4-bit, representing a decimal digit from 0 to 9).\n    B [3:0]: Second BCD input (4-bit, representing a decimal digit from 0 to 9).\n    Cin: Carry-in input (1-bit).\nOutput ports:\n    Sum [3:0]: 4-bit output representing the sum of the two BCD inputs, corrected to be a valid BCD digit (0–9).\n    Cout: Carry-out output (1-bit), used when the sum exceeds the decimal value of 9.\n\nImplementation:\nAddition: The module performs binary addition of A, B, and Cin.\nBCD Correction: If the sum exceeds 9 (binary 1001), a correction of 6 (binary 0110) is added to the sum. This correction ensures that the result is within the BCD range.\nCarry Generation: If the result of the addition exceeds 9, a carry-out (Cout) is generated, signaling that the BCD sum exceeds a single decimal digit.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule testbench;\n\n  reg [3:0] A;    // First BCD input (4 bits)\n  reg [3:0] B;    // Second BCD input (4 bits)\n  reg Cin;        // Carry-in input (1 bit)\n  wire [3:0] Sum; // BCD sum output (4 bits)\n  wire Cout;      // Carry-out output (1 bit)\n\n  integer i;      \n  integer error = 0; \n  reg [4:0] expected_sum; \n\n\n  adder_bcd uut (\n    .A(A),\n    .B(B),\n    .Cin(Cin),\n    .Sum(Sum),\n    .Cout(Cout)\n  );\n\n  initial begin\n    for (i = 0; i < 100; i = i + 1) begin\n        A = $random % 10; \n        B = $random % 10;\n        Cin = $random % 2;\n        if (A > 9) A = A % 10;\n        if (B > 9) B = B % 10;\n        // Wait for the operation to complete\n        #10;\n\n        expected_sum = A + B + Cin;\n\n        // Adjust for BCD overflow (sum greater than 9)\n        if (expected_sum > 9) begin\n            expected_sum = expected_sum + 6;  // Correct the sum for BCD\n        end\n\n        // Check the result of the BCD adder\n        if ({Cout, Sum} !== expected_sum) begin\n            error = error + 1;\n            $display(\"Test failed: A = %d, B = %d, Cin = %d | Expected = %d, Got = %d, Cout = %d\", \n                     A, B, Cin, expected_sum, Sum, Cout);\n        end\n    end\n    \n    if (error == 0) begin\n      $display(\"=========== Your Design Passed ===========\");\n    end\n    else begin\n      $display(\"=========== Test completed with %d /100 failures ===========\", error);\n    end\n\n    $finish;\n  end\n\nendmodule",
+  "reference_rtl": "module adder_bcd (\n    input  [3:0] A,   // First BCD number (0-9)\n    input  [3:0] B,   // Second BCD number (0-9)\n    input  Cin,       // Input carry\n    output [3:0] Sum, // BCD sum (0-9)\n    output Cout       // Output carry\n);\n    wire [4:0] temp_sum;        // Temporary 5-bit sum to store initial result\n    wire [3:0] corrected_sum;   // Adjusted BCD sum\n    wire carry_out;             // Corrected carry-out\n\n    // Step 1: Perform binary addition of A, B, and Cin\n    assign temp_sum = A + B + Cin;\n\n    // Step 2: If the sum is greater than 9, adjust the sum by adding 6\n    assign carry_out = (temp_sum > 9) ? 1 : 0;  // If sum exceeds 9, set carry\n    assign corrected_sum = (temp_sum > 9) ? (temp_sum + 4'b0110) : temp_sum;  // Add 6 to correct BCD\n\n    // Output the corrected sum and the carry\n    assign Sum = corrected_sum[3:0];  // The BCD sum is the lower 4 bits\n    assign Cout = carry_out;          // Output the carry\nendmodule"
+}

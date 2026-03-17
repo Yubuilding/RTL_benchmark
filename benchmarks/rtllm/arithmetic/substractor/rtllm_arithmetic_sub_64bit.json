@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_sub_64bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "sub_64bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/substractor",
+  "track": "arithmetic",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "substractor",
+    "medium"
+  ],
+  "module_header": "module sub_64bit( input [63:0] A, input [63:0] B, output reg [63:0] result, output reg overflow );",
+  "prompt": "Please act as a professional Verilog designer.\n\nImplement a module of a 64-bit subtractor with overflow checking for high-precision arithmetic operations. \n\nModule name:  \n    sub_64bit               \nInput ports:\n    A [63:0]: First 64-bit input operand (representing a large signed integer).\n    B [63:0]: Second 64-bit input operand (representing a large signed integer to be subtracted from A).\nOutput ports:\n    result [63:0]: 64-bit output representing the difference of the two operands (A - B).\n    overflow: 1-bit output indicating whether an overflow occurred during the subtraction operation.\n\nImplementation:\nSubtraction: The module performs binary subtraction of A and B to obtain the result.\nOverflow Detection: The module checks for overflow conditions by examining the sign bits of A, B, and the result. \n- Positive overflow occurs when a positive number (A) is subtracted by a negative number (B) and the result is negative.\n- Negative overflow occurs when a negative number (A) is subtracted by a positive number (B) and the result is positive.\n\nThe overflow flag is set to 1 if an overflow condition is detected; otherwise, it is set to 0.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\n\nmodule testbench;\n\n  reg [63:0] A;          // Input A (64 bits)\n  reg [63:0] B;          // Input B (64 bits)\n  wire [63:0] result;    // Subtraction result (64 bits)\n  wire overflow;         // Overflow signal\n  integer i;             // Loop variable\n  integer error = 0;     // Error count for failed tests\n\n  // Instantiate the verified_sub_64bit module\n  sub_64bit uut (\n    .A(A),\n    .B(B),\n    .result(result),\n    .overflow(overflow)\n  );\n\n  // Randomize inputs and check output\n  initial begin\n    for (i = 0; i < 100; i = i + 1) begin\n        // Generate random 64-bit inputs\n        A = $random;\n        B = $random;\n\n        // Wait for the operation to complete\n        #10;\n\n        // Calculate expected result using system task\n        // $monitor(\"A = %d, B = %d, Expected Result = %d, Overflow = %b\", A, B, A - B, overflow);\n\n        // Check the result of the subtraction\n        if (result !== (A - B) || (A - B < 0 && overflow !== 1)) begin\n            error = error + 1;\n            $display(\"Test failed: A = %d, B = %d, Expected Result = %d, Got = %d, Overflow = %b\", A, B, A - B, result, overflow);\n        end\n    end\n\n    // Final test result summary\n    if (error == 0) begin\n      $display(\"=========== Your Design Passed ===========\");\n    end\n    else begin\n      $display(\"=========== Test completed with %d /100 failures ===========\", error);\n    end\n\n    $finish;\n  end\n\nendmodule",
+  "reference_rtl": "module sub_64bit(\n  input [63:0] A,\n  input [63:0] B,\n  output reg [63:0] result,\n  output reg overflow\n);\n  always @(*) begin\n    result = A - B;\n\n    // Overflow happens when the sign of A and B are different, but the sign of result matches B\n    if ((A[63] != B[63]) && (result[63] != A[63])) begin\n      overflow = 1;\n    end else begin\n      overflow = 0;\n    end\n  end\n\nendmodule"
+}

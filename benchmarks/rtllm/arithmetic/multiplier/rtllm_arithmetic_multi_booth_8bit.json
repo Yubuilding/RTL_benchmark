@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_arithmetic_multi_booth_8bit",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "multi_booth_8bit",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "arithmetic/multiplier",
+  "track": "arithmetic",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "arithmetic",
+    "multiplier",
+    "hard"
+  ],
+  "module_header": "module multi_booth_8bit (p, rdy, clk, reset, a, b);",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement an 8-bit Radix-4 booth multiplier that performs the multiplication of two 8-bit inputs (a and b) using the Booth algorithm. It utilizes a clock signal (clk), and a reset signal (reset), and provides the product output (p) and a ready signal (rdy). The ready signal (rdy) is set to 1 to indicate the completion of the multiplication process.\n\nModule name:  \n   multi_booth_8bit  \n\nInput ports:\n   clk: Clock signal used for synchronous operation.\n   reset: Reset signal used to initialize the multiplier module.\n   a: 8-bit input representing the multiplicand.\n   b: 8-bit input representing the multiplier.\n\nOutput ports:\n   p: 16-bit output representing the product of the multiplication.\n   rdy: Ready signal indicating the completion of the multiplication operation.\n\nImplementation:\nOn the positive edge of the clock signal (clk) or the positive edge of the reset signal (reset), the module performs the multiplication process.\nIf the reset signal (reset) is high, two 16-bit registers multiplier <= {{8{a[7]}}, a} and multiplicand <= {{8{b[7]}}, b}. \nIf the reset signal (reset) is low, indicating normal operation, the module checks if the counter (5bit ctr) is less than 16.\nIf the counter (ctr) is less than 16, the multiplicand register (multiplicand) is left-shifted by 1 to simulate the Booth algorithm's shifting operation.\nIf the current bit of the multiplier register (multiplier[ctr]) is 1, indicating a positive Booth encoding, the product register (p) accumulates the value of the multiplicand register (multiplicand).\nThe counter (ctr) is incremented by 1. Once the counter (ctr) reaches 16, indicating the completion of the multiplication process, the ready signal (rdy) is set to 1.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ns\n`define width 8\n`define TESTFILE \"test_data.dat\"\n\nmodule booth4_mul_tb () ;\n    reg signed [`width-1:0] a, b;\n    reg             clk, reset;\n\n    wire signed [2*`width-1:0] p;\n    wire           rdy;\n\n    integer total, err;\n    integer i, s, fp, numtests;\n\n    wire signed [2*`width-1:0] ans = a*b;\n\n    multi_booth_8bit dut( .clk(clk),\n        .reset(reset),\n        .a(a),\n        .b(b),\n        .p(p),\n        .rdy(rdy));\n\n    // Set up 10ns clock\n    always #5 clk = ~clk;\n\n    task apply_and_check;\n        input [`width-1:0] ain;\n        input [`width-1:0] bin;\n        begin\n            // Set the inputs\n            a = ain;\n            b = bin;\n            // Reset the DUT for one clock cycle\n            reset = 1;\n            @(posedge clk);\n            // Remove reset \n            #1 reset = 0;\n\n            while (rdy == 0) begin\n                @(posedge clk); // Wait for one clock cycle\n            end\n            if (p == ans) begin\n                // $display($time, \" Passed %d * %d = %d\", a, b, p);\n            end else begin\n                // $display($time, \" Fail %d * %d: %d instead of %d\", a, b, p, ans);\n                err = err + 1;\n            end\n            total = total + 1;\n        end\n    endtask // apply_and_check\n\n    initial begin\n        clk = 1;\n        total = 0;\n        err = 0;\n\n        // Get all inputs from file: 1st line has number of inputs\n        fp = $fopen(`TESTFILE, \"r\");\n        s = $fscanf(fp, \"%d\\n\", numtests);\n        // Sequences of values pumped through DUT \n        for (i=0; i<numtests; i=i+1) begin\n            s = $fscanf(fp, \"%d %d\\n\", a, b);\n            apply_and_check(a, b);\n        end\n        if (err > 0) begin\n            $display(\"=========== Failed ===========\");\n        end else begin\n            $display(\"===========Your Design Passed===========\");\n        end\n        $finish;\n    end\n\nendmodule",
+  "reference_rtl": "`timescale 1ns / 1ps\n\nmodule multi_booth_8bit (p, rdy, clk, reset, a, b);\n   input clk, reset;\n   input [7:0] a, b;\n   output [15:0] p;\n   output rdy;\n   \n   reg [15:0] p;\n   reg [15:0] multiplier;\n   reg [15:0] multiplicand;\n   reg rdy;\n   reg [4:0] ctr;\n\nalways @(posedge clk or posedge reset) begin\n    if (reset) \n    begin\n    rdy     <= 0;\n    p   <= 0;\n    ctr     <= 0;\n    multiplier <= {{8{a[7]}}, a};\n    multiplicand <= {{8{b[7]}}, b};\n    end \n    else \n    begin \n      if(ctr < 16) \n          begin\n          multiplicand <= multiplicand << 1;\n            if (multiplier[ctr] == 1)\n            begin\n                p <= p + multiplicand;\n            end\n            ctr <= ctr + 1;\n          end\n       else \n           begin\n           rdy <= 1;\n           end\n    end\n  end //End of always block\n    \nendmodule"
+}

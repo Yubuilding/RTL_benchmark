@@ -1,0 +1,30 @@
+{
+  "id": "verilogeval_093_ece241_2014_q3",
+  "task_type": "rtl",
+  "language": "systemverilog",
+  "top_module": "TopModule",
+  "source": "verilogeval",
+  "suite": "verilogeval",
+  "category": "combinational",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "verilogeval",
+    "combinational",
+    "medium",
+    "ece241",
+    "q3"
+  ],
+  "module_header": "module TopModule ( input c, input d, output [3:0] mux_in );",
+  "prompt": "I would like you to implement a module named TopModule with the following\ninterface. All input and output ports are one bit unless otherwise\nspecified.\n\n - input  c\n - input  d\n - output mux_in (4 bits)\n\nFor the following Karnaugh map, give the circuit implementation using one\n4-to-1 multiplexer and as many 2-to-1 multiplexers as required, but using\nas few as possible. You are not allowed to use any other logic gate and\nyou must use _a_ and _b_ as the multiplexer selector inputs, as shown on\nthe 4-to-1 multiplexer below.\n\n      ab\n  cd  00  01  11  10\n  00 | 0 | 0 | 0 | 1 |\n  01 | 1 | 0 | 0 | 0 |\n  11 | 1 | 0 | 1 | 1 |\n  10 | 1 | 0 | 0 | 1 |\n\nConsider a block diagram with inputs 'c' and 'd' going into a module\ncalled \"TopModule\". This \"TopModule\" has four outputs, mux_in[3:0], that\nconnect to a four input mux. The mux takes as input {a,b} and ab = 00 is\nconnected to mux_in[0], ab=01 is connected to mux_in[1], and so in. You\nare implementing in Verilog just the portion labelled \"TopModule\", such\nthat the entire circuit (including the 4-to-1 mux) implements the K-map.",
+  "testbench": "`timescale 1 ps/1 ps\n`define OK 12\n`define INCORRECT 13\n\n\nmodule stimulus_gen (\n\tinput clk,\n\toutput logic c, d,\n\toutput reg[511:0] wavedrom_title,\n\toutput reg wavedrom_enable\t\n);\n\n\n// Add two ports to module stimulus_gen:\n//    output [511:0] wavedrom_title\n//    output reg wavedrom_enable\n\n\ttask wavedrom_start(input[511:0] title = \"\");\n\tendtask\n\t\n\ttask wavedrom_stop;\n\t\t#1;\n\tendtask\t\n\n\n\n\tinitial begin\n\t\t{c, d} <= 0;\n\t\t@(negedge clk) wavedrom_start();\n\t\t\t@(posedge clk) {c, d} <= 2'h0;\n\t\t\t@(posedge clk) {c, d} <= 2'h1;\n\t\t\t@(posedge clk) {c, d} <= 2'h2;\n\t\t\t@(posedge clk) {c, d} <= 2'h3;\n\t\t@(negedge clk) wavedrom_stop();\n\t\trepeat(50) @(posedge clk, negedge clk)\n\t\t\t{c,d} <= $random;\n\n\t\t$finish;\n\tend\n\t\nendmodule\n\nmodule tb();\n\n\ttypedef struct packed {\n\t\tint errors;\n\t\tint errortime;\n\t\tint errors_mux_in;\n\t\tint errortime_mux_in;\n\n\t\tint clocks;\n\t} stats;\n\t\n\tstats stats1;\n\t\n\t\n\twire[511:0] wavedrom_title;\n\twire wavedrom_enable;\n\tint wavedrom_hide_after_time;\n\t\n\treg clk=0;\n\tinitial forever\n\t\t#5 clk = ~clk;\n\n\tlogic c;\n\tlogic d;\n\tlogic [3:0] mux_in_ref;\n\tlogic [3:0] mux_in_dut;\n\n\tinitial begin \n\t\t$dumpfile(\"wave.vcd\");\n\t\t$dumpvars(1, stim1.clk, tb_mismatch ,c,d,mux_in_ref,mux_in_dut );\n\tend\n\n\n\twire tb_match;\t\t// Verification\n\twire tb_mismatch = ~tb_match;\n\t\n\tstimulus_gen stim1 (\n\t\t.clk,\n\t\t.* ,\n\t\t.c,\n\t\t.d );\n\tRefModule good1 (\n\t\t.c,\n\t\t.d,\n\t\t.mux_in(mux_in_ref) );\n\t\t\n\tTopModule top_module1 (\n\t\t.c,\n\t\t.d,\n\t\t.mux_in(mux_in_dut) );\n\n\t\n\tbit strobe = 0;\n\ttask wait_for_end_of_timestep;\n\t\trepeat(5) begin\n\t\t\tstrobe <= !strobe;  // Try to delay until the very end of the time step.\n\t\t\t@(strobe);\n\t\tend\n\tendtask\t\n\n\t\n\tfinal begin\n\t\tif (stats1.errors_mux_in) $display(\"Hint: Output '%s' has %0d mismatches. First mismatch occurred at time %0d.\", \"mux_in\", stats1.errors_mux_in, stats1.errortime_mux_in);\n\t\telse $display(\"Hint: Output '%s' has no mismatches.\", \"mux_in\");\n\n\t\t$display(\"Hint: Total mismatched samples is %1d out of %1d samples\\n\", stats1.errors, stats1.clocks);\n\t\t$display(\"Simulation finished at %0d ps\", $time);\n\t\t$display(\"Mismatches: %1d in %1d samples\", stats1.errors, stats1.clocks);\n\tend\n\t\n\t// Verification: XORs on the right makes any X in good_vector match anything, but X in dut_vector will only match X.\n\tassign tb_match = ( { mux_in_ref } === ( { mux_in_ref } ^ { mux_in_dut } ^ { mux_in_ref } ) );\n\t// Use explicit sensitivity list here. @(*) causes NetProc::nex_input() to be called when trying to compute\n\t// the sensitivity list of the @(strobe) process, which isn't implemented.\n\talways @(posedge clk, negedge clk) begin\n\n\t\tstats1.clocks++;\n\t\tif (!tb_match) begin\n\t\t\tif (stats1.errors == 0) stats1.errortime = $time;\n\t\t\tstats1.errors++;\n\t\tend\n\t\tif (mux_in_ref !== ( mux_in_ref ^ mux_in_dut ^ mux_in_ref ))\n\t\tbegin if (stats1.errors_mux_in == 0) stats1.errortime_mux_in = $time;\n\t\t\tstats1.errors_mux_in = stats1.errors_mux_in+1'b1; end\n\n\tend\n\n   // add timeout after 100K cycles\n   initial begin\n     #1000000\n     $display(\"TIMEOUT\");\n     $finish();\n   end\n\nendmodule",
+  "reference_rtl": "module TopModule (\n  input c,\n  input d,\n  output [3:0] mux_in\n);\n\n  assign mux_in[0] = c | d;\n  assign mux_in[1] = 0;\n  assign mux_in[2] = ~d;\n  assign mux_in[3] = c&d;\n\nendmodule"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_control_counter_12",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "counter_12",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "control/counter",
+  "track": "control",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "control",
+    "counter",
+    "hard"
+  ],
+  "module_header": "module counter_12 ( input rst_n, input clk, input valid_count, output reg [3:0] out );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module of a counter design that requires counting from 4 'b0000 to 4' d11. The counting can be controlled by the input signal valid_count. That is, the count is paused if valid_count is 0. The counter increments on each clock cycle when the valid_count signal is active and resets to 0 when the reset signal (rst_n) is active.\n\nModule name:  \n    counter_12               \nInput ports:\n    rst_n: Reset signal (active low)\n    clk: Clock signal\n    valid_count: Signal to enable counting\nOutput ports:\n    out: 4-bit output representing the current count value\n\nImplementation:\nIf the reset signal is active (!rst_n), the counter is reset to 0 by assigning the value 4'b0000 to the output register (out). If the valid_count signal is 1, the counter increments. It checks if the current count value (out) is equal to 4'd11 (maximum count value). If it is, the counter wraps around and resets to 0 by assigning the value 4'b0000 to the output register (out). Otherwise, it increments the output register by 1. If the valid_count = 0, the counter will stop, and the output register (out) remains unchanged.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ps\nmodule counter_12_tb;\n\n  reg clk, rst_n, valid_count;\n  wire [3:0] out;\n\n  counter_12 dut (\n    .rst_n(rst_n),\n    .clk(clk),\n    .valid_count(valid_count),\n    .out(out)\n  );\n\n\n  always #5 clk = ~clk;\n  integer i = 0;\n  integer error = 0;\n  initial begin\n    clk = 0;\n    rst_n = 0;\n    valid_count = 0;\n\n    #20 rst_n = 1;\n    // testcase1: validation of valid_count\n    repeat(15) begin\t\n      error = (out == 0) ?error:error+1;\n      #10;\n    end\n    // testcase2: counter\n    #100 valid_count = 1;\n    repeat(11) begin\t\n      error = (out == i) ?error:error+1;\n      i = i+1;\n      #10;\n    end\n    // testcase3: the count is paused if valid_count is invalid\n    valid_count = 0;\n    repeat(5) begin\t\n      error = (out == 11) ?error:error+1;\n      #10;\n    end\n\n    if (error == 0) begin\n              $display(\"===========Your Design Passed===========\");\n          end\n          else begin\n          $display(\"===========Failed===========\", error);\n          end\n    $finish;\n  end\n\n\nendmodule",
+  "reference_rtl": "`timescale 1ns/1ps\nmodule counter_12 \n(\n  input rst_n,\n  input clk,\n  input valid_count,\n\n  output reg [3:0] out\n);\n\n  always @(posedge clk or negedge rst_n) begin\n    if (!rst_n) \n\tbegin\n      out <= 4'b0000;\n    end \n\n\telse if (valid_count) \n\tbegin\n      if (out == 4'd11) \n\t  begin\n        out <= 4'b0000;\n      end \n\t  else begin\n        out <= out + 1;\n      end\n    end \n\t\n\telse begin\n      out <= out; // Pause the count when valid_count is invalid\n    end\n  end\n\nendmodule"
+}

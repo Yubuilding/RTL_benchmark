@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_serial2parallel",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "serial2parallel",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/others",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "others",
+    "medium"
+  ],
+  "module_header": "module serial2parallel( input clk, input rst_n, input din_serial, input din_valid, output reg [7:0]dout_parallel, output reg dout_valid );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a series-parallel conversion circuit. It receives a serial input signal \"din_serial\" along with a control signal \"din_valid\" indicating the validity of the input data. The module operates on the rising edge of the clock signal \"clk\" and uses a synchronous design. The input din_serial is a single-bit data, and when the module receives 8 input data, the output dout_parallel outputs the 8-bit data(The serial input values are sequentially placed in dout_parallel from the most significant bit to the least significant bit), and the dout_valid is set to 1.\n\nModule name:  \n    serial2parallel          \n\nInput ports:\n\tclk: Clock signal.\n\trst_n: Reset signal (active low).\n\tdin_serial: Serial input data.\n\tdin_valid: Validity signal for input data.\t\n\nOutput ports:\n\tdout_parallel: Parallel output data (8 bits wide).\n\tdout_valid: Validity signal for the output data.\n\nImplementation:\nThe module utilizes a 4-bit counter (cnt) to keep track of the number of serial input data bits received. Every eight din_serial input, dout_parallel will output. When all 8 serial data bits have been received, the valid output signal is set to 1, indicating that the parallel output data is valid. Otherwise, the valid output signal is set to 0, indicating that the parallel output data is not valid.\n\nGive me the complete code.",
+  "testbench": "module tb();\n\treg clk,rst_n;\n\treg din_serial,din_valid;\n\twire dout_valid;\n\twire[7:0]dout_parallel;\n \n\talways #5 clk = ~clk;\n  integer error = 0;\n\tinitial begin\n\t\tclk  <= 1'b0;\n\t\trst_n <= 1'b0;\n\t\t#12\n\t\trst_n <= 1'b1;\n\t\tdin_valid  <= 1'b1;\n\n\t\tdin_serial <= 1'b1; #10;\n\t\tdin_serial <= 1'b1; #10;\n\t\tdin_serial <= 1'b1; #10;\n\t\tdin_serial <= 1'b1; #10;\n    error = (dout_valid == 0) ?error:error+1;\n\t\tdin_serial <= 1'b0; #10;\n    din_serial <= 1'b0; #10;\n    din_serial <= 1'b0; #10;\n    din_serial <= 1'b0; #10;\n    while(dout_valid == 0) begin\n      #5;\n    end\n    // $display(\"%b\",dout_parallel);\n    error = (dout_parallel == 8'b11110000) ?error:error+1;\n    \n    din_valid  <= 1'b0; \n\t\t#30;\n\t\tdin_valid  <= 1'b1;\n\n    din_serial <= 1'b1; #10\n    din_serial <= 1'b1; #10\n    din_serial <= 1'b0; #10\n\t\tdin_serial <= 1'b0; #10\n    error = (dout_valid == 0) ?error:error+1;\n\t\tdin_serial <= 1'b0; #10\n\t\tdin_serial <= 1'b0; #10\n\t\tdin_serial <= 1'b1; #10\n\t\tdin_serial <= 1'b1; #20\n\t\tdin_valid  <= 1'b0;\n    while(dout_valid == 0) begin\n      #5;\n    end\n    // $display(\"%b\",dout_parallel);\n    error = (dout_parallel == 8'b11000011) ?error:error+1;\n\t\t#10\n    error = (dout_valid == 0) ?error:error+1;\n    #10\n\n    if (error == 0) begin\n        $display(\"===========Your Design Passed===========\");\n    end\n    else begin\n    $display(\"===========Error===========\");\n    end\n\t\t$finish;\n\tend \n\tserial2parallel u0(\n    .clk           (clk)           ,\n    .rst_n          (rst_n)          ,\n    .din_serial    (din_serial)    ,\n    .dout_parallel (dout_parallel) ,\n    .din_valid     (din_valid)     ,\n    .dout_valid    (dout_valid)\n\t);  \nendmodule",
+  "reference_rtl": "module serial2parallel(\n\tinput clk,\n\tinput rst_n,\n\tinput din_serial,\n\tinput din_valid,\n\toutput reg [7:0]dout_parallel,\n\toutput reg dout_valid\n);\n\n\treg[7:0]din_tmp;\n\treg[3:0]cnt;\n\t\n\talways@(posedge clk or negedge rst_n)begin\n\t\tif(!rst_n)\n\t\t\tcnt <= 0;\n\t\telse if(din_valid)\n\t\t\tcnt <= (cnt == 4'd8)?0:cnt+1'b1;\n\t\telse\t\n\t\t\tcnt <= 0;\n\tend\n\t\n\talways@(posedge clk or negedge rst_n)begin\n\t\tif(!rst_n)\n\t\t\tdin_tmp <= 8'b0;\n\t\telse if(din_valid && cnt <= 4'd7)\n\t\t\tdin_tmp <= {din_tmp[6:0],din_serial};\n\t\n\tend \n\t\n\talways@(posedge clk or negedge rst_n)begin\n\t\tif(!rst_n)begin\n\t\t\tdout_valid <= 1'b0;\n\t\t\tdout_parallel <= 8'b0;\n\t\tend\n\t\telse if(cnt == 4'd8)begin\n\t\t\tdout_valid <= 1'b1;\n\t\t\tdout_parallel <= din_tmp;\n\t\tend\n\t\telse begin\n\t\t\tdout_valid <= 1'b0;\n\t\tend\n\tend \n\t\nendmodule"
+}

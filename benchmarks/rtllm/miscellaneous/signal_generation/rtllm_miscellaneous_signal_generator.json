@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_signal_generator",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "signal_generator",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/signal_generation",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "signal_generation",
+    "medium"
+  ],
+  "module_header": "module signal_generator( input clk, input rst_n, output reg [4:0] wave );",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a Triangle Wave signal generator module that generates a waveform by incrementing and decrementing a 5-bit signal named \"wave\". The waveform cycles between 0 and 31, which is incremented or decremented by 1.\n\n\nModule name:  \n    signal_generator \n                 \nInput ports:\n    clk: Clock signal used for synchronous operation.\n    rst_n: Active-low reset signal. Defined as 0 for reset and 1 for reset signal inactive.\n\nOutput ports:\n    wave: 5-bit output waveform signal representing the generated waveform.\n\nImplementation:\nState and Waveform Generation:\nThe module includes a register, state, used to control the state of the waveform generation.\nThe module also includes a register, wave, with a width of 5 bits, which represents the generated waveform.\nThe state and waveform registers are updated in the always block, triggered on the positive edge of the clock signal (posedge clk) or the negative edge of the reset signal (negedge rst_n).\nOn reset, indicated by ~rst_n, the state register is cleared to 0, and the wave register is cleared to 0.\nThe waveform generation is controlled using a case statement based on the current state:\nIf the state is 0, the waveform (wave) is incremented by 1.\nIf the waveform reaches 31 (wave == 31), the state is transitioned to 1.\nIf the state is 1, the waveform is decremented by 1.\nIf the waveform reaches 0 (wave == 0), the state is transitioned back to 0.\nThe waveform generation continues to cycle between 0 and 31 based on the state transitions.\n\nGive me the complete code.",
+  "testbench": "module tb_signal_generator;\nreg\t\t\t\tclk,rst_n;\nwire[4:0]\t\twave;\n\nsignal_generator uut(\n\t\t\t\t.clk(clk),\n\t\t\t\t.rst_n(rst_n),\n\t\t\t\t.wave(wave)\n\t\t\t\t);\n\nreg[31:0]reference[0:99];\n\ninteger i = 0;\ninteger error = 0;\n// integer outfile;\ninitial begin\n      $readmemh(\"tri_gen.txt\",reference);\n\t\t\tclk = 0;\n      rst_n = 0;\n\t\t\t#10\n      rst_n =1;\n      // outfile = $fopen(\"tri_gen.txt\", \"w\");\n\t\t\trepeat(100) begin\n        // $fwrite(outfile, \"%h\\n\", wave);\n        // $display(wave);\n        error=(wave==reference[i])?error:error+1;\n        #10;\n        i = i+1;\n      end\n      // $fclose(outfile);\n      if(error==0)\n      begin\n        $display(\"===========Your Design Passed===========\");\n            end\n      else\n      begin\n        $display(\"===========Error===========\");\n      end\n      $finish;\nend\n \nalways #5 clk =~clk;\n \nendmodule",
+  "reference_rtl": "module signal_generator(\n  input clk,\n  input rst_n,\n  output reg [4:0] wave\n);\n\n  reg [1:0] state;\n  \n  always @(posedge clk or negedge rst_n) begin\n    if (~rst_n) begin\n      state <= 2'b0;\n      wave <= 5'b0;\n    end\n    else begin\n      case (state)\n        2'b00:\n          begin\n            if (wave == 5'b11111)\n              state <= 2'b01;\n            else\n              wave <= wave + 1;\n          end\n          \n        2'b01:\n          begin\n            if (wave == 5'b00000)\n              state <= 2'b00;\n            else\n              wave <= wave - 1;\n          end\n      endcase\n    end\n  end\n\nendmodule"
+}

@@ -68,8 +68,10 @@ benchmarks/
   rtl/*.json
   hdlbits/*/*.json
   industrial/*/*.json
+  rtllm/*/*/*.json
   testbench/*.json
-configs/pipeline.json
+  verilogeval/*/*.json
+configs/pipeline*.json
 data/model_feeds/open_models.json
 .github/workflows/benchmark.yml
 Dockerfile
@@ -78,7 +80,7 @@ Dockerfile
 External benchmark source catalogs live under `data/problem_catalogs/`:
 
 - `hdlbits_index.json`: link-only HDLBits index because the site license is not explicit
-- `open_rtl_benchmarks.json`: open-source benchmark repos that are candidates for future import
+- `open_rtl_benchmarks.json`: researched open-source RTL benchmark repos with license and import notes
 
 ## Configuration
 
@@ -95,6 +97,15 @@ Key fields:
 - `execution`: local vs Docker evaluator backend
 - `max_iterations`: retry loop for model self-repair
 - `run_root`, `raw_results_dir`, `leaderboard_path`: output paths
+
+## Web Console Workflow
+
+The local web console now separates provider setup from benchmark execution:
+
+- `/config`: maintain provider endpoints, API keys, and the enabled model lists for each provider
+- `/`: choose the benchmark scope and select which enabled models should participate in the current run
+
+This means you can keep multiple models configured under one provider, then launch separate jobs with different model selections. Those jobs can run in parallel as long as they use different job threads.
 
 Docker mode keys:
 
@@ -227,7 +238,9 @@ Ready-to-use examples:
 
 - `configs/pipeline.hdlbits.json`: teaching-oriented HDLBits sweep
 - `configs/pipeline.industrial.json`: harder control/protocol subset
-- `configs/pipeline.rtllm.json`: imported RTLLM subset once local conversion is done
+- `configs/pipeline.rtllm.json`: imported RTLLM subset
+- `configs/pipeline.verilogeval.json`: imported VerilogEval spec-to-RTL subset
+- `configs/pipeline.open_complex.json`: hard-only sweep across imported open-source sets
 
 External-source policy:
 
@@ -244,8 +257,19 @@ PYTHONPATH=src python3 -m rtl_benchmark.cli import-rtllm \
 PYTHONPATH=src python3 -m rtl_benchmark.cli problems --config configs/pipeline.rtllm.json
 ```
 
-This importer expects the official RTLLM folder layout with `design_description.txt`, `testbench.v`, and either
-`designer_RTL.v` or `verified_verilog.v` inside each design directory.
+This importer supports the older flat RTLLM layout and the official RTLLM v2.0 categorized layout. Each design directory must contain `design_description.txt`, `testbench.v`, and a verified reference RTL such as `designer_RTL.v`, `verified_verilog.v`, or `verified_*.v`.
+
+VerilogEval local import:
+
+```bash
+PYTHONPATH=src python3 -m rtl_benchmark.cli import-verilogeval \
+  --src /path/to/verilog-eval \
+  --dest benchmarks/verilogeval
+PYTHONPATH=src python3 -m rtl_benchmark.cli problems --config configs/pipeline.verilogeval.json
+PYTHONPATH=src python3 -m rtl_benchmark.cli problems --config configs/pipeline.open_complex.json
+```
+
+The VerilogEval importer targets the official `dataset_spec-to-rtl` snapshot and converts all prompt/reference/testbench triples into local benchmark JSON files.
 
 ## Check Environment
 

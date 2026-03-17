@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_freq_divbyeven",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "freq_diveven",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/frequency_divider",
+  "track": "rtl_core",
+  "difficulty": "hard",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "frequency_divider",
+    "hard"
+  ],
+  "module_header": "module freq_diveven( clk, rst_n, clk_div );",
+  "prompt": "Please act as a professional verilog designer.\n\nFrequency divider that divides the input clock frequency by even numbers. This module generates a divided clock signal by toggling its output every specified number of input clock cycles.\n\nModule name: \n    freq_diveven\n\nInput ports:\n    clk: Input clock signal that will be divided.\n    rst_n: Active-low reset signal to initialize the module.\n\nOutput ports:\n    clk_div: Divided clock output signal.\n\nImplementation:\n    The frequency divider uses a counter (`cnt`) to count the number of clock cycles. The `NUM_DIV` parameter specifies the division factor, which must be an even number.\n    - When the reset signal (`rst_n`) is low, the counter and the divided clock signal (`clk_div`) are initialized to zero.\n    - On each positive edge of the input clock (`clk`), if the counter is less than half of `NUM_DIV - 1`, the counter increments without changing the divided clock output.\n    - When the counter reaches the specified limit, it resets to zero and toggles the `clk_div` output signal, effectively dividing the frequency of the input clock by the even number specified by `NUM_DIV`.\n\nCounter:\n    - The counter is a 4-bit register (`cnt`) that tracks the number of clock cycles.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns / 1ps\nmodule testb_div_even;\n    // Inputs\n    reg clk;\n    reg rst_n;\n    // Outputs\n    wire clk_div;\n \n    // Instantiate the Unit Under Test (UUT)\n    freq_divbyeven uut (\n        .clk(clk), \n        .rst_n(rst_n), \n        .clk_div(clk_div)\n    );\n    always #5 clk = ~clk;\n    \n    integer error = 0;\n    integer expected_value = 0;\n    integer i;\n    initial begin\n        // Initialize Inputs\n        clk = 1;\n        rst_n = 0;\n        # 10 rst_n = 1;\n        #100;\n\n        $finish;\n    end\n    initial begin\n        // $monitor(\"clk=%d, clk_div=%d\",clk,clk_div);\n        #5;\n        for (i = 1; i < 20; i = i + 1) begin\n            if (clk_div !== expected_value) begin\n                error = error + 1; \n                $display(\"Failed at%d: clk=%d, clk_div=%d (expected %d)\", i,clk, clk_div, expected_value);\n            end\n\n            if (i < 6) expected_value = 0; // First five pairs\n            else if (i < 12) expected_value = 1; // Next five pairs\n            else if (i < 18) expected_value = 0; // Next five pairs\n            else expected_value = 1; // Last five pairs\n            #5;\n        end\n        if (error == 0) begin\n            $display(\"=========== Your Design Passed ===========\");\n            end\n        else begin\n            $display(\"=========== Test completed with %d/20 failures ===========\", error);\n        end\n    end\nendmodule",
+  "reference_rtl": "module freq_diveven(\n    clk,\n    rst_n,\n    clk_div\n);\n    input clk;\n    input rst_n;\n    output clk_div;\n    reg clk_div;\n\n    parameter NUM_DIV = 6;\n    reg    [3:0] cnt;\n\nalways @(posedge clk or negedge rst_n)\n    if(!rst_n) begin\n        cnt     <= 4'd0;\n        clk_div    <= 1'b0;\n    end\n    else if(cnt < NUM_DIV / 2 - 1) begin\n        cnt     <= cnt + 1'b1;\n        clk_div    <= clk_div;\n    end\n    else begin\n        cnt     <= 4'd0;\n        clk_div    <= ~clk_div;\n    end\n endmodule"
+}

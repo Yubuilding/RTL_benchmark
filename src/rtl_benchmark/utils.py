@@ -1,10 +1,18 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+MAX_CANDIDATE_CHARS = 200_000
+FENCED_CODE_RE = re.compile(r"```[^\n`]*\n(.*?)```", re.DOTALL)
+MODULE_BLOCK_RE = re.compile(r"\bmodule\b.*?\bendmodule\b", re.DOTALL)
+MODULE_DECL_RE = re.compile(r"\bmodule\s+([A-Za-z_][A-Za-z0-9_$]*)\b")
+ENDMODULE_RE = re.compile(r"\bendmodule\b")
 
 
 def now_utc_iso() -> str:
@@ -38,3 +46,46 @@ def save_json(path: str | Path, data: Any) -> None:
 
 def tool_exists(tool: str) -> bool:
     return shutil.which(tool) is not None
+
+
+def extract_hdl_code(text: str) -> str:
+    stripped = (text or "").strip()
+    if not stripped:
+        return ""
+
+    fence_matches = [match.strip() for match in FENCED_CODE_RE.findall(stripped) if match.strip()]
+    if fence_matches:
+        module_fences = [match for match in fence_matches if MODULE_DECL_RE.search(match)]
+        selected = module_fences or fence_matches
+        return "\n\n".join(selected).strip()
+
+    module_blocks = [match.strip() for match in MODULE_BLOCK_RE.findall(stripped) if match.strip()]
+    if module_blocks:
+        return "\n\n".join(module_blocks).strip()
+
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if len(lines) >= 2 and lines[-1].strip() == "```":
+            return "\n".join(lines[1:-1]).strip()
+
+    return stripped
+
+
+def validate_hdl_candidate(candidate_code: str, max_chars: int = MAX_CANDIDATE_CHARS) -> str:
+    stripped = (candidate_code or "").strip()
+    if not stripped:
+        return "candidate is empty"
+    if len(stripped) > max_chars:
+        return f"candidate is too large ({len(stripped)} chars > {max_chars})"
+    if "```" in stripped:
+        return "candidate still contains markdown fences"
+
+    module_count = len(MODULE_DECL_RE.findall(stripped))
+    endmodule_count = len(ENDMODULE_RE.findall(stripped))
+    if module_count == 0:
+        return "candidate does not contain a Verilog module declaration"
+    if endmodule_count == 0:
+        return "candidate is missing endmodule (possible truncated output)"
+    if endmodule_count < module_count:
+        return "candidate has unclosed module declarations (possible truncated output)"
+    return ""

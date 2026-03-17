@@ -1,0 +1,29 @@
+{
+  "id": "rtllm_miscellaneous_calendar",
+  "task_type": "rtl",
+  "language": "verilog",
+  "top_module": "calendar",
+  "source": "rtllm",
+  "suite": "rtllm",
+  "category": "miscellaneous/others",
+  "track": "rtl_core",
+  "difficulty": "medium",
+  "prompt_style": "spec_to_rtl",
+  "harness_type": "testbench_compare",
+  "evaluation_targets": [
+    "syntax",
+    "functionality",
+    "synthesis"
+  ],
+  "exposure": "public",
+  "tags": [
+    "rtllm",
+    "miscellaneous",
+    "others",
+    "medium"
+  ],
+  "module_header": "module calendar(CLK,RST,Hours,Mins,Secs);",
+  "prompt": "Please act as a professional verilog designer.\n\nImplement a module of perpetual calendar. The starting value of Secs, Mins, and Hours are all 0. Both Secs and Mins loop continuously from 0 to 59. When Secs=59, Min increases by 1 at the next cycle, and when Min=59 && Secs=59, Hours increases by 1 at the next cycle. Hours is counted from the 0-23 cycle.\n\nModule name:  \n    calendar  \n                 \nInput ports:\n    CLK: Clock input\n    RST: Active high reset signal\n\nOutput ports:\n    Hours: 6-bit output representing the current hours\n    Mins: 6-bit output representing the current minutes\n    Secs: 6-bit output representing the current seconds\n\nImplementation:\nThe calendar module uses three always blocks to update the values of seconds, minutes, and hours based on the clock signal and reset signal.\nThe first always block triggers on the positive edge of the clock signal (posedge CLK) or the positive edge of the reset signal (posedge RST). It checks if the reset signal is active (RST) and sets the seconds value (Secs) to 0. If the seconds value is 59, it wraps around and sets the seconds value to 0. Otherwise, it increments the seconds value by 1.\nThe second always block also triggers on the positive edge of the clock signal or the positive edge of the reset signal. It handles the minutes value (Mins). If the reset signal is active, it sets the minutes value to 0. If both the minutes and seconds values are 59, it wraps around and sets the minutes value to 0. If the seconds value is 59, it increments the minutes value by 1. Otherwise, it keeps the minutes value unchanged.\nThe third always block triggers on the positive edge of the clock signal or the positive edge of the reset signal. It handles the hours value (Hours). If the reset signal is active, it sets the hours value to 0. If the hours, minutes, and seconds values are all at their maximum (23, 59, and 59 respectively), it wraps around and sets the hours value to 0. If the minutes and seconds values are both 59, it increments the hours value by 1. Otherwise, it keeps the hours value unchanged.\n\nGive me the complete code.",
+  "testbench": "`timescale 1ns/1ps\nmodule main();\nreg clk,rst;\n\nwire[5:0] out1,out2,out3;\n\ncalendar dut(.CLK(clk),.RST(rst),.Hours(out1),.Mins(out2),.Secs(out3));\n\ninitial begin\n\tclk=0;\n\tforever #5 clk=~clk;\nend\n\ninteger outfile;\nreg [17:0] clocktime;\nalways @(posedge clk) begin\n    clocktime[17:12] <= out1;\n    clocktime[11:6] <= out2;\n    clocktime[5:0] <= out3;\nend\n\nreg [17:0] reference_data [0:4000];\ninteger i=0;\ninteger error = 0;\ninitial begin\n\t#10;\n\trst = 1;\n\t#25;\n\trst = 0;\n\t// outfile = $fopen(\"reference.txt\", \"w\");\n\t$readmemh(\"reference.txt\",reference_data);\n\trepeat(4000) begin\t\n\t\t// $fwrite(outfile, \"%h\\n\", clocktime);\n\t\terror = (reference_data[i] == clocktime) ? error :error +1;\n\t\ti = i + 1;\n\n\t\t#10;\n\tend\n\tif(error==0)\n\tbegin\n\t\t$display(\"===========Your Design Passed===========\");\n        end\n\telse\n\tbegin\n\t\t$display(\"===========Error===========\");\n\tend\n\t// $fclose(outfile);\n\t$finish;\nend\n\nendmodule",
+  "reference_rtl": "module calendar(CLK,RST,Hours,Mins,Secs);\ninput CLK,RST;\noutput [5:0] Hours,Mins,Secs;\nreg [5:0] Hours,Mins,Secs;\n\nalways@(posedge CLK or posedge RST) begin\n\tif (RST)\n\t\tSecs <= 0;\n\telse if (Secs == 59)\n\t\tSecs <= 0;\n\telse\n\t\tSecs <= Secs + 1;\nend\n\nalways@(posedge CLK or posedge RST) begin\n\tif (RST)\n\t\tMins <= 0;\n\telse if((Mins==59)&&(Secs==59))\n\t\tMins <= 0;\n\telse if(Secs== 59)\n\t\tMins <= Mins + 1;\n\telse\n\t\tMins <= Mins;\nend\n\nalways@(posedge CLK or posedge RST) begin\n        if (RST)\n                Hours <= 0;\n        else if((Hours == 23)&&(Mins==59)&&(Secs==59))\n                Hours <= 0;\n        else if((Mins == 59)&&(Secs==59))\n                Hours <= Hours + 1;\n        else\n                Hours <= Hours;\nend\n\nendmodule"
+}
