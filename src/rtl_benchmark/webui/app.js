@@ -16,6 +16,7 @@ const state = {
   selectedProblemIds: new Set(),
   selectedRunModelKeys: new Set(),
   expandedModels: new Set(),
+  expandedLeaderboardBreakdowns: new Set(),
   artifactViewer: null,
   problemSearch: "",
   pollTimer: null,
@@ -110,6 +111,7 @@ function checkResponse(response) {
 
 async function loadState(options = {}) {
   const preserveInputs = Boolean(options.preserveInputs);
+  const previousSelectedRunId = state.selectedRunId;
   const payload = await apiGet("/api/state");
   state.uiConfig = payload.uiConfig;
   state.problems = payload.problems || [];
@@ -129,7 +131,10 @@ async function loadState(options = {}) {
   if (page === "results" || page === "leaderboard") {
     const desiredRunId = state.selectedRunId || currentRunFromUrl() || (state.history[0] && state.history[0].run_id) || "";
     if (desiredRunId) {
-      await viewRun(desiredRunId, { pushHistory: false });
+      await viewRun(desiredRunId, {
+        pushHistory: false,
+        reveal: options.revealSelectedRun === true || (!previousSelectedRunId || previousSelectedRunId !== desiredRunId),
+      });
     }
   }
   resetPolling();
@@ -692,7 +697,9 @@ function renderLeaderboard() {
                 <td>${row.cases || 0}</td>
                 <td>
                   <div class="leaderboard-profile-summary">${escapeHtml(row.profile_summary || "n/a")}</div>
-                  <details class="leaderboard-breakdown">
+                  <details class="leaderboard-breakdown" data-leaderboard-breakdown-key="${escapeHtml(
+                    leaderboardBreakdownKey(row),
+                  )}" ${state.expandedLeaderboardBreakdowns.has(leaderboardBreakdownKey(row)) ? "open" : ""}>
                     <summary>Open Slice Breakdown</summary>
                     ${renderLeaderboardBreakdown(row)}
                   </details>
@@ -715,6 +722,10 @@ function renderLeaderboard() {
   `;
   const sliceSections = renderSliceRankingSections(leaderboard.slice_rankings || {});
   table.innerHTML = mainTable + sliceSections;
+}
+
+function leaderboardBreakdownKey(row) {
+  return `${String(row.provider || "").trim()}::${String(row.model_id || "").trim()}`;
 }
 
 function renderHomeRunDetail() {
@@ -1835,7 +1846,9 @@ async function viewRun(runId, options = {}) {
     await loadLeaderboardCompare(options);
   }
   render();
-  revealSelectedRun();
+  if (options.reveal !== false) {
+    revealSelectedRun();
+  }
 }
 
 async function loadLeaderboardCompare(options = {}) {
@@ -2046,6 +2059,21 @@ function bindEvents() {
       state.compareModelB = target.value || "";
       state.leaderboardCompare = null;
       loadLeaderboardCompare().catch(showError);
+    }
+  });
+  document.addEventListener("toggle", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLDetailsElement) || !target.matches("details[data-leaderboard-breakdown-key]")) {
+      return;
+    }
+    const key = target.dataset.leaderboardBreakdownKey;
+    if (!key) {
+      return;
+    }
+    if (target.open) {
+      state.expandedLeaderboardBreakdowns.add(key);
+    } else {
+      state.expandedLeaderboardBreakdowns.delete(key);
     }
   });
   document.addEventListener("click", (event) => {

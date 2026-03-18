@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import json
 from pathlib import Path
 
 from rtl_benchmark.scoring import compute_scored_run
@@ -97,7 +98,10 @@ def rebuild_leaderboard_from_raw_results(
     raw_dir = Path(raw_results_dir)
     runs: list[dict] = []
     for path in raw_dir.glob("*.json"):
-        data = load_json(path, default={})
+        try:
+            data = load_json(path, default={})
+        except json.JSONDecodeError:
+            continue
         started_at = str(data.get("started_at", ""))
         scope = str(data.get("scope", "suite"))
         if not scope_updates_leaderboard(scope, custom_problem=bool(data.get("custom_problem", False))):

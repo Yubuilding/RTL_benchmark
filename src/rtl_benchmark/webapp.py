@@ -1065,18 +1065,23 @@ class WebAppService:
         save_json(raw_dir / f"{run_result['run_id']}.json", run_result)
         if not update_board:
             return
-        update_leaderboard(
-            self.base_config.get("leaderboard_path", "results/leaderboard.json"),
-            str(run_result.get("run_id", "")),
-            list(run_result.get("summary", [])),
-            scope=str(run_result.get("scope", "suite")),
-            problem_ids=list(run_result.get("problem_ids", [])),
-            slice_rankings=dict(run_result.get("slice_rankings", {})),
-            scoring_policy=dict(run_result.get("scoring_policy", {})),
-            raw_results_dir=self.base_config.get("raw_results_dir", "results/raw"),
-            reset_after=self._leaderboard_reset_at(),
-            custom_problem=bool(run_result.get("custom_problem", False)),
-        )
+        try:
+            update_leaderboard(
+                self.base_config.get("leaderboard_path", "results/leaderboard.json"),
+                str(run_result.get("run_id", "")),
+                list(run_result.get("summary", [])),
+                scope=str(run_result.get("scope", "suite")),
+                problem_ids=list(run_result.get("problem_ids", [])),
+                slice_rankings=dict(run_result.get("slice_rankings", {})),
+                scoring_policy=dict(run_result.get("scoring_policy", {})),
+                raw_results_dir=self.base_config.get("raw_results_dir", "results/raw"),
+                reset_after=self._leaderboard_reset_at(),
+                custom_problem=bool(run_result.get("custom_problem", False)),
+            )
+        except Exception:
+            # Raw run snapshots are the source of truth. If leaderboard rebuild fails,
+            # keep the run persisted and let a later refresh rebuild derived state.
+            return
 
     def _persist_api_trace(
         self,

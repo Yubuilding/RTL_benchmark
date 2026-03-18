@@ -1045,6 +1045,32 @@ class ScoringTests(unittest.TestCase):
             self.assertEqual(model["last_problem_count"], 1)
             self.assertAlmostEqual(model["pass_rate"], 1 / 3, places=4)
 
+    def test_rebuild_leaderboard_skips_malformed_raw_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            raw_dir = tmp_path / "raw"
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            leaderboard_path = tmp_path / "leaderboard.json"
+
+            save_json(
+                raw_dir / "valid.json",
+                {
+                    "run_id": "valid",
+                    "started_at": "2026-03-15T10:00:00Z",
+                    "scope": "suite",
+                    "problem_ids": ["src1_easy"],
+                    "problems": self._sample_problems(),
+                    "cases": [self._rtl_case("model_a", "src1_easy", True)],
+                },
+            )
+            (raw_dir / "broken.json").write_text('{"run_id": "broken", "cases": [', encoding="utf-8")
+
+            board = rebuild_leaderboard_from_raw_results(str(leaderboard_path), str(raw_dir))
+
+            self.assertEqual(len(board["models"]), 1)
+            self.assertEqual(board["models"][0]["model_id"], "model_a")
+            self.assertEqual(board["models"][0]["runs"], 1)
+
 
 class DockerExecutionTests(unittest.TestCase):
     def test_docker_command_mounts_case_dir(self) -> None:

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-03-17T13:18:12Z",
+  "updated_at": "2026-03-18T05:34:54Z",
   "models": [
     {
       "model_id": "openrouter/hunter-alpha",
@@ -30,7 +30,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "source",
@@ -58,7 +58,7 @@
             "synth_pass_rate": 0.98,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0425,
-            "lift_vs_field_average": 0.1068
+            "lift_vs_field_average": 0.0808
           },
           {
             "dimension": "source",
@@ -72,7 +72,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.1095,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.2397
           },
           {
             "dimension": "source",
@@ -86,7 +86,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": -0.2427,
-            "lift_vs_field_average": 0.0445
+            "lift_vs_field_average": 0.0383
           }
         ],
         "tracks": [
@@ -102,7 +102,7 @@
             "synth_pass_rate": 0.9918,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1196,
-            "lift_vs_field_average": 0.2169
+            "lift_vs_field_average": 0.2036
           },
           {
             "dimension": "track",
@@ -116,7 +116,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0186,
-            "lift_vs_field_average": -0.0551
+            "lift_vs_field_average": 0.0455
           },
           {
             "dimension": "track",
@@ -144,7 +144,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": -0.8451,
-            "lift_vs_field_average": -0.5
+            "lift_vs_field_average": -0.4286
           },
           {
             "dimension": "track",
@@ -158,7 +158,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1452
+            "lift_vs_field_average": 0.145
           },
           {
             "dimension": "track",
@@ -172,7 +172,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.2829,
-            "lift_vs_field_average": -0.0114
+            "lift_vs_field_average": 0.1006
           }
         ],
         "difficulties": [
@@ -188,7 +188,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": -0.0824,
-            "lift_vs_field_average": 0.1189
+            "lift_vs_field_average": 0.1404
           },
           {
             "dimension": "difficulty",
@@ -202,7 +202,7 @@
             "synth_pass_rate": 0.9792,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.05,
-            "lift_vs_field_average": 0.0177
+            "lift_vs_field_average": 0.0418
           },
           {
             "dimension": "difficulty",
@@ -216,7 +216,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.2084
+            "lift_vs_field_average": 0.1826
           }
         ],
         "categories": [
@@ -232,7 +232,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0201,
-            "lift_vs_field_average": -0.0691
+            "lift_vs_field_average": 0.0553
           },
           {
             "dimension": "category",
@@ -246,7 +246,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0129,
-            "lift_vs_field_average": -0.0666
+            "lift_vs_field_average": 0.0581
           },
           {
             "dimension": "category",
@@ -260,7 +260,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.4063
+            "lift_vs_field_average": 0.3514
           },
           {
             "dimension": "category",
@@ -288,7 +288,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0958,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.3136
           },
           {
             "dimension": "category",
@@ -302,7 +302,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": -0.8451,
-            "lift_vs_field_average": -0.5
+            "lift_vs_field_average": -0.4286
           },
           {
             "dimension": "category",
@@ -330,7 +330,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1577
+            "lift_vs_field_average": 0.1561
           },
           {
             "dimension": "category",
@@ -344,7 +344,7 @@
             "synth_pass_rate": 0.8333,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0118,
-            "lift_vs_field_average": 0.0833
+            "lift_vs_field_average": 0.0555
           },
           {
             "dimension": "category",
@@ -372,7 +372,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1667
+            "lift_vs_field_average": 0.1429
           },
           {
             "dimension": "category",
@@ -386,7 +386,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "category",
@@ -400,7 +400,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0299,
-            "lift_vs_field_average": 0.0625
+            "lift_vs_field_average": 0.0417
           },
           {
             "dimension": "category",
@@ -428,7 +428,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0951,
-            "lift_vs_field_average": 0.25
+            "lift_vs_field_average": 0.1667
           },
           {
             "dimension": "category",
@@ -442,7 +442,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1667
+            "lift_vs_field_average": 0.1111
           },
           {
             "dimension": "category",
@@ -456,7 +456,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "category",
@@ -484,7 +484,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.25
+            "lift_vs_field_average": 0.1667
           },
           {
             "dimension": "category",
@@ -498,7 +498,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.5
+            "lift_vs_field_average": 0.5556
           },
           {
             "dimension": "category",
@@ -598,7 +598,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0677,
-            "lift_vs_field_average": 0.2445
+            "lift_vs_field_average": 0.2148
           },
           {
             "dimension": "tag",
@@ -612,7 +612,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1296,
-            "lift_vs_field_average": 0.1673
+            "lift_vs_field_average": 0.2029
           },
           {
             "dimension": "tag",
@@ -626,7 +626,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.012,
-            "lift_vs_field_average": 0.0243
+            "lift_vs_field_average": 0.2146
           },
           {
             "dimension": "tag",
@@ -640,7 +640,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "tag",
@@ -654,7 +654,7 @@
             "synth_pass_rate": 0.98,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0425,
-            "lift_vs_field_average": 0.1068
+            "lift_vs_field_average": 0.0808
           },
           {
             "dimension": "tag",
@@ -668,7 +668,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.1095,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.2397
           },
           {
             "dimension": "tag",
@@ -682,7 +682,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0186,
-            "lift_vs_field_average": -0.0551
+            "lift_vs_field_average": 0.0455
           },
           {
             "dimension": "tag",
@@ -696,7 +696,7 @@
             "synth_pass_rate": 0.9783,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0669,
-            "lift_vs_field_average": 0.0554
+            "lift_vs_field_average": 0.0885
           },
           {
             "dimension": "tag",
@@ -710,7 +710,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1564
+            "lift_vs_field_average": 0.144
           },
           {
             "dimension": "tag",
@@ -724,7 +724,7 @@
             "synth_pass_rate": 0.95,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0076,
-            "lift_vs_field_average": 0.1125
+            "lift_vs_field_average": 0.075
           },
           {
             "dimension": "tag",
@@ -738,7 +738,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.2711
+            "lift_vs_field_average": 0.2315
           },
           {
             "dimension": "tag",
@@ -766,7 +766,7 @@
             "synth_pass_rate": 0.8333,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0118,
-            "lift_vs_field_average": 0.0833
+            "lift_vs_field_average": 0.0555
           },
           {
             "dimension": "tag",
@@ -780,7 +780,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0451,
-            "lift_vs_field_average": 0.1
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "tag",
@@ -794,7 +794,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.1
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "tag",
@@ -808,7 +808,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0299,
-            "lift_vs_field_average": 0.0625
+            "lift_vs_field_average": 0.0417
           },
           {
             "dimension": "tag",
@@ -822,7 +822,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.0951,
-            "lift_vs_field_average": 0.25
+            "lift_vs_field_average": 0.1667
           },
           {
             "dimension": "tag",
@@ -836,7 +836,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0882,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.3111
           },
           {
             "dimension": "tag",
@@ -850,7 +850,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.1677,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.1183
           },
           {
             "dimension": "tag",
@@ -864,7 +864,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.2451,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.1667
           },
           {
             "dimension": "tag",
@@ -878,7 +878,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": -0.1055,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.2465
           },
           {
             "dimension": "tag",
@@ -892,7 +892,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.3333
           },
           {
             "dimension": "tag",
@@ -906,7 +906,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.3333
           },
           {
             "dimension": "tag",
@@ -920,7 +920,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.2654
           },
           {
             "dimension": "tag",
@@ -934,7 +934,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.1549,
-            "lift_vs_field_average": 0.0
+            "lift_vs_field_average": 0.3333
           }
         ]
       },
@@ -951,7 +951,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.1549,
-          "lift_vs_field_average": 0.087
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "source",
@@ -965,7 +965,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.1549,
-          "lift_vs_field_average": 0.087
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "difficulty",
@@ -979,7 +979,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.1549,
-          "lift_vs_field_average": 0.2084
+          "lift_vs_field_average": 0.1826
         }
       ],
       "weaknesses": [],
@@ -996,7 +996,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0677,
-          "lift_vs_field_average": 0.2445
+          "lift_vs_field_average": 0.2148
         },
         {
           "dimension": "tag",
@@ -1010,7 +1010,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.1296,
-          "lift_vs_field_average": 0.1673
+          "lift_vs_field_average": 0.2029
         },
         {
           "dimension": "tag",
@@ -1024,7 +1024,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": -0.012,
-          "lift_vs_field_average": 0.0243
+          "lift_vs_field_average": 0.2146
         },
         {
           "dimension": "tag",
@@ -1038,7 +1038,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.1549,
-          "lift_vs_field_average": 0.087
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "tag",
@@ -1052,7 +1052,7 @@
           "synth_pass_rate": 0.98,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0425,
-          "lift_vs_field_average": 0.1068
+          "lift_vs_field_average": 0.0808
         },
         {
           "dimension": "tag",
@@ -1066,7 +1066,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": -0.1095,
-          "lift_vs_field_average": 0.0
+          "lift_vs_field_average": 0.2397
         },
         {
           "dimension": "tag",
@@ -1080,7 +1080,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": -0.0186,
-          "lift_vs_field_average": -0.0551
+          "lift_vs_field_average": 0.0455
         },
         {
           "dimension": "tag",
@@ -1094,7 +1094,7 @@
           "synth_pass_rate": 0.9783,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": -0.0669,
-          "lift_vs_field_average": 0.0554
+          "lift_vs_field_average": 0.0885
         }
       ],
       "profile_summary": "擅长 标签 hdlbits、题源 hdlbits、难度 easy；薄弱于 暂无显著弱项",
@@ -1106,20 +1106,20 @@
       "updated_at": "2026-03-17T08:59:09Z"
     },
     {
-      "model_id": "gemini-3.1-pro-preview",
-      "provider": "gemini",
-      "score": 0.6625,
-      "weighted_pass_score": 0.6625,
-      "quality_score": 0.6906,
-      "weighted_case_mass": 0.8,
-      "overall_weighted_pass_rate": 0.8281,
-      "overall_weighted_quality_rate": 0.8632,
-      "pass_rate": 0.7213,
-      "lint_pass_rate": 0.9787,
-      "sim_pass_rate": 0.9362,
-      "synth_pass_rate": 1.0,
-      "avg_mutation_kill_rate": 1.0,
-      "cases": 61,
+      "model_id": "openrouter/healer-alpha",
+      "provider": "openrouter",
+      "score": 0.8391,
+      "weighted_pass_score": 0.8391,
+      "quality_score": 0.8993,
+      "weighted_case_mass": 1.0,
+      "overall_weighted_pass_rate": 0.8391,
+      "overall_weighted_quality_rate": 0.8993,
+      "pass_rate": 0.7972,
+      "lint_pass_rate": 0.8326,
+      "sim_pass_rate": 0.814,
+      "synth_pass_rate": 0.9907,
+      "avg_mutation_kill_rate": 0.0,
+      "cases": 217,
       "breakdowns": {
         "sources": [
           {
@@ -1133,8 +1133,8 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.087
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "source",
@@ -1147,7 +1147,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1156,13 +1156,27 @@
             "label": "题源 rtllm",
             "cases": 50,
             "global_weight_mass": 0.2,
-            "slice_weighted_pass_rate": 0.6739,
-            "slice_quality_score": 0.6881,
-            "sim_pass_rate": 0.9444,
-            "synth_pass_rate": 1.0,
+            "slice_weighted_pass_rate": 0.8587,
+            "slice_quality_score": 0.9107,
+            "sim_pass_rate": 0.88,
+            "synth_pass_rate": 0.98,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1542,
-            "lift_vs_field_average": -0.1069
+            "lift_vs_model_overall": 0.0196,
+            "lift_vs_field_average": 0.0519
+          },
+          {
+            "dimension": "source",
+            "value": "verilogeval",
+            "label": "题源 verilogeval",
+            "cases": 156,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.7345,
+            "slice_quality_score": 0.7845,
+            "sim_pass_rate": 0.7792,
+            "synth_pass_rate": 0.9935,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.1046,
+            "lift_vs_field_average": 0.2386
           },
           {
             "dimension": "source",
@@ -1170,13 +1184,13 @@
             "label": "题源 local",
             "cases": 3,
             "global_weight_mass": 0.2,
-            "slice_weighted_pass_rate": 0.6386,
-            "slice_quality_score": 0.7651,
-            "sim_pass_rate": 0.6667,
+            "slice_weighted_pass_rate": 0.6024,
+            "slice_quality_score": 0.8012,
+            "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": 1.0,
-            "lift_vs_model_overall": -0.1895,
-            "lift_vs_field_average": 0.0807
+            "avg_mutation_kill_rate": 0.0,
+            "lift_vs_model_overall": -0.2367,
+            "lift_vs_field_average": 0.0383
           }
         ],
         "tracks": [
@@ -1184,29 +1198,29 @@
             "dimension": "track",
             "value": "rtl_core",
             "label": "能力 rtl_core",
-            "cases": 28,
-            "global_weight_mass": 0.3939,
-            "slice_weighted_pass_rate": 0.7443,
-            "slice_quality_score": 0.8108,
-            "sim_pass_rate": 0.9091,
-            "synth_pass_rate": 1.0,
+            "cases": 123,
+            "global_weight_mass": 0.4987,
+            "slice_weighted_pass_rate": 0.9624,
+            "slice_quality_score": 0.9758,
+            "sim_pass_rate": 0.9426,
+            "synth_pass_rate": 0.9918,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0838,
-            "lift_vs_field_average": -0.0035
+            "lift_vs_model_overall": 0.1233,
+            "lift_vs_field_average": 0.2013
           },
           {
             "dimension": "track",
             "value": "control",
             "label": "能力 control",
-            "cases": 7,
-            "global_weight_mass": 0.133,
-            "slice_weighted_pass_rate": 0.9586,
-            "slice_quality_score": 0.9731,
-            "sim_pass_rate": 0.8571,
-            "synth_pass_rate": 1.0,
+            "cases": 38,
+            "global_weight_mass": 0.1862,
+            "slice_weighted_pass_rate": 0.8314,
+            "slice_quality_score": 0.8675,
+            "sim_pass_rate": 0.5946,
+            "synth_pass_rate": 0.973,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1305,
-            "lift_vs_field_average": 0.077
+            "lift_vs_model_overall": -0.0077,
+            "lift_vs_field_average": 0.0504
           },
           {
             "dimension": "track",
@@ -1219,7 +1233,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1228,115 +1242,129 @@
             "label": "能力 verification",
             "cases": 1,
             "global_weight_mass": 0.0795,
-            "slice_weighted_pass_rate": 1.0,
-            "slice_quality_score": 1.0,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.5,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": null,
-            "avg_mutation_kill_rate": 1.0,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.5
+            "avg_mutation_kill_rate": 0.0,
+            "lift_vs_model_overall": -0.8391,
+            "lift_vs_field_average": -0.4286
           },
           {
             "dimension": "track",
             "value": "arithmetic",
             "label": "能力 arithmetic",
-            "cases": 19,
-            "global_weight_mass": 0.0684,
-            "slice_weighted_pass_rate": 0.6901,
-            "slice_quality_score": 0.6901,
-            "sim_pass_rate": 1.0,
+            "cases": 26,
+            "global_weight_mass": 0.0775,
+            "slice_weighted_pass_rate": 0.9255,
+            "slice_quality_score": 0.9404,
+            "sim_pass_rate": 0.9231,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.138,
-            "lift_vs_field_average": -0.1647
+            "lift_vs_model_overall": 0.0864,
+            "lift_vs_field_average": 0.0705
           },
           {
             "dimension": "track",
             "value": "memory",
             "label": "能力 memory",
-            "cases": 5,
-            "global_weight_mass": 0.0252,
-            "slice_weighted_pass_rate": 0.6,
-            "slice_quality_score": 0.6,
-            "sim_pass_rate": 1.0,
+            "cases": 28,
+            "global_weight_mass": 0.0581,
+            "slice_weighted_pass_rate": 0.5622,
+            "slice_quality_score": 0.6627,
+            "sim_pass_rate": 0.4286,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.2281,
-            "lift_vs_field_average": 0.0264
+            "lift_vs_model_overall": -0.2769,
+            "lift_vs_field_average": 0.1006
           }
         ],
         "difficulties": [
           {
             "dimension": "difficulty",
-            "value": "hard",
-            "label": "难度 hard",
-            "cases": 30,
-            "global_weight_mass": 0.3378,
-            "slice_weighted_pass_rate": 0.8575,
-            "slice_quality_score": 0.8659,
-            "sim_pass_rate": 0.9091,
+            "value": "medium",
+            "label": "难度 medium",
+            "cases": 154,
+            "global_weight_mass": 0.4849,
+            "slice_weighted_pass_rate": 0.7456,
+            "slice_quality_score": 0.8455,
+            "sim_pass_rate": 0.8092,
             "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.0294,
-            "lift_vs_field_average": -0.0199
+            "avg_mutation_kill_rate": 0.0,
+            "lift_vs_model_overall": -0.0935,
+            "lift_vs_field_average": 0.1233
           },
           {
             "dimension": "difficulty",
-            "value": "medium",
-            "label": "难度 medium",
-            "cases": 27,
-            "global_weight_mass": 0.334,
-            "slice_weighted_pass_rate": 0.7325,
-            "slice_quality_score": 0.8082,
-            "sim_pass_rate": 0.9524,
-            "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": 1.0,
-            "lift_vs_model_overall": -0.0956,
-            "lift_vs_field_average": 0.0887
+            "value": "hard",
+            "label": "难度 hard",
+            "cases": 49,
+            "global_weight_mass": 0.3793,
+            "slice_weighted_pass_rate": 0.9011,
+            "slice_quality_score": 0.932,
+            "sim_pass_rate": 0.7755,
+            "synth_pass_rate": 0.9592,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.062,
+            "lift_vs_field_average": 0.0478
           },
           {
             "dimension": "difficulty",
             "value": "easy",
             "label": "难度 easy",
-            "cases": 4,
-            "global_weight_mass": 0.1282,
+            "cases": 14,
+            "global_weight_mass": 0.1358,
             "slice_weighted_pass_rate": 1.0,
             "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.2084
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.1826
           }
         ],
         "categories": [
+          {
+            "dimension": "category",
+            "value": "control",
+            "label": "类别 control",
+            "cases": 32,
+            "global_weight_mass": 0.1531,
+            "slice_weighted_pass_rate": 0.831,
+            "slice_quality_score": 0.8622,
+            "sim_pass_rate": 0.5484,
+            "synth_pass_rate": 0.9677,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0081,
+            "lift_vs_field_average": 0.0613
+          },
+          {
+            "dimension": "category",
+            "value": "sequential",
+            "label": "类别 sequential",
+            "cases": 32,
+            "global_weight_mass": 0.1216,
+            "slice_weighted_pass_rate": 0.8322,
+            "slice_quality_score": 0.8658,
+            "sim_pass_rate": 0.5312,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0069,
+            "lift_vs_field_average": 0.0581
+          },
           {
             "dimension": "category",
             "value": "rtl",
             "label": "类别 rtl",
             "cases": 2,
             "global_weight_mass": 0.1205,
-            "slice_weighted_pass_rate": 0.4,
-            "slice_quality_score": 0.61,
-            "sim_pass_rate": 0.5,
-            "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.4281,
-            "lift_vs_field_average": -0.1937
-          },
-          {
-            "dimension": "category",
-            "value": "control",
-            "label": "类别 control",
-            "cases": 1,
-            "global_weight_mass": 0.1,
             "slice_weighted_pass_rate": 1.0,
             "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.1059
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.3514
           },
           {
             "dimension": "category",
@@ -1349,22 +1377,22 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
             "dimension": "category",
-            "value": "sequential",
-            "label": "类别 sequential",
-            "cases": 2,
-            "global_weight_mass": 0.08,
-            "slice_weighted_pass_rate": 1.0,
-            "slice_quality_score": 1.0,
-            "sim_pass_rate": 1.0,
+            "value": "combinational",
+            "label": "类别 combinational",
+            "cases": 88,
+            "global_weight_mass": 0.0961,
+            "slice_weighted_pass_rate": 0.9291,
+            "slice_quality_score": 0.9409,
+            "sim_pass_rate": 0.9425,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.1012
+            "lift_vs_model_overall": 0.09,
+            "lift_vs_field_average": 0.3018
           },
           {
             "dimension": "category",
@@ -1372,13 +1400,13 @@
             "label": "类别 testbench",
             "cases": 1,
             "global_weight_mass": 0.0795,
-            "slice_weighted_pass_rate": 1.0,
-            "slice_quality_score": 1.0,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.5,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": null,
-            "avg_mutation_kill_rate": 1.0,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.5
+            "avg_mutation_kill_rate": 0.0,
+            "lift_vs_model_overall": -0.8391,
+            "lift_vs_field_average": -0.4286
           },
           {
             "dimension": "category",
@@ -1391,8 +1419,22 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic",
+            "label": "类别 arithmetic",
+            "cases": 8,
+            "global_weight_mass": 0.0358,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.1561
           },
           {
             "dimension": "category",
@@ -1400,27 +1442,13 @@
             "label": "类别 miscellaneous/risc_v",
             "cases": 6,
             "global_weight_mass": 0.0275,
-            "slice_weighted_pass_rate": 0.6667,
-            "slice_quality_score": 0.6667,
+            "slice_weighted_pass_rate": 0.8333,
+            "slice_quality_score": 0.9667,
             "sim_pass_rate": 1.0,
-            "synth_pass_rate": 1.0,
+            "synth_pass_rate": 0.8333,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1614,
-            "lift_vs_field_average": -0.0833
-          },
-          {
-            "dimension": "category",
-            "value": "arithmetic",
-            "label": "类别 arithmetic",
-            "cases": 1,
-            "global_weight_mass": 0.0267,
-            "slice_weighted_pass_rate": 1.0,
-            "slice_quality_score": 1.0,
-            "sim_pass_rate": 1.0,
-            "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.1577
+            "lift_vs_model_overall": -0.0058,
+            "lift_vs_field_average": 0.0555
           },
           {
             "dimension": "category",
@@ -1433,7 +1461,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1447,8 +1475,8 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.1667
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.1429
           },
           {
             "dimension": "category",
@@ -1456,13 +1484,27 @@
             "label": "类别 arithmetic/multiplier",
             "cases": 5,
             "global_weight_mass": 0.0241,
-            "slice_weighted_pass_rate": 0.8,
-            "slice_quality_score": 0.8,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0281,
-            "lift_vs_field_average": -0.1
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.0667
+          },
+          {
+            "dimension": "category",
+            "value": "miscellaneous/others",
+            "label": "类别 miscellaneous/others",
+            "cases": 8,
+            "global_weight_mass": 0.022,
+            "slice_weighted_pass_rate": 0.875,
+            "slice_quality_score": 0.9188,
+            "sim_pass_rate": 0.875,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0359,
+            "lift_vs_field_average": 0.0417
           },
           {
             "dimension": "category",
@@ -1475,22 +1517,8 @@
             "sim_pass_rate": 0.75,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0781,
+            "lift_vs_model_overall": -0.0891,
             "lift_vs_field_average": 0.0
-          },
-          {
-            "dimension": "category",
-            "value": "miscellaneous/others",
-            "label": "类别 miscellaneous/others",
-            "cases": 8,
-            "global_weight_mass": 0.022,
-            "slice_weighted_pass_rate": 0.75,
-            "slice_quality_score": 0.75,
-            "sim_pass_rate": 1.0,
-            "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0781,
-            "lift_vs_field_average": -0.0625
           },
           {
             "dimension": "category",
@@ -1498,13 +1526,13 @@
             "label": "类别 miscellaneous/frequency_divider",
             "cases": 4,
             "global_weight_mass": 0.0183,
-            "slice_weighted_pass_rate": 0.25,
-            "slice_quality_score": 0.3,
-            "sim_pass_rate": 0.5,
+            "slice_weighted_pass_rate": 0.75,
+            "slice_quality_score": 0.8,
+            "sim_pass_rate": 0.75,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.5781,
-            "lift_vs_field_average": -0.25
+            "lift_vs_model_overall": -0.0891,
+            "lift_vs_field_average": 0.1667
           },
           {
             "dimension": "category",
@@ -1512,13 +1540,13 @@
             "label": "类别 memory/shifter",
             "cases": 3,
             "global_weight_mass": 0.0151,
-            "slice_weighted_pass_rate": 0.6667,
-            "slice_quality_score": 0.6667,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1614,
-            "lift_vs_field_average": -0.1666
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.1111
           },
           {
             "dimension": "category",
@@ -1526,13 +1554,13 @@
             "label": "类别 arithmetic/adder",
             "cases": 5,
             "global_weight_mass": 0.0144,
-            "slice_weighted_pass_rate": 0.8,
-            "slice_quality_score": 0.8,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0281,
-            "lift_vs_field_average": -0.1
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "category",
@@ -1545,7 +1573,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1554,13 +1582,13 @@
             "label": "类别 arithmetic/divider",
             "cases": 2,
             "global_weight_mass": 0.0096,
-            "slice_weighted_pass_rate": 0.5,
-            "slice_quality_score": 0.5,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.3281,
-            "lift_vs_field_average": -0.25
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.1667
           },
           {
             "dimension": "category",
@@ -1568,13 +1596,13 @@
             "label": "类别 arithmetic/other",
             "cases": 3,
             "global_weight_mass": 0.0087,
-            "slice_weighted_pass_rate": 0.0,
-            "slice_quality_score": 0.0,
-            "sim_pass_rate": null,
-            "synth_pass_rate": null,
+            "slice_weighted_pass_rate": 0.3333,
+            "slice_quality_score": 0.4667,
+            "sim_pass_rate": 0.3333,
+            "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.8281,
-            "lift_vs_field_average": -0.5
+            "lift_vs_model_overall": -0.5058,
+            "lift_vs_field_average": -0.1111
           },
           {
             "dimension": "category",
@@ -1587,7 +1615,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1601,7 +1629,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1615,7 +1643,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1625,11 +1653,11 @@
             "cases": 1,
             "global_weight_mass": 0.005,
             "slice_weighted_pass_rate": 0.0,
-            "slice_quality_score": 0.0,
-            "sim_pass_rate": null,
-            "synth_pass_rate": null,
+            "slice_quality_score": 0.35,
+            "sim_pass_rate": 0.0,
+            "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.8281,
+            "lift_vs_model_overall": -0.8391,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1643,7 +1671,7 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           },
           {
@@ -1657,11 +1685,53 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
+            "lift_vs_model_overall": 0.1609,
             "lift_vs_field_average": 0.0
           }
         ],
         "tags": [
+          {
+            "dimension": "tag",
+            "value": "sequential",
+            "label": "标签 sequential",
+            "cases": 34,
+            "global_weight_mass": 0.2339,
+            "slice_weighted_pass_rate": 0.9128,
+            "slice_quality_score": 0.9302,
+            "sim_pass_rate": 0.5588,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0737,
+            "lift_vs_field_average": 0.2148
+          },
+          {
+            "dimension": "tag",
+            "value": "combinational",
+            "label": "标签 combinational",
+            "cases": 92,
+            "global_weight_mass": 0.2243,
+            "slice_weighted_pass_rate": 0.9696,
+            "slice_quality_score": 0.9747,
+            "sim_pass_rate": 0.9451,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1305,
+            "lift_vs_field_average": 0.1978
+          },
+          {
+            "dimension": "tag",
+            "value": "medium",
+            "label": "标签 medium",
+            "cases": 149,
+            "global_weight_mass": 0.2131,
+            "slice_weighted_pass_rate": 0.7943,
+            "slice_quality_score": 0.835,
+            "sim_pass_rate": 0.8027,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0448,
+            "lift_vs_field_average": 0.1758
+          },
           {
             "dimension": "tag",
             "value": "hdlbits",
@@ -1673,8 +1743,8 @@
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.087
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "tag",
@@ -1682,83 +1752,69 @@
             "label": "标签 rtllm",
             "cases": 50,
             "global_weight_mass": 0.2,
-            "slice_weighted_pass_rate": 0.6739,
-            "slice_quality_score": 0.6881,
-            "sim_pass_rate": 0.9444,
-            "synth_pass_rate": 1.0,
+            "slice_weighted_pass_rate": 0.8587,
+            "slice_quality_score": 0.9107,
+            "sim_pass_rate": 0.88,
+            "synth_pass_rate": 0.98,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1542,
-            "lift_vs_field_average": -0.1069
+            "lift_vs_model_overall": 0.0196,
+            "lift_vs_field_average": 0.0519
           },
           {
             "dimension": "tag",
-            "value": "sequential",
-            "label": "标签 sequential",
-            "cases": 4,
-            "global_weight_mass": 0.1923,
-            "slice_weighted_pass_rate": 0.6241,
-            "slice_quality_score": 0.7556,
-            "sim_pass_rate": 0.75,
-            "synth_pass_rate": 1.0,
+            "value": "verilogeval",
+            "label": "标签 verilogeval",
+            "cases": 156,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.7345,
+            "slice_quality_score": 0.7845,
+            "sim_pass_rate": 0.7792,
+            "synth_pass_rate": 0.9935,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.204,
-            "lift_vs_field_average": -0.0442
-          },
-          {
-            "dimension": "tag",
-            "value": "hard",
-            "label": "标签 hard",
-            "cases": 28,
-            "global_weight_mass": 0.1378,
-            "slice_weighted_pass_rate": 0.6506,
-            "slice_quality_score": 0.6712,
-            "sim_pass_rate": 0.9,
-            "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1775,
-            "lift_vs_field_average": -0.0722
+            "lift_vs_model_overall": -0.1046,
+            "lift_vs_field_average": 0.2386
           },
           {
             "dimension": "tag",
             "value": "control",
             "label": "标签 control",
-            "cases": 7,
-            "global_weight_mass": 0.133,
-            "slice_weighted_pass_rate": 0.9586,
-            "slice_quality_score": 0.9731,
-            "sim_pass_rate": 0.8571,
-            "synth_pass_rate": 1.0,
+            "cases": 38,
+            "global_weight_mass": 0.1862,
+            "slice_weighted_pass_rate": 0.8314,
+            "slice_quality_score": 0.8675,
+            "sim_pass_rate": 0.5946,
+            "synth_pass_rate": 0.973,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1305,
-            "lift_vs_field_average": 0.077
+            "lift_vs_model_overall": -0.0077,
+            "lift_vs_field_average": 0.0504
           },
           {
             "dimension": "tag",
-            "value": "combinational",
-            "label": "标签 combinational",
-            "cases": 4,
-            "global_weight_mass": 0.1282,
-            "slice_weighted_pass_rate": 1.0,
-            "slice_quality_score": 1.0,
-            "sim_pass_rate": 1.0,
-            "synth_pass_rate": 1.0,
+            "value": "hard",
+            "label": "标签 hard",
+            "cases": 47,
+            "global_weight_mass": 0.1793,
+            "slice_weighted_pass_rate": 0.7909,
+            "slice_quality_score": 0.8562,
+            "sim_pass_rate": 0.766,
+            "synth_pass_rate": 0.9574,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1719,
-            "lift_vs_field_average": 0.1926
+            "lift_vs_model_overall": -0.0482,
+            "lift_vs_field_average": 0.1012
           },
           {
             "dimension": "tag",
             "value": "arithmetic",
             "label": "标签 arithmetic",
-            "cases": 20,
-            "global_weight_mass": 0.095,
-            "slice_weighted_pass_rate": 0.7771,
-            "slice_quality_score": 0.7771,
-            "sim_pass_rate": 1.0,
+            "cases": 27,
+            "global_weight_mass": 0.1042,
+            "slice_weighted_pass_rate": 0.9445,
+            "slice_quality_score": 0.9556,
+            "sim_pass_rate": 0.9259,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.051,
-            "lift_vs_field_average": -0.0665
+            "lift_vs_model_overall": 0.1054,
+            "lift_vs_field_average": 0.0885
           },
           {
             "dimension": "tag",
@@ -1766,13 +1822,13 @@
             "label": "标签 miscellaneous",
             "cases": 20,
             "global_weight_mass": 0.0734,
-            "slice_weighted_pass_rate": 0.6125,
-            "slice_quality_score": 0.625,
-            "sim_pass_rate": 0.9286,
-            "synth_pass_rate": 1.0,
+            "slice_weighted_pass_rate": 0.8375,
+            "slice_quality_score": 0.9131,
+            "sim_pass_rate": 0.9,
+            "synth_pass_rate": 0.95,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.2156,
-            "lift_vs_field_average": -0.1125
+            "lift_vs_model_overall": -0.0016,
+            "lift_vs_field_average": 0.075
           },
           {
             "dimension": "tag",
@@ -1780,27 +1836,13 @@
             "label": "标签 adder",
             "cases": 6,
             "global_weight_mass": 0.0626,
-            "slice_weighted_pass_rate": 0.9539,
-            "slice_quality_score": 0.9539,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.1258,
-            "lift_vs_field_average": 0.225
-          },
-          {
-            "dimension": "tag",
-            "value": "medium",
-            "label": "标签 medium",
-            "cases": 22,
-            "global_weight_mass": 0.0622,
-            "slice_weighted_pass_rate": 0.7257,
-            "slice_quality_score": 0.7257,
-            "sim_pass_rate": 1.0,
-            "synth_pass_rate": 1.0,
-            "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1024,
-            "lift_vs_field_average": -0.0831
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.2315
           },
           {
             "dimension": "tag",
@@ -1813,7 +1855,7 @@
             "sim_pass_rate": 0.8,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": 0.0832,
+            "lift_vs_model_overall": 0.0722,
             "lift_vs_field_average": -0.0
           },
           {
@@ -1822,13 +1864,13 @@
             "label": "标签 risc_v",
             "cases": 6,
             "global_weight_mass": 0.0275,
-            "slice_weighted_pass_rate": 0.6667,
-            "slice_quality_score": 0.6667,
+            "slice_weighted_pass_rate": 0.8333,
+            "slice_quality_score": 0.9667,
             "sim_pass_rate": 1.0,
-            "synth_pass_rate": 1.0,
+            "synth_pass_rate": 0.8333,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.1614,
-            "lift_vs_field_average": -0.0833
+            "lift_vs_model_overall": -0.0058,
+            "lift_vs_field_average": 0.0555
           },
           {
             "dimension": "tag",
@@ -1836,13 +1878,13 @@
             "label": "标签 memory",
             "cases": 5,
             "global_weight_mass": 0.0252,
-            "slice_weighted_pass_rate": 0.6,
-            "slice_quality_score": 0.6,
-            "sim_pass_rate": 1.0,
+            "slice_weighted_pass_rate": 0.8,
+            "slice_quality_score": 0.87,
+            "sim_pass_rate": 0.8,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.2281,
-            "lift_vs_field_average": -0.1
+            "lift_vs_model_overall": -0.0391,
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "tag",
@@ -1850,13 +1892,13 @@
             "label": "标签 multiplier",
             "cases": 5,
             "global_weight_mass": 0.0241,
-            "slice_weighted_pass_rate": 0.8,
-            "slice_quality_score": 0.8,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
             "sim_pass_rate": 1.0,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0281,
-            "lift_vs_field_average": -0.1
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.0667
           },
           {
             "dimension": "tag",
@@ -1864,13 +1906,13 @@
             "label": "标签 others",
             "cases": 8,
             "global_weight_mass": 0.022,
-            "slice_weighted_pass_rate": 0.75,
-            "slice_quality_score": 0.75,
-            "sim_pass_rate": 1.0,
+            "slice_weighted_pass_rate": 0.875,
+            "slice_quality_score": 0.9188,
+            "sim_pass_rate": 0.875,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.0781,
-            "lift_vs_field_average": -0.0625
+            "lift_vs_model_overall": 0.0359,
+            "lift_vs_field_average": 0.0417
           },
           {
             "dimension": "tag",
@@ -1878,13 +1920,125 @@
             "label": "标签 frequency_divider",
             "cases": 4,
             "global_weight_mass": 0.0183,
-            "slice_weighted_pass_rate": 0.25,
-            "slice_quality_score": 0.3,
-            "sim_pass_rate": 0.5,
+            "slice_weighted_pass_rate": 0.75,
+            "slice_quality_score": 0.8,
+            "sim_pass_rate": 0.75,
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
-            "lift_vs_model_overall": -0.5781,
-            "lift_vs_field_average": -0.25
+            "lift_vs_model_overall": -0.0891,
+            "lift_vs_field_average": 0.1667
+          },
+          {
+            "dimension": "tag",
+            "value": "m2014",
+            "label": "标签 m2014",
+            "cases": 15,
+            "global_weight_mass": 0.017,
+            "slice_weighted_pass_rate": 0.9333,
+            "slice_quality_score": 0.9467,
+            "sim_pass_rate": 0.9333,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0942,
+            "lift_vs_field_average": 0.3111
+          },
+          {
+            "dimension": "tag",
+            "value": "fsm",
+            "label": "标签 fsm",
+            "cases": 7,
+            "global_weight_mass": 0.0141,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.4409
+          },
+          {
+            "dimension": "tag",
+            "value": "ece241",
+            "label": "标签 ece241",
+            "cases": 10,
+            "global_weight_mass": 0.0114,
+            "slice_weighted_pass_rate": 0.6,
+            "slice_quality_score": 0.68,
+            "sim_pass_rate": 0.6,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.2391,
+            "lift_vs_field_average": 0.1667
+          },
+          {
+            "dimension": "tag",
+            "value": "review2015",
+            "label": "标签 review2015",
+            "cases": 7,
+            "global_weight_mass": 0.01,
+            "slice_weighted_pass_rate": 0.7396,
+            "slice_quality_score": 0.7917,
+            "sim_pass_rate": 0.7143,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0995,
+            "lift_vs_field_average": 0.2465
+          },
+          {
+            "dimension": "tag",
+            "value": "easy",
+            "label": "标签 easy",
+            "cases": 10,
+            "global_weight_mass": 0.0076,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.3333
+          },
+          {
+            "dimension": "tag",
+            "value": "always",
+            "label": "标签 always",
+            "cases": 6,
+            "global_weight_mass": 0.0068,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.3333
+          },
+          {
+            "dimension": "tag",
+            "value": "mt2015",
+            "label": "标签 mt2015",
+            "cases": 5,
+            "global_weight_mass": 0.0058,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.2654
+          },
+          {
+            "dimension": "tag",
+            "value": "bugs",
+            "label": "标签 bugs",
+            "cases": 3,
+            "global_weight_mass": 0.0035,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1609,
+            "lift_vs_field_average": 0.3333
           }
         ]
       },
@@ -1900,8 +2054,8 @@
           "sim_pass_rate": 1.0,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": 0.1719,
-          "lift_vs_field_average": 0.087
+          "lift_vs_model_overall": 0.1609,
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "source",
@@ -1914,69 +2068,68 @@
           "sim_pass_rate": 1.0,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": 0.1719,
-          "lift_vs_field_average": 0.087
+          "lift_vs_model_overall": 0.1609,
+          "lift_vs_field_average": 0.0656
         },
         {
-          "dimension": "tag",
-          "value": "combinational",
-          "label": "标签 combinational",
-          "cases": 4,
-          "global_weight_mass": 0.1282,
+          "dimension": "difficulty",
+          "value": "easy",
+          "label": "难度 easy",
+          "cases": 14,
+          "global_weight_mass": 0.1358,
           "slice_weighted_pass_rate": 1.0,
           "slice_quality_score": 1.0,
           "sim_pass_rate": 1.0,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": 0.1719,
-          "lift_vs_field_average": 0.1926
+          "lift_vs_model_overall": 0.1609,
+          "lift_vs_field_average": 0.1826
         }
       ],
-      "weaknesses": [
-        {
-          "dimension": "tag",
-          "value": "miscellaneous",
-          "label": "标签 miscellaneous",
-          "cases": 20,
-          "global_weight_mass": 0.0734,
-          "slice_weighted_pass_rate": 0.6125,
-          "slice_quality_score": 0.625,
-          "sim_pass_rate": 0.9286,
-          "synth_pass_rate": 1.0,
-          "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.2156,
-          "lift_vs_field_average": -0.1125
-        },
-        {
-          "dimension": "tag",
-          "value": "hard",
-          "label": "标签 hard",
-          "cases": 28,
-          "global_weight_mass": 0.1378,
-          "slice_weighted_pass_rate": 0.6506,
-          "slice_quality_score": 0.6712,
-          "sim_pass_rate": 0.9,
-          "synth_pass_rate": 1.0,
-          "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.1775,
-          "lift_vs_field_average": -0.0722
-        },
-        {
-          "dimension": "tag",
-          "value": "rtllm",
-          "label": "标签 rtllm",
-          "cases": 50,
-          "global_weight_mass": 0.2,
-          "slice_weighted_pass_rate": 0.6739,
-          "slice_quality_score": 0.6881,
-          "sim_pass_rate": 0.9444,
-          "synth_pass_rate": 1.0,
-          "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.1542,
-          "lift_vs_field_average": -0.1069
-        }
-      ],
+      "weaknesses": [],
       "top_tags": [
+        {
+          "dimension": "tag",
+          "value": "sequential",
+          "label": "标签 sequential",
+          "cases": 34,
+          "global_weight_mass": 0.2339,
+          "slice_weighted_pass_rate": 0.9128,
+          "slice_quality_score": 0.9302,
+          "sim_pass_rate": 0.5588,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.0737,
+          "lift_vs_field_average": 0.2148
+        },
+        {
+          "dimension": "tag",
+          "value": "combinational",
+          "label": "标签 combinational",
+          "cases": 92,
+          "global_weight_mass": 0.2243,
+          "slice_weighted_pass_rate": 0.9696,
+          "slice_quality_score": 0.9747,
+          "sim_pass_rate": 0.9451,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.1305,
+          "lift_vs_field_average": 0.1978
+        },
+        {
+          "dimension": "tag",
+          "value": "medium",
+          "label": "标签 medium",
+          "cases": 149,
+          "global_weight_mass": 0.2131,
+          "slice_weighted_pass_rate": 0.7943,
+          "slice_quality_score": 0.835,
+          "sim_pass_rate": 0.8027,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.0448,
+          "lift_vs_field_average": 0.1758
+        },
         {
           "dimension": "tag",
           "value": "hdlbits",
@@ -1988,8 +2141,1155 @@
           "sim_pass_rate": 1.0,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": 0.1719,
-          "lift_vs_field_average": 0.087
+          "lift_vs_model_overall": 0.1609,
+          "lift_vs_field_average": 0.0656
+        },
+        {
+          "dimension": "tag",
+          "value": "rtllm",
+          "label": "标签 rtllm",
+          "cases": 50,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 0.8587,
+          "slice_quality_score": 0.9107,
+          "sim_pass_rate": 0.88,
+          "synth_pass_rate": 0.98,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.0196,
+          "lift_vs_field_average": 0.0519
+        },
+        {
+          "dimension": "tag",
+          "value": "verilogeval",
+          "label": "标签 verilogeval",
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 0.7345,
+          "slice_quality_score": 0.7845,
+          "sim_pass_rate": 0.7792,
+          "synth_pass_rate": 0.9935,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.1046,
+          "lift_vs_field_average": 0.2386
+        },
+        {
+          "dimension": "tag",
+          "value": "control",
+          "label": "标签 control",
+          "cases": 38,
+          "global_weight_mass": 0.1862,
+          "slice_weighted_pass_rate": 0.8314,
+          "slice_quality_score": 0.8675,
+          "sim_pass_rate": 0.5946,
+          "synth_pass_rate": 0.973,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.0077,
+          "lift_vs_field_average": 0.0504
+        },
+        {
+          "dimension": "tag",
+          "value": "hard",
+          "label": "标签 hard",
+          "cases": 47,
+          "global_weight_mass": 0.1793,
+          "slice_weighted_pass_rate": 0.7909,
+          "slice_quality_score": 0.8562,
+          "sim_pass_rate": 0.766,
+          "synth_pass_rate": 0.9574,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.0482,
+          "lift_vs_field_average": 0.1012
+        }
+      ],
+      "profile_summary": "擅长 标签 hdlbits、题源 hdlbits、难度 easy；薄弱于 暂无显著弱项",
+      "rank": 2,
+      "runs": 1,
+      "last_run_id": "20260318T034438854219Z",
+      "last_scope": "suite",
+      "last_problem_count": 217,
+      "updated_at": "2026-03-18T03:44:38Z"
+    },
+    {
+      "model_id": "gemini-3.1-pro-preview",
+      "provider": "gemini",
+      "score": 0.666,
+      "weighted_pass_score": 0.666,
+      "quality_score": 0.6942,
+      "weighted_case_mass": 1.0,
+      "overall_weighted_pass_rate": 0.666,
+      "overall_weighted_quality_rate": 0.6942,
+      "pass_rate": 0.2166,
+      "lint_pass_rate": 0.98,
+      "sim_pass_rate": 0.94,
+      "synth_pass_rate": 1.0,
+      "avg_mutation_kill_rate": 1.0,
+      "cases": 217,
+      "breakdowns": {
+        "sources": [
+          {
+            "dimension": "source",
+            "value": "hdlbits",
+            "label": "题源 hdlbits",
+            "cases": 6,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0656
+          },
+          {
+            "dimension": "source",
+            "value": "industrial",
+            "label": "题源 industrial",
+            "cases": 2,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "source",
+            "value": "rtllm",
+            "label": "题源 rtllm",
+            "cases": 50,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.6739,
+            "slice_quality_score": 0.6881,
+            "sim_pass_rate": 0.9444,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0079,
+            "lift_vs_field_average": -0.1329
+          },
+          {
+            "dimension": "source",
+            "value": "local",
+            "label": "题源 local",
+            "cases": 3,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.6386,
+            "slice_quality_score": 0.7651,
+            "sim_pass_rate": 0.6667,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": 1.0,
+            "lift_vs_model_overall": -0.0274,
+            "lift_vs_field_average": 0.0745
+          },
+          {
+            "dimension": "source",
+            "value": "verilogeval",
+            "label": "题源 verilogeval",
+            "cases": 156,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.0176,
+            "slice_quality_score": 0.0176,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.6484,
+            "lift_vs_field_average": -0.4783
+          }
+        ],
+        "tracks": [
+          {
+            "dimension": "track",
+            "value": "rtl_core",
+            "label": "能力 rtl_core",
+            "cases": 123,
+            "global_weight_mass": 0.4987,
+            "slice_weighted_pass_rate": 0.5901,
+            "slice_quality_score": 0.6427,
+            "sim_pass_rate": 0.913,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0759,
+            "lift_vs_field_average": -0.171
+          },
+          {
+            "dimension": "track",
+            "value": "control",
+            "label": "能力 control",
+            "cases": 38,
+            "global_weight_mass": 0.1862,
+            "slice_weighted_pass_rate": 0.685,
+            "slice_quality_score": 0.6953,
+            "sim_pass_rate": 0.8571,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.019,
+            "lift_vs_field_average": -0.096
+          },
+          {
+            "dimension": "track",
+            "value": "protocol",
+            "label": "能力 protocol",
+            "cases": 1,
+            "global_weight_mass": 0.1,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "track",
+            "value": "verification",
+            "label": "能力 verification",
+            "cases": 1,
+            "global_weight_mass": 0.0795,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": 1.0,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.5714
+          },
+          {
+            "dimension": "track",
+            "value": "arithmetic",
+            "label": "能力 arithmetic",
+            "cases": 26,
+            "global_weight_mass": 0.0775,
+            "slice_weighted_pass_rate": 0.6395,
+            "slice_quality_score": 0.6395,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0265,
+            "lift_vs_field_average": -0.2155
+          },
+          {
+            "dimension": "track",
+            "value": "memory",
+            "label": "能力 memory",
+            "cases": 28,
+            "global_weight_mass": 0.0581,
+            "slice_weighted_pass_rate": 0.2604,
+            "slice_quality_score": 0.2604,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.4056,
+            "lift_vs_field_average": -0.2012
+          }
+        ],
+        "difficulties": [
+          {
+            "dimension": "difficulty",
+            "value": "medium",
+            "label": "难度 medium",
+            "cases": 154,
+            "global_weight_mass": 0.4849,
+            "slice_weighted_pass_rate": 0.5118,
+            "slice_quality_score": 0.564,
+            "sim_pass_rate": 0.9583,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": 1.0,
+            "lift_vs_model_overall": -0.1542,
+            "lift_vs_field_average": -0.1105
+          },
+          {
+            "dimension": "difficulty",
+            "value": "hard",
+            "label": "难度 hard",
+            "cases": 49,
+            "global_weight_mass": 0.3793,
+            "slice_weighted_pass_rate": 0.7636,
+            "slice_quality_score": 0.7711,
+            "sim_pass_rate": 0.9091,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0976,
+            "lift_vs_field_average": -0.0897
+          },
+          {
+            "dimension": "difficulty",
+            "value": "easy",
+            "label": "难度 easy",
+            "cases": 14,
+            "global_weight_mass": 0.1358,
+            "slice_weighted_pass_rate": 0.9442,
+            "slice_quality_score": 0.9442,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.2782,
+            "lift_vs_field_average": 0.1268
+          }
+        ],
+        "categories": [
+          {
+            "dimension": "category",
+            "value": "control",
+            "label": "类别 control",
+            "cases": 32,
+            "global_weight_mass": 0.1531,
+            "slice_weighted_pass_rate": 0.653,
+            "slice_quality_score": 0.653,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.013,
+            "lift_vs_field_average": -0.1167
+          },
+          {
+            "dimension": "category",
+            "value": "sequential",
+            "label": "类别 sequential",
+            "cases": 32,
+            "global_weight_mass": 0.1216,
+            "slice_weighted_pass_rate": 0.6579,
+            "slice_quality_score": 0.6579,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0081,
+            "lift_vs_field_average": -0.1162
+          },
+          {
+            "dimension": "category",
+            "value": "rtl",
+            "label": "类别 rtl",
+            "cases": 2,
+            "global_weight_mass": 0.1205,
+            "slice_weighted_pass_rate": 0.4,
+            "slice_quality_score": 0.61,
+            "sim_pass_rate": 0.5,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.266,
+            "lift_vs_field_average": -0.2486
+          },
+          {
+            "dimension": "category",
+            "value": "protocol",
+            "label": "类别 protocol",
+            "cases": 1,
+            "global_weight_mass": 0.1,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "combinational",
+            "label": "类别 combinational",
+            "cases": 88,
+            "global_weight_mass": 0.0961,
+            "slice_weighted_pass_rate": 0.0118,
+            "slice_quality_score": 0.0118,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.6542,
+            "lift_vs_field_average": -0.6155
+          },
+          {
+            "dimension": "category",
+            "value": "testbench",
+            "label": "类别 testbench",
+            "cases": 1,
+            "global_weight_mass": 0.0795,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": 1.0,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.5714
+          },
+          {
+            "dimension": "category",
+            "value": "counters",
+            "label": "类别 counters",
+            "cases": 1,
+            "global_weight_mass": 0.04,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic",
+            "label": "类别 arithmetic",
+            "cases": 8,
+            "global_weight_mass": 0.0358,
+            "slice_weighted_pass_rate": 0.8113,
+            "slice_quality_score": 0.8113,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.1453,
+            "lift_vs_field_average": -0.0326
+          },
+          {
+            "dimension": "category",
+            "value": "miscellaneous/risc_v",
+            "label": "类别 miscellaneous/risc_v",
+            "cases": 6,
+            "global_weight_mass": 0.0275,
+            "slice_weighted_pass_rate": 0.6667,
+            "slice_quality_score": 0.6667,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0007,
+            "lift_vs_field_average": -0.1111
+          },
+          {
+            "dimension": "category",
+            "value": "muxes",
+            "label": "类别 muxes",
+            "cases": 1,
+            "global_weight_mass": 0.0267,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "vectors",
+            "label": "类别 vectors",
+            "cases": 1,
+            "global_weight_mass": 0.0267,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.1429
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/multiplier",
+            "label": "类别 arithmetic/multiplier",
+            "cases": 5,
+            "global_weight_mass": 0.0241,
+            "slice_weighted_pass_rate": 0.8,
+            "slice_quality_score": 0.8,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.134,
+            "lift_vs_field_average": -0.1333
+          },
+          {
+            "dimension": "category",
+            "value": "control/counter",
+            "label": "类别 control/counter",
+            "cases": 4,
+            "global_weight_mass": 0.022,
+            "slice_weighted_pass_rate": 0.75,
+            "slice_quality_score": 0.8375,
+            "sim_pass_rate": 0.75,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.084,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "miscellaneous/others",
+            "label": "类别 miscellaneous/others",
+            "cases": 8,
+            "global_weight_mass": 0.022,
+            "slice_weighted_pass_rate": 0.75,
+            "slice_quality_score": 0.75,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.084,
+            "lift_vs_field_average": -0.0833
+          },
+          {
+            "dimension": "category",
+            "value": "miscellaneous/frequency_divider",
+            "label": "类别 miscellaneous/frequency_divider",
+            "cases": 4,
+            "global_weight_mass": 0.0183,
+            "slice_weighted_pass_rate": 0.25,
+            "slice_quality_score": 0.3,
+            "sim_pass_rate": 0.5,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.416,
+            "lift_vs_field_average": -0.3333
+          },
+          {
+            "dimension": "category",
+            "value": "memory/shifter",
+            "label": "类别 memory/shifter",
+            "cases": 3,
+            "global_weight_mass": 0.0151,
+            "slice_weighted_pass_rate": 0.6667,
+            "slice_quality_score": 0.6667,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0007,
+            "lift_vs_field_average": -0.2222
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/adder",
+            "label": "类别 arithmetic/adder",
+            "cases": 5,
+            "global_weight_mass": 0.0144,
+            "slice_weighted_pass_rate": 0.8,
+            "slice_quality_score": 0.8,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.134,
+            "lift_vs_field_average": -0.1333
+          },
+          {
+            "dimension": "category",
+            "value": "control/finite_state_machine",
+            "label": "类别 control/finite_state_machine",
+            "cases": 2,
+            "global_weight_mass": 0.011,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/divider",
+            "label": "类别 arithmetic/divider",
+            "cases": 2,
+            "global_weight_mass": 0.0096,
+            "slice_weighted_pass_rate": 0.5,
+            "slice_quality_score": 0.5,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.166,
+            "lift_vs_field_average": -0.3333
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/other",
+            "label": "类别 arithmetic/other",
+            "cases": 3,
+            "global_weight_mass": 0.0087,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.4444
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/comparator",
+            "label": "类别 arithmetic/comparator",
+            "cases": 2,
+            "global_weight_mass": 0.0058,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "miscellaneous/signal_generation",
+            "label": "类别 miscellaneous/signal_generation",
+            "cases": 2,
+            "global_weight_mass": 0.0055,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "memory/lifo",
+            "label": "类别 memory/lifo",
+            "cases": 1,
+            "global_weight_mass": 0.005,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "memory/fifo",
+            "label": "类别 memory/fifo",
+            "cases": 1,
+            "global_weight_mass": 0.005,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/accumulator",
+            "label": "类别 arithmetic/accumulator",
+            "cases": 1,
+            "global_weight_mass": 0.0029,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          },
+          {
+            "dimension": "category",
+            "value": "arithmetic/substractor",
+            "label": "类别 arithmetic/substractor",
+            "cases": 1,
+            "global_weight_mass": 0.0029,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0
+          }
+        ],
+        "tags": [
+          {
+            "dimension": "tag",
+            "value": "sequential",
+            "label": "标签 sequential",
+            "cases": 34,
+            "global_weight_mass": 0.2339,
+            "slice_weighted_pass_rate": 0.5131,
+            "slice_quality_score": 0.6213,
+            "sim_pass_rate": 0.75,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.1529,
+            "lift_vs_field_average": -0.1849
+          },
+          {
+            "dimension": "tag",
+            "value": "combinational",
+            "label": "标签 combinational",
+            "cases": 92,
+            "global_weight_mass": 0.2243,
+            "slice_weighted_pass_rate": 0.5765,
+            "slice_quality_score": 0.5765,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0895,
+            "lift_vs_field_average": -0.1953
+          },
+          {
+            "dimension": "tag",
+            "value": "medium",
+            "label": "标签 medium",
+            "cases": 149,
+            "global_weight_mass": 0.2131,
+            "slice_weighted_pass_rate": 0.2283,
+            "slice_quality_score": 0.2283,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.4377,
+            "lift_vs_field_average": -0.3902
+          },
+          {
+            "dimension": "tag",
+            "value": "hdlbits",
+            "label": "标签 hdlbits",
+            "cases": 6,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 1.0,
+            "slice_quality_score": 1.0,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.334,
+            "lift_vs_field_average": 0.0656
+          },
+          {
+            "dimension": "tag",
+            "value": "rtllm",
+            "label": "标签 rtllm",
+            "cases": 50,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.6739,
+            "slice_quality_score": 0.6881,
+            "sim_pass_rate": 0.9444,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0079,
+            "lift_vs_field_average": -0.1329
+          },
+          {
+            "dimension": "tag",
+            "value": "verilogeval",
+            "label": "标签 verilogeval",
+            "cases": 156,
+            "global_weight_mass": 0.2,
+            "slice_weighted_pass_rate": 0.0176,
+            "slice_quality_score": 0.0176,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.6484,
+            "lift_vs_field_average": -0.4783
+          },
+          {
+            "dimension": "tag",
+            "value": "control",
+            "label": "标签 control",
+            "cases": 38,
+            "global_weight_mass": 0.1862,
+            "slice_weighted_pass_rate": 0.685,
+            "slice_quality_score": 0.6953,
+            "sim_pass_rate": 0.8571,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.019,
+            "lift_vs_field_average": -0.096
+          },
+          {
+            "dimension": "tag",
+            "value": "hard",
+            "label": "标签 hard",
+            "cases": 47,
+            "global_weight_mass": 0.1793,
+            "slice_weighted_pass_rate": 0.4999,
+            "slice_quality_score": 0.5158,
+            "sim_pass_rate": 0.9,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.1661,
+            "lift_vs_field_average": -0.1898
+          },
+          {
+            "dimension": "tag",
+            "value": "arithmetic",
+            "label": "标签 arithmetic",
+            "cases": 27,
+            "global_weight_mass": 0.1042,
+            "slice_weighted_pass_rate": 0.7318,
+            "slice_quality_score": 0.7318,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0658,
+            "lift_vs_field_average": -0.1242
+          },
+          {
+            "dimension": "tag",
+            "value": "miscellaneous",
+            "label": "标签 miscellaneous",
+            "cases": 20,
+            "global_weight_mass": 0.0734,
+            "slice_weighted_pass_rate": 0.6125,
+            "slice_quality_score": 0.625,
+            "sim_pass_rate": 0.9286,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.0535,
+            "lift_vs_field_average": -0.15
+          },
+          {
+            "dimension": "tag",
+            "value": "adder",
+            "label": "标签 adder",
+            "cases": 6,
+            "global_weight_mass": 0.0626,
+            "slice_weighted_pass_rate": 0.9539,
+            "slice_quality_score": 0.9539,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.2879,
+            "lift_vs_field_average": 0.1854
+          },
+          {
+            "dimension": "tag",
+            "value": "counter",
+            "label": "标签 counter",
+            "cases": 5,
+            "global_weight_mass": 0.062,
+            "slice_weighted_pass_rate": 0.9113,
+            "slice_quality_score": 0.9423,
+            "sim_pass_rate": 0.8,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.2453,
+            "lift_vs_field_average": -0.0
+          },
+          {
+            "dimension": "tag",
+            "value": "risc_v",
+            "label": "标签 risc_v",
+            "cases": 6,
+            "global_weight_mass": 0.0275,
+            "slice_weighted_pass_rate": 0.6667,
+            "slice_quality_score": 0.6667,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.0007,
+            "lift_vs_field_average": -0.1111
+          },
+          {
+            "dimension": "tag",
+            "value": "memory",
+            "label": "标签 memory",
+            "cases": 5,
+            "global_weight_mass": 0.0252,
+            "slice_weighted_pass_rate": 0.6,
+            "slice_quality_score": 0.6,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.066,
+            "lift_vs_field_average": -0.1333
+          },
+          {
+            "dimension": "tag",
+            "value": "multiplier",
+            "label": "标签 multiplier",
+            "cases": 5,
+            "global_weight_mass": 0.0241,
+            "slice_weighted_pass_rate": 0.8,
+            "slice_quality_score": 0.8,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.134,
+            "lift_vs_field_average": -0.1333
+          },
+          {
+            "dimension": "tag",
+            "value": "others",
+            "label": "标签 others",
+            "cases": 8,
+            "global_weight_mass": 0.022,
+            "slice_weighted_pass_rate": 0.75,
+            "slice_quality_score": 0.75,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": 0.084,
+            "lift_vs_field_average": -0.0833
+          },
+          {
+            "dimension": "tag",
+            "value": "frequency_divider",
+            "label": "标签 frequency_divider",
+            "cases": 4,
+            "global_weight_mass": 0.0183,
+            "slice_weighted_pass_rate": 0.25,
+            "slice_quality_score": 0.3,
+            "sim_pass_rate": 0.5,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.416,
+            "lift_vs_field_average": -0.3333
+          },
+          {
+            "dimension": "tag",
+            "value": "m2014",
+            "label": "标签 m2014",
+            "cases": 15,
+            "global_weight_mass": 0.017,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.6222
+          },
+          {
+            "dimension": "tag",
+            "value": "fsm",
+            "label": "标签 fsm",
+            "cases": 7,
+            "global_weight_mass": 0.0141,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.5591
+          },
+          {
+            "dimension": "tag",
+            "value": "ece241",
+            "label": "标签 ece241",
+            "cases": 10,
+            "global_weight_mass": 0.0114,
+            "slice_weighted_pass_rate": 0.1,
+            "slice_quality_score": 0.1,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.566,
+            "lift_vs_field_average": -0.3333
+          },
+          {
+            "dimension": "tag",
+            "value": "review2015",
+            "label": "标签 review2015",
+            "cases": 7,
+            "global_weight_mass": 0.01,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.4931
+          },
+          {
+            "dimension": "tag",
+            "value": "easy",
+            "label": "标签 easy",
+            "cases": 10,
+            "global_weight_mass": 0.0076,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.6667
+          },
+          {
+            "dimension": "tag",
+            "value": "always",
+            "label": "标签 always",
+            "cases": 6,
+            "global_weight_mass": 0.0068,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.6667
+          },
+          {
+            "dimension": "tag",
+            "value": "mt2015",
+            "label": "标签 mt2015",
+            "cases": 5,
+            "global_weight_mass": 0.0058,
+            "slice_weighted_pass_rate": 0.2039,
+            "slice_quality_score": 0.2039,
+            "sim_pass_rate": 1.0,
+            "synth_pass_rate": 1.0,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.4621,
+            "lift_vs_field_average": -0.5307
+          },
+          {
+            "dimension": "tag",
+            "value": "bugs",
+            "label": "标签 bugs",
+            "cases": 3,
+            "global_weight_mass": 0.0035,
+            "slice_weighted_pass_rate": 0.0,
+            "slice_quality_score": 0.0,
+            "sim_pass_rate": null,
+            "synth_pass_rate": null,
+            "avg_mutation_kill_rate": null,
+            "lift_vs_model_overall": -0.666,
+            "lift_vs_field_average": -0.6667
+          }
+        ]
+      },
+      "strengths": [
+        {
+          "dimension": "tag",
+          "value": "hdlbits",
+          "label": "标签 hdlbits",
+          "cases": 6,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 1.0,
+          "slice_quality_score": 1.0,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.334,
+          "lift_vs_field_average": 0.0656
+        },
+        {
+          "dimension": "source",
+          "value": "hdlbits",
+          "label": "题源 hdlbits",
+          "cases": 6,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 1.0,
+          "slice_quality_score": 1.0,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.334,
+          "lift_vs_field_average": 0.0656
+        },
+        {
+          "dimension": "tag",
+          "value": "adder",
+          "label": "标签 adder",
+          "cases": 6,
+          "global_weight_mass": 0.0626,
+          "slice_weighted_pass_rate": 0.9539,
+          "slice_quality_score": 0.9539,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.2879,
+          "lift_vs_field_average": 0.1854
+        }
+      ],
+      "weaknesses": [
+        {
+          "dimension": "category",
+          "value": "combinational",
+          "label": "类别 combinational",
+          "cases": 88,
+          "global_weight_mass": 0.0961,
+          "slice_weighted_pass_rate": 0.0118,
+          "slice_quality_score": 0.0118,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.6542,
+          "lift_vs_field_average": -0.6155
+        },
+        {
+          "dimension": "tag",
+          "value": "verilogeval",
+          "label": "标签 verilogeval",
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 0.0176,
+          "slice_quality_score": 0.0176,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.6484,
+          "lift_vs_field_average": -0.4783
+        },
+        {
+          "dimension": "source",
+          "value": "verilogeval",
+          "label": "题源 verilogeval",
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 0.0176,
+          "slice_quality_score": 0.0176,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.6484,
+          "lift_vs_field_average": -0.4783
+        }
+      ],
+      "top_tags": [
+        {
+          "dimension": "tag",
+          "value": "sequential",
+          "label": "标签 sequential",
+          "cases": 34,
+          "global_weight_mass": 0.2339,
+          "slice_weighted_pass_rate": 0.5131,
+          "slice_quality_score": 0.6213,
+          "sim_pass_rate": 0.75,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.1529,
+          "lift_vs_field_average": -0.1849
+        },
+        {
+          "dimension": "tag",
+          "value": "combinational",
+          "label": "标签 combinational",
+          "cases": 92,
+          "global_weight_mass": 0.2243,
+          "slice_weighted_pass_rate": 0.5765,
+          "slice_quality_score": 0.5765,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.0895,
+          "lift_vs_field_average": -0.1953
+        },
+        {
+          "dimension": "tag",
+          "value": "medium",
+          "label": "标签 medium",
+          "cases": 149,
+          "global_weight_mass": 0.2131,
+          "slice_weighted_pass_rate": 0.2283,
+          "slice_quality_score": 0.2283,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": -0.4377,
+          "lift_vs_field_average": -0.3902
+        },
+        {
+          "dimension": "tag",
+          "value": "hdlbits",
+          "label": "标签 hdlbits",
+          "cases": 6,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 1.0,
+          "slice_quality_score": 1.0,
+          "sim_pass_rate": 1.0,
+          "synth_pass_rate": 1.0,
+          "avg_mutation_kill_rate": null,
+          "lift_vs_model_overall": 0.334,
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "tag",
@@ -2002,101 +3302,59 @@
           "sim_pass_rate": 0.9444,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.1542,
-          "lift_vs_field_average": -0.1069
+          "lift_vs_model_overall": 0.0079,
+          "lift_vs_field_average": -0.1329
         },
         {
           "dimension": "tag",
-          "value": "sequential",
-          "label": "标签 sequential",
-          "cases": 4,
-          "global_weight_mass": 0.1923,
-          "slice_weighted_pass_rate": 0.6241,
-          "slice_quality_score": 0.7556,
-          "sim_pass_rate": 0.75,
+          "value": "verilogeval",
+          "label": "标签 verilogeval",
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "slice_weighted_pass_rate": 0.0176,
+          "slice_quality_score": 0.0176,
+          "sim_pass_rate": 1.0,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.204,
-          "lift_vs_field_average": -0.0442
-        },
-        {
-          "dimension": "tag",
-          "value": "hard",
-          "label": "标签 hard",
-          "cases": 28,
-          "global_weight_mass": 0.1378,
-          "slice_weighted_pass_rate": 0.6506,
-          "slice_quality_score": 0.6712,
-          "sim_pass_rate": 0.9,
-          "synth_pass_rate": 1.0,
-          "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.1775,
-          "lift_vs_field_average": -0.0722
+          "lift_vs_model_overall": -0.6484,
+          "lift_vs_field_average": -0.4783
         },
         {
           "dimension": "tag",
           "value": "control",
           "label": "标签 control",
-          "cases": 7,
-          "global_weight_mass": 0.133,
-          "slice_weighted_pass_rate": 0.9586,
-          "slice_quality_score": 0.9731,
+          "cases": 38,
+          "global_weight_mass": 0.1862,
+          "slice_weighted_pass_rate": 0.685,
+          "slice_quality_score": 0.6953,
           "sim_pass_rate": 0.8571,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": 0.1305,
-          "lift_vs_field_average": 0.077
+          "lift_vs_model_overall": 0.019,
+          "lift_vs_field_average": -0.096
         },
         {
           "dimension": "tag",
-          "value": "combinational",
-          "label": "标签 combinational",
-          "cases": 4,
-          "global_weight_mass": 0.1282,
-          "slice_weighted_pass_rate": 1.0,
-          "slice_quality_score": 1.0,
-          "sim_pass_rate": 1.0,
+          "value": "hard",
+          "label": "标签 hard",
+          "cases": 47,
+          "global_weight_mass": 0.1793,
+          "slice_weighted_pass_rate": 0.4999,
+          "slice_quality_score": 0.5158,
+          "sim_pass_rate": 0.9,
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": 0.1719,
-          "lift_vs_field_average": 0.1926
-        },
-        {
-          "dimension": "tag",
-          "value": "arithmetic",
-          "label": "标签 arithmetic",
-          "cases": 20,
-          "global_weight_mass": 0.095,
-          "slice_weighted_pass_rate": 0.7771,
-          "slice_quality_score": 0.7771,
-          "sim_pass_rate": 1.0,
-          "synth_pass_rate": 1.0,
-          "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.051,
-          "lift_vs_field_average": -0.0665
-        },
-        {
-          "dimension": "tag",
-          "value": "miscellaneous",
-          "label": "标签 miscellaneous",
-          "cases": 20,
-          "global_weight_mass": 0.0734,
-          "slice_weighted_pass_rate": 0.6125,
-          "slice_quality_score": 0.625,
-          "sim_pass_rate": 0.9286,
-          "synth_pass_rate": 1.0,
-          "avg_mutation_kill_rate": null,
-          "lift_vs_model_overall": -0.2156,
-          "lift_vs_field_average": -0.1125
+          "lift_vs_model_overall": -0.1661,
+          "lift_vs_field_average": -0.1898
         }
       ],
-      "profile_summary": "擅长 标签 hdlbits、题源 hdlbits、标签 combinational；薄弱于 标签 miscellaneous、标签 hard、标签 rtllm",
-      "rank": 2,
-      "runs": 14,
-      "last_run_id": "20260317T131812520644Z",
-      "last_scope": "suite",
-      "last_problem_count": 217,
-      "updated_at": "2026-03-17T13:18:12Z"
+      "profile_summary": "擅长 标签 hdlbits、题源 hdlbits、标签 adder；薄弱于 类别 combinational、标签 verilogeval、题源 verilogeval",
+      "rank": 3,
+      "runs": 15,
+      "last_run_id": "20260318T053454569613Z",
+      "last_scope": "selected_problems",
+      "last_problem_count": 156,
+      "updated_at": "2026-03-18T05:34:54Z"
     },
     {
       "model_id": "mock/rtl-strong-v1",
@@ -2127,7 +3385,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.4421
+            "lift_vs_field_average": 0.4359
           },
           {
             "dimension": "source",
@@ -2141,7 +3399,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           }
         ],
         "tracks": [
@@ -2157,7 +3415,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2522
+            "lift_vs_field_average": 0.2389
           },
           {
             "dimension": "track",
@@ -2171,7 +3429,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.5
+            "lift_vs_field_average": 0.5714
           }
         ],
         "difficulties": [
@@ -2187,7 +3445,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.3562
+            "lift_vs_field_average": 0.3777
           },
           {
             "dimension": "difficulty",
@@ -2201,7 +3459,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2084
+            "lift_vs_field_average": 0.1826
           }
         ],
         "categories": [
@@ -2217,7 +3475,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.4063
+            "lift_vs_field_average": 0.3514
           },
           {
             "dimension": "category",
@@ -2231,7 +3489,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.5
+            "lift_vs_field_average": 0.5714
           },
           {
             "dimension": "category",
@@ -2245,7 +3503,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1577
+            "lift_vs_field_average": 0.1561
           },
           {
             "dimension": "category",
@@ -2259,7 +3517,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1667
+            "lift_vs_field_average": 0.1429
           }
         ],
         "tags": [
@@ -2275,7 +3533,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1926
+            "lift_vs_field_average": 0.2282
           },
           {
             "dimension": "tag",
@@ -2289,7 +3547,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.3317
+            "lift_vs_field_average": 0.302
           },
           {
             "dimension": "tag",
@@ -2303,7 +3561,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "tag",
@@ -2317,7 +3575,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2711
+            "lift_vs_field_average": 0.2315
           },
           {
             "dimension": "tag",
@@ -2331,7 +3589,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1564
+            "lift_vs_field_average": 0.144
           }
         ]
       },
@@ -2350,7 +3608,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.1926
+          "lift_vs_field_average": 0.2282
         },
         {
           "dimension": "tag",
@@ -2364,7 +3622,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.3317
+          "lift_vs_field_average": 0.302
         },
         {
           "dimension": "tag",
@@ -2378,7 +3636,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.087
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "tag",
@@ -2392,7 +3650,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.2711
+          "lift_vs_field_average": 0.2315
         },
         {
           "dimension": "tag",
@@ -2406,11 +3664,11 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.1564
+          "lift_vs_field_average": 0.144
         }
       ],
       "profile_summary": "擅长 暂无显著强项；薄弱于 暂无显著弱项",
-      "rank": 3,
+      "rank": 4,
       "runs": 15,
       "last_run_id": "20260316T150311720064Z",
       "last_scope": "selected_problems",
@@ -2446,7 +3704,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.4421
+            "lift_vs_field_average": 0.4359
           },
           {
             "dimension": "source",
@@ -2460,7 +3718,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           }
         ],
         "tracks": [
@@ -2476,7 +3734,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2522
+            "lift_vs_field_average": 0.2389
           },
           {
             "dimension": "track",
@@ -2490,7 +3748,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.5
+            "lift_vs_field_average": 0.5714
           }
         ],
         "difficulties": [
@@ -2506,7 +3764,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.3562
+            "lift_vs_field_average": 0.3777
           },
           {
             "dimension": "difficulty",
@@ -2520,7 +3778,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2084
+            "lift_vs_field_average": 0.1826
           }
         ],
         "categories": [
@@ -2536,7 +3794,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.4063
+            "lift_vs_field_average": 0.3514
           },
           {
             "dimension": "category",
@@ -2550,7 +3808,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 1.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.5
+            "lift_vs_field_average": 0.5714
           },
           {
             "dimension": "category",
@@ -2564,7 +3822,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1577
+            "lift_vs_field_average": 0.1561
           },
           {
             "dimension": "category",
@@ -2578,7 +3836,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1667
+            "lift_vs_field_average": 0.1429
           }
         ],
         "tags": [
@@ -2594,7 +3852,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1926
+            "lift_vs_field_average": 0.2282
           },
           {
             "dimension": "tag",
@@ -2608,7 +3866,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.3317
+            "lift_vs_field_average": 0.302
           },
           {
             "dimension": "tag",
@@ -2622,7 +3880,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "tag",
@@ -2636,7 +3894,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2711
+            "lift_vs_field_average": 0.2315
           },
           {
             "dimension": "tag",
@@ -2650,7 +3908,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1564
+            "lift_vs_field_average": 0.144
           }
         ]
       },
@@ -2669,7 +3927,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.1926
+          "lift_vs_field_average": 0.2282
         },
         {
           "dimension": "tag",
@@ -2683,7 +3941,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.3317
+          "lift_vs_field_average": 0.302
         },
         {
           "dimension": "tag",
@@ -2697,7 +3955,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.087
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "tag",
@@ -2711,7 +3969,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.2711
+          "lift_vs_field_average": 0.2315
         },
         {
           "dimension": "tag",
@@ -2725,11 +3983,11 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.1564
+          "lift_vs_field_average": 0.144
         }
       ],
       "profile_summary": "擅长 暂无显著强项；薄弱于 暂无显著弱项",
-      "rank": 4,
+      "rank": 5,
       "runs": 15,
       "last_run_id": "20260316T150311720064Z",
       "last_scope": "selected_problems",
@@ -2765,7 +4023,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "source",
@@ -2779,7 +4037,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.4421
+            "lift_vs_field_average": 0.4359
           }
         ],
         "tracks": [
@@ -2795,7 +4053,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2522
+            "lift_vs_field_average": 0.2389
           }
         ],
         "difficulties": [
@@ -2811,7 +4069,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2084
+            "lift_vs_field_average": 0.1826
           }
         ],
         "categories": [
@@ -2827,7 +4085,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.4063
+            "lift_vs_field_average": 0.3514
           },
           {
             "dimension": "category",
@@ -2841,7 +4099,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1577
+            "lift_vs_field_average": 0.1561
           },
           {
             "dimension": "category",
@@ -2855,7 +4113,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1667
+            "lift_vs_field_average": 0.1429
           }
         ],
         "tags": [
@@ -2871,7 +4129,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1926
+            "lift_vs_field_average": 0.2282
           },
           {
             "dimension": "tag",
@@ -2885,7 +4143,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.087
+            "lift_vs_field_average": 0.0656
           },
           {
             "dimension": "tag",
@@ -2899,7 +4157,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.2711
+            "lift_vs_field_average": 0.2315
           },
           {
             "dimension": "tag",
@@ -2913,7 +4171,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": 0.1564
+            "lift_vs_field_average": 0.144
           }
         ]
       },
@@ -2932,7 +4190,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.1926
+          "lift_vs_field_average": 0.2282
         },
         {
           "dimension": "tag",
@@ -2946,7 +4204,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.087
+          "lift_vs_field_average": 0.0656
         },
         {
           "dimension": "tag",
@@ -2960,7 +4218,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.2711
+          "lift_vs_field_average": 0.2315
         },
         {
           "dimension": "tag",
@@ -2974,11 +4232,11 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": 0.1564
+          "lift_vs_field_average": 0.144
         }
       ],
       "profile_summary": "擅长 暂无显著强项；薄弱于 暂无显著弱项",
-      "rank": 5,
+      "rank": 6,
       "runs": 2,
       "last_run_id": "20260316T150741059108Z",
       "last_scope": "selected_problems",
@@ -3014,7 +4272,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5579
+            "lift_vs_field_average": -0.5641
           },
           {
             "dimension": "source",
@@ -3028,7 +4286,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.913
+            "lift_vs_field_average": -0.9344
           }
         ],
         "tracks": [
@@ -3044,7 +4302,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.7478
+            "lift_vs_field_average": -0.7611
           },
           {
             "dimension": "track",
@@ -3058,7 +4316,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5
+            "lift_vs_field_average": -0.4286
           }
         ],
         "difficulties": [
@@ -3074,7 +4332,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.6438
+            "lift_vs_field_average": -0.6223
           },
           {
             "dimension": "difficulty",
@@ -3088,7 +4346,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.7916
+            "lift_vs_field_average": -0.8174
           }
         ],
         "categories": [
@@ -3104,7 +4362,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5937
+            "lift_vs_field_average": -0.6486
           },
           {
             "dimension": "category",
@@ -3118,7 +4376,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": 0.0,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5
+            "lift_vs_field_average": -0.4286
           },
           {
             "dimension": "category",
@@ -3132,7 +4390,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.8423
+            "lift_vs_field_average": -0.8439
           },
           {
             "dimension": "category",
@@ -3146,7 +4404,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.8333
+            "lift_vs_field_average": -0.8571
           }
         ],
         "tags": [
@@ -3162,7 +4420,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.8074
+            "lift_vs_field_average": -0.7718
           },
           {
             "dimension": "tag",
@@ -3176,7 +4434,7 @@
             "synth_pass_rate": 1.0,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.6683
+            "lift_vs_field_average": -0.698
           },
           {
             "dimension": "tag",
@@ -3190,7 +4448,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.913
+            "lift_vs_field_average": -0.9344
           },
           {
             "dimension": "tag",
@@ -3204,7 +4462,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.7289
+            "lift_vs_field_average": -0.7685
           },
           {
             "dimension": "tag",
@@ -3218,7 +4476,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.8436
+            "lift_vs_field_average": -0.856
           }
         ]
       },
@@ -3237,7 +4495,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.8074
+          "lift_vs_field_average": -0.7718
         },
         {
           "dimension": "tag",
@@ -3251,7 +4509,7 @@
           "synth_pass_rate": 1.0,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.6683
+          "lift_vs_field_average": -0.698
         },
         {
           "dimension": "tag",
@@ -3265,7 +4523,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.913
+          "lift_vs_field_average": -0.9344
         },
         {
           "dimension": "tag",
@@ -3279,7 +4537,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.7289
+          "lift_vs_field_average": -0.7685
         },
         {
           "dimension": "tag",
@@ -3293,11 +4551,11 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.8436
+          "lift_vs_field_average": -0.856
         }
       ],
       "profile_summary": "擅长 暂无显著强项；薄弱于 暂无显著弱项",
-      "rank": 6,
+      "rank": 7,
       "runs": 15,
       "last_run_id": "20260316T150311720064Z",
       "last_scope": "selected_problems",
@@ -3333,7 +4591,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5579
+            "lift_vs_field_average": -0.5641
           }
         ],
         "tracks": [
@@ -3349,7 +4607,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.7478
+            "lift_vs_field_average": -0.7611
           },
           {
             "dimension": "track",
@@ -3363,7 +4621,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5
+            "lift_vs_field_average": -0.4286
           }
         ],
         "difficulties": [
@@ -3379,7 +4637,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.6438
+            "lift_vs_field_average": -0.6223
           },
           {
             "dimension": "difficulty",
@@ -3393,7 +4651,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.7916
+            "lift_vs_field_average": -0.8174
           }
         ],
         "categories": [
@@ -3409,7 +4667,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5937
+            "lift_vs_field_average": -0.6486
           },
           {
             "dimension": "category",
@@ -3423,7 +4681,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.5
+            "lift_vs_field_average": -0.4286
           }
         ],
         "tags": [
@@ -3439,7 +4697,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.6683
+            "lift_vs_field_average": -0.698
           },
           {
             "dimension": "tag",
@@ -3453,7 +4711,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.7289
+            "lift_vs_field_average": -0.7685
           },
           {
             "dimension": "tag",
@@ -3467,7 +4725,7 @@
             "synth_pass_rate": null,
             "avg_mutation_kill_rate": null,
             "lift_vs_model_overall": 0.0,
-            "lift_vs_field_average": -0.8074
+            "lift_vs_field_average": -0.7718
           }
         ]
       },
@@ -3486,7 +4744,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.6683
+          "lift_vs_field_average": -0.698
         },
         {
           "dimension": "tag",
@@ -3500,7 +4758,7 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.7289
+          "lift_vs_field_average": -0.7685
         },
         {
           "dimension": "tag",
@@ -3514,11 +4772,11 @@
           "synth_pass_rate": null,
           "avg_mutation_kill_rate": null,
           "lift_vs_model_overall": 0.0,
-          "lift_vs_field_average": -0.8074
+          "lift_vs_field_average": -0.7718
         }
       ],
       "profile_summary": "擅长 暂无显著强项；薄弱于 暂无显著弱项",
-      "rank": 7,
+      "rank": 8,
       "runs": 1,
       "last_run_id": "20260313T100740471246Z",
       "last_scope": "suite",
@@ -3574,6 +4832,17 @@
           "value": "hdlbits"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 6,
+          "global_weight_mass": 0.2,
+          "label": "题源 hdlbits",
+          "value": "hdlbits"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 1.0,
@@ -3609,6 +4878,17 @@
           "value": "industrial"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 2,
+          "global_weight_mass": 0.2,
+          "label": "题源 industrial",
+          "value": "industrial"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 1.0,
@@ -3627,6 +4907,17 @@
           "score": 0.8876,
           "weighted_pass_score": 0.8876,
           "quality_score": 0.9338,
+          "cases": 50,
+          "global_weight_mass": 0.2,
+          "label": "题源 rtllm",
+          "value": "rtllm"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8587,
+          "weighted_pass_score": 0.8587,
+          "quality_score": 0.9107,
           "cases": 50,
           "global_weight_mass": 0.2,
           "label": "题源 rtllm",
@@ -3690,6 +4981,17 @@
           "value": "local"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.6024,
+          "weighted_pass_score": 0.6024,
+          "quality_score": 0.8012,
+          "cases": 3,
+          "global_weight_mass": 0.2,
+          "label": "题源 local",
+          "value": "local"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 0.6024,
@@ -3730,6 +5032,28 @@
           "score": 0.7356,
           "weighted_pass_score": 0.7356,
           "quality_score": 0.7842,
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "label": "题源 verilogeval",
+          "value": "verilogeval"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.7345,
+          "weighted_pass_score": 0.7345,
+          "quality_score": 0.7845,
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "label": "题源 verilogeval",
+          "value": "verilogeval"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0176,
+          "weighted_pass_score": 0.0176,
+          "quality_score": 0.0176,
           "cases": 156,
           "global_weight_mass": 0.2,
           "label": "题源 verilogeval",
@@ -3784,13 +5108,24 @@
           "value": "rtl_core"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9624,
+          "weighted_pass_score": 0.9624,
+          "quality_score": 0.9758,
+          "cases": 123,
+          "global_weight_mass": 0.4987,
+          "label": "能力 rtl_core",
+          "value": "rtl_core"
+        },
+        {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.7443,
-          "weighted_pass_score": 0.7443,
-          "quality_score": 0.8108,
-          "cases": 28,
-          "global_weight_mass": 0.3939,
+          "score": 0.5901,
+          "weighted_pass_score": 0.5901,
+          "quality_score": 0.6427,
+          "cases": 123,
+          "global_weight_mass": 0.4987,
           "label": "能力 rtl_core",
           "value": "rtl_core"
         },
@@ -3819,13 +5154,13 @@
       ],
       "control": [
         {
-          "model_id": "gemini-3.1-pro-preview",
-          "provider": "gemini",
-          "score": 0.9586,
-          "weighted_pass_score": 0.9586,
-          "quality_score": 0.9731,
-          "cases": 7,
-          "global_weight_mass": 0.133,
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8314,
+          "weighted_pass_score": 0.8314,
+          "quality_score": 0.8675,
+          "cases": 38,
+          "global_weight_mass": 0.1862,
           "label": "能力 control",
           "value": "control"
         },
@@ -3839,12 +5174,34 @@
           "global_weight_mass": 0.1862,
           "label": "能力 control",
           "value": "control"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.685,
+          "weighted_pass_score": 0.685,
+          "quality_score": 0.6953,
+          "cases": 38,
+          "global_weight_mass": 0.1862,
+          "label": "能力 control",
+          "value": "control"
         }
       ],
       "protocol": [
         {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 1,
+          "global_weight_mass": 0.1,
+          "label": "能力 protocol",
+          "value": "protocol"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
           "score": 1.0,
           "weighted_pass_score": 1.0,
           "quality_score": 1.0,
@@ -3911,6 +5268,17 @@
           "value": "verification"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.5,
+          "cases": 1,
+          "global_weight_mass": 0.0795,
+          "label": "能力 verification",
+          "value": "verification"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 0.0,
@@ -3946,26 +5314,37 @@
           "value": "arithmetic"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9255,
+          "weighted_pass_score": 0.9255,
+          "quality_score": 0.9404,
+          "cases": 26,
+          "global_weight_mass": 0.0775,
+          "label": "能力 arithmetic",
+          "value": "arithmetic"
+        },
+        {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.6901,
-          "weighted_pass_score": 0.6901,
-          "quality_score": 0.6901,
-          "cases": 19,
-          "global_weight_mass": 0.0684,
+          "score": 0.6395,
+          "weighted_pass_score": 0.6395,
+          "quality_score": 0.6395,
+          "cases": 26,
+          "global_weight_mass": 0.0775,
           "label": "能力 arithmetic",
           "value": "arithmetic"
         }
       ],
       "memory": [
         {
-          "model_id": "gemini-3.1-pro-preview",
-          "provider": "gemini",
-          "score": 0.6,
-          "weighted_pass_score": 0.6,
-          "quality_score": 0.6,
-          "cases": 5,
-          "global_weight_mass": 0.0252,
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.5622,
+          "weighted_pass_score": 0.5622,
+          "quality_score": 0.6627,
+          "cases": 28,
+          "global_weight_mass": 0.0581,
           "label": "能力 memory",
           "value": "memory"
         },
@@ -3979,34 +5358,21 @@
           "global_weight_mass": 0.0581,
           "label": "能力 memory",
           "value": "memory"
-        }
-      ]
-    },
-    "difficulties": {
-      "hard": [
-        {
-          "model_id": "openrouter/hunter-alpha",
-          "provider": "openrouter",
-          "score": 0.8951,
-          "weighted_pass_score": 0.8951,
-          "quality_score": 0.9272,
-          "cases": 49,
-          "global_weight_mass": 0.3793,
-          "label": "难度 hard",
-          "value": "hard"
         },
         {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.8575,
-          "weighted_pass_score": 0.8575,
-          "quality_score": 0.8659,
-          "cases": 30,
-          "global_weight_mass": 0.3378,
-          "label": "难度 hard",
-          "value": "hard"
+          "score": 0.2604,
+          "weighted_pass_score": 0.2604,
+          "quality_score": 0.2604,
+          "cases": 28,
+          "global_weight_mass": 0.0581,
+          "label": "能力 memory",
+          "value": "memory"
         }
-      ],
+      ]
+    },
+    "difficulties": {
       "medium": [
         {
           "model_id": "mock/rtl-strong-v1",
@@ -4042,13 +5408,24 @@
           "value": "medium"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.7456,
+          "weighted_pass_score": 0.7456,
+          "quality_score": 0.8455,
+          "cases": 154,
+          "global_weight_mass": 0.4849,
+          "label": "难度 medium",
+          "value": "medium"
+        },
+        {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.7325,
-          "weighted_pass_score": 0.7325,
-          "quality_score": 0.8082,
-          "cases": 27,
-          "global_weight_mass": 0.334,
+          "score": 0.5118,
+          "weighted_pass_score": 0.5118,
+          "quality_score": 0.564,
+          "cases": 154,
+          "global_weight_mass": 0.4849,
           "label": "难度 medium",
           "value": "medium"
         },
@@ -4075,18 +5452,42 @@
           "value": "medium"
         }
       ],
-      "easy": [
+      "hard": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9011,
+          "weighted_pass_score": 0.9011,
+          "quality_score": 0.932,
+          "cases": 49,
+          "global_weight_mass": 0.3793,
+          "label": "难度 hard",
+          "value": "hard"
+        },
+        {
+          "model_id": "openrouter/hunter-alpha",
+          "provider": "openrouter",
+          "score": 0.8951,
+          "weighted_pass_score": 0.8951,
+          "quality_score": 0.9272,
+          "cases": 49,
+          "global_weight_mass": 0.3793,
+          "label": "难度 hard",
+          "value": "hard"
+        },
         {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 4,
-          "global_weight_mass": 0.1282,
-          "label": "难度 easy",
-          "value": "easy"
-        },
+          "score": 0.7636,
+          "weighted_pass_score": 0.7636,
+          "quality_score": 0.7711,
+          "cases": 49,
+          "global_weight_mass": 0.3793,
+          "label": "难度 hard",
+          "value": "hard"
+        }
+      ],
+      "easy": [
         {
           "model_id": "mock/rtl-strong-v1",
           "provider": "mock",
@@ -4121,11 +5522,33 @@
           "value": "easy"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 14,
+          "global_weight_mass": 0.1358,
+          "label": "难度 easy",
+          "value": "easy"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 1.0,
           "weighted_pass_score": 1.0,
           "quality_score": 1.0,
+          "cases": 14,
+          "global_weight_mass": 0.1358,
+          "label": "难度 easy",
+          "value": "easy"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.9442,
+          "weighted_pass_score": 0.9442,
+          "quality_score": 0.9442,
           "cases": 14,
           "global_weight_mass": 0.1358,
           "label": "难度 easy",
@@ -4156,6 +5579,210 @@
       ]
     },
     "tags": {
+      "sequential": [
+        {
+          "model_id": "mock/rtl-strong-v1",
+          "provider": "mock",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 1,
+          "global_weight_mass": 0.0723,
+          "label": "标签 sequential",
+          "value": "sequential"
+        },
+        {
+          "model_id": "mock/tb-strong-v1",
+          "provider": "mock",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 1,
+          "global_weight_mass": 0.0723,
+          "label": "标签 sequential",
+          "value": "sequential"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9128,
+          "weighted_pass_score": 0.9128,
+          "quality_score": 0.9302,
+          "cases": 34,
+          "global_weight_mass": 0.2339,
+          "label": "标签 sequential",
+          "value": "sequential"
+        },
+        {
+          "model_id": "openrouter/hunter-alpha",
+          "provider": "openrouter",
+          "score": 0.9128,
+          "weighted_pass_score": 0.9128,
+          "quality_score": 0.9292,
+          "cases": 34,
+          "global_weight_mass": 0.2339,
+          "label": "标签 sequential",
+          "value": "sequential"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.5131,
+          "weighted_pass_score": 0.5131,
+          "quality_score": 0.6213,
+          "cases": 34,
+          "global_weight_mass": 0.2339,
+          "label": "标签 sequential",
+          "value": "sequential"
+        },
+        {
+          "model_id": "mock/rtl-weak-v1",
+          "provider": "mock",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.2,
+          "cases": 1,
+          "global_weight_mass": 0.0723,
+          "label": "标签 sequential",
+          "value": "sequential"
+        },
+        {
+          "model_id": "gpt-4.1-mini",
+          "provider": "openai",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 1,
+          "global_weight_mass": 0.0723,
+          "label": "标签 sequential",
+          "value": "sequential"
+        }
+      ],
+      "combinational": [
+        {
+          "model_id": "mock/rtl-strong-v1",
+          "provider": "mock",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 3,
+          "global_weight_mass": 0.1015,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "mock/tb-strong-v1",
+          "provider": "mock",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 3,
+          "global_weight_mass": 0.1015,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "openai/gpt-4.1-mini",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 3,
+          "global_weight_mass": 0.1015,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "openrouter/hunter-alpha",
+          "provider": "openrouter",
+          "score": 0.9747,
+          "weighted_pass_score": 0.9747,
+          "quality_score": 0.9787,
+          "cases": 92,
+          "global_weight_mass": 0.2243,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9696,
+          "weighted_pass_score": 0.9696,
+          "quality_score": 0.9747,
+          "cases": 92,
+          "global_weight_mass": 0.2243,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.5765,
+          "weighted_pass_score": 0.5765,
+          "quality_score": 0.5765,
+          "cases": 92,
+          "global_weight_mass": 0.2243,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "gpt-4.1-mini",
+          "provider": "openai",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 1,
+          "global_weight_mass": 0.0482,
+          "label": "标签 combinational",
+          "value": "combinational"
+        },
+        {
+          "model_id": "mock/rtl-weak-v1",
+          "provider": "mock",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 3,
+          "global_weight_mass": 0.1015,
+          "label": "标签 combinational",
+          "value": "combinational"
+        }
+      ],
+      "medium": [
+        {
+          "model_id": "openrouter/hunter-alpha",
+          "provider": "openrouter",
+          "score": 0.8331,
+          "weighted_pass_score": 0.8331,
+          "quality_score": 0.8649,
+          "cases": 149,
+          "global_weight_mass": 0.2131,
+          "label": "标签 medium",
+          "value": "medium"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.7943,
+          "weighted_pass_score": 0.7943,
+          "quality_score": 0.835,
+          "cases": 149,
+          "global_weight_mass": 0.2131,
+          "label": "标签 medium",
+          "value": "medium"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.2283,
+          "weighted_pass_score": 0.2283,
+          "quality_score": 0.2283,
+          "cases": 149,
+          "global_weight_mass": 0.2131,
+          "label": "标签 medium",
+          "value": "medium"
+        }
+      ],
       "hdlbits": [
         {
           "model_id": "gemini-3.1-pro-preview",
@@ -4202,6 +5829,17 @@
           "value": "hdlbits"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 6,
+          "global_weight_mass": 0.2,
+          "label": "标签 hdlbits",
+          "value": "hdlbits"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 1.0,
@@ -4237,6 +5875,17 @@
           "value": "rtllm"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8587,
+          "weighted_pass_score": 0.8587,
+          "quality_score": 0.9107,
+          "cases": 50,
+          "global_weight_mass": 0.2,
+          "label": "标签 rtllm",
+          "value": "rtllm"
+        },
+        {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
           "score": 0.6739,
@@ -4248,75 +5897,88 @@
           "value": "rtllm"
         }
       ],
-      "sequential": [
-        {
-          "model_id": "mock/rtl-strong-v1",
-          "provider": "mock",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 1,
-          "global_weight_mass": 0.0723,
-          "label": "标签 sequential",
-          "value": "sequential"
-        },
-        {
-          "model_id": "mock/tb-strong-v1",
-          "provider": "mock",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 1,
-          "global_weight_mass": 0.0723,
-          "label": "标签 sequential",
-          "value": "sequential"
-        },
+      "verilogeval": [
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
-          "score": 0.9128,
-          "weighted_pass_score": 0.9128,
-          "quality_score": 0.9292,
-          "cases": 34,
-          "global_weight_mass": 0.2339,
-          "label": "标签 sequential",
-          "value": "sequential"
+          "score": 0.7356,
+          "weighted_pass_score": 0.7356,
+          "quality_score": 0.7842,
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "label": "标签 verilogeval",
+          "value": "verilogeval"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.7345,
+          "weighted_pass_score": 0.7345,
+          "quality_score": 0.7845,
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "label": "标签 verilogeval",
+          "value": "verilogeval"
         },
         {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.6241,
-          "weighted_pass_score": 0.6241,
-          "quality_score": 0.7556,
-          "cases": 4,
-          "global_weight_mass": 0.1923,
-          "label": "标签 sequential",
-          "value": "sequential"
+          "score": 0.0176,
+          "weighted_pass_score": 0.0176,
+          "quality_score": 0.0176,
+          "cases": 156,
+          "global_weight_mass": 0.2,
+          "label": "标签 verilogeval",
+          "value": "verilogeval"
+        }
+      ],
+      "control": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8314,
+          "weighted_pass_score": 0.8314,
+          "quality_score": 0.8675,
+          "cases": 38,
+          "global_weight_mass": 0.1862,
+          "label": "标签 control",
+          "value": "control"
         },
         {
-          "model_id": "mock/rtl-weak-v1",
-          "provider": "mock",
-          "score": 0.0,
-          "weighted_pass_score": 0.0,
-          "quality_score": 0.2,
-          "cases": 1,
-          "global_weight_mass": 0.0723,
-          "label": "标签 sequential",
-          "value": "sequential"
+          "model_id": "openrouter/hunter-alpha",
+          "provider": "openrouter",
+          "score": 0.8265,
+          "weighted_pass_score": 0.8265,
+          "quality_score": 0.8636,
+          "cases": 38,
+          "global_weight_mass": 0.1862,
+          "label": "标签 control",
+          "value": "control"
         },
         {
-          "model_id": "gpt-4.1-mini",
-          "provider": "openai",
-          "score": 0.0,
-          "weighted_pass_score": 0.0,
-          "quality_score": 0.0,
-          "cases": 1,
-          "global_weight_mass": 0.0723,
-          "label": "标签 sequential",
-          "value": "sequential"
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.685,
+          "weighted_pass_score": 0.685,
+          "quality_score": 0.6953,
+          "cases": 38,
+          "global_weight_mass": 0.1862,
+          "label": "标签 control",
+          "value": "control"
         }
       ],
       "hard": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.7909,
+          "weighted_pass_score": 0.7909,
+          "quality_score": 0.8562,
+          "cases": 47,
+          "global_weight_mass": 0.1793,
+          "label": "标签 hard",
+          "value": "hard"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4331,116 +5993,13 @@
         {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.6506,
-          "weighted_pass_score": 0.6506,
-          "quality_score": 0.6712,
-          "cases": 28,
-          "global_weight_mass": 0.1378,
+          "score": 0.4999,
+          "weighted_pass_score": 0.4999,
+          "quality_score": 0.5158,
+          "cases": 47,
+          "global_weight_mass": 0.1793,
           "label": "标签 hard",
           "value": "hard"
-        }
-      ],
-      "control": [
-        {
-          "model_id": "gemini-3.1-pro-preview",
-          "provider": "gemini",
-          "score": 0.9586,
-          "weighted_pass_score": 0.9586,
-          "quality_score": 0.9731,
-          "cases": 7,
-          "global_weight_mass": 0.133,
-          "label": "标签 control",
-          "value": "control"
-        },
-        {
-          "model_id": "openrouter/hunter-alpha",
-          "provider": "openrouter",
-          "score": 0.8265,
-          "weighted_pass_score": 0.8265,
-          "quality_score": 0.8636,
-          "cases": 38,
-          "global_weight_mass": 0.1862,
-          "label": "标签 control",
-          "value": "control"
-        }
-      ],
-      "combinational": [
-        {
-          "model_id": "gemini-3.1-pro-preview",
-          "provider": "gemini",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 4,
-          "global_weight_mass": 0.1282,
-          "label": "标签 combinational",
-          "value": "combinational"
-        },
-        {
-          "model_id": "mock/rtl-strong-v1",
-          "provider": "mock",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 3,
-          "global_weight_mass": 0.1015,
-          "label": "标签 combinational",
-          "value": "combinational"
-        },
-        {
-          "model_id": "mock/tb-strong-v1",
-          "provider": "mock",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 3,
-          "global_weight_mass": 0.1015,
-          "label": "标签 combinational",
-          "value": "combinational"
-        },
-        {
-          "model_id": "openai/gpt-4.1-mini",
-          "provider": "openrouter",
-          "score": 1.0,
-          "weighted_pass_score": 1.0,
-          "quality_score": 1.0,
-          "cases": 3,
-          "global_weight_mass": 0.1015,
-          "label": "标签 combinational",
-          "value": "combinational"
-        },
-        {
-          "model_id": "openrouter/hunter-alpha",
-          "provider": "openrouter",
-          "score": 0.9747,
-          "weighted_pass_score": 0.9747,
-          "quality_score": 0.9787,
-          "cases": 92,
-          "global_weight_mass": 0.2243,
-          "label": "标签 combinational",
-          "value": "combinational"
-        },
-        {
-          "model_id": "gpt-4.1-mini",
-          "provider": "openai",
-          "score": 0.0,
-          "weighted_pass_score": 0.0,
-          "quality_score": 0.0,
-          "cases": 1,
-          "global_weight_mass": 0.0482,
-          "label": "标签 combinational",
-          "value": "combinational"
-        },
-        {
-          "model_id": "mock/rtl-weak-v1",
-          "provider": "mock",
-          "score": 0.0,
-          "weighted_pass_score": 0.0,
-          "quality_score": 0.0,
-          "cases": 3,
-          "global_weight_mass": 0.1015,
-          "label": "标签 combinational",
-          "value": "combinational"
         }
       ],
       "arithmetic": [
@@ -4489,13 +6048,24 @@
           "value": "arithmetic"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9445,
+          "weighted_pass_score": 0.9445,
+          "quality_score": 0.9556,
+          "cases": 27,
+          "global_weight_mass": 0.1042,
+          "label": "标签 arithmetic",
+          "value": "arithmetic"
+        },
+        {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
-          "score": 0.7771,
-          "weighted_pass_score": 0.7771,
-          "quality_score": 0.7771,
-          "cases": 20,
-          "global_weight_mass": 0.095,
+          "score": 0.7318,
+          "weighted_pass_score": 0.7318,
+          "quality_score": 0.7318,
+          "cases": 27,
+          "global_weight_mass": 0.1042,
           "label": "标签 arithmetic",
           "value": "arithmetic"
         },
@@ -4512,6 +6082,17 @@
         }
       ],
       "miscellaneous": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8375,
+          "weighted_pass_score": 0.8375,
+          "quality_score": 0.9131,
+          "cases": 20,
+          "global_weight_mass": 0.0734,
+          "label": "标签 miscellaneous",
+          "value": "miscellaneous"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4570,6 +6151,17 @@
           "value": "adder"
         },
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 6,
+          "global_weight_mass": 0.0626,
+          "label": "标签 adder",
+          "value": "adder"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 1.0,
@@ -4614,34 +6206,21 @@
           "value": "adder"
         }
       ],
-      "medium": [
-        {
-          "model_id": "openrouter/hunter-alpha",
-          "provider": "openrouter",
-          "score": 0.8331,
-          "weighted_pass_score": 0.8331,
-          "quality_score": 0.8649,
-          "cases": 149,
-          "global_weight_mass": 0.2131,
-          "label": "标签 medium",
-          "value": "medium"
-        },
-        {
-          "model_id": "gemini-3.1-pro-preview",
-          "provider": "gemini",
-          "score": 0.7257,
-          "weighted_pass_score": 0.7257,
-          "quality_score": 0.7257,
-          "cases": 22,
-          "global_weight_mass": 0.0622,
-          "label": "标签 medium",
-          "value": "medium"
-        }
-      ],
       "counter": [
         {
           "model_id": "gemini-3.1-pro-preview",
           "provider": "gemini",
+          "score": 0.9113,
+          "weighted_pass_score": 0.9113,
+          "quality_score": 0.9423,
+          "cases": 5,
+          "global_weight_mass": 0.062,
+          "label": "标签 counter",
+          "value": "counter"
+        },
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
           "score": 0.9113,
           "weighted_pass_score": 0.9113,
           "quality_score": 0.9423,
@@ -4663,6 +6242,17 @@
         }
       ],
       "risc_v": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8333,
+          "weighted_pass_score": 0.8333,
+          "quality_score": 0.9667,
+          "cases": 6,
+          "global_weight_mass": 0.0275,
+          "label": "标签 risc_v",
+          "value": "risc_v"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4688,6 +6278,17 @@
       ],
       "memory": [
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.8,
+          "weighted_pass_score": 0.8,
+          "quality_score": 0.87,
+          "cases": 5,
+          "global_weight_mass": 0.0252,
+          "label": "标签 memory",
+          "value": "memory"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 0.8,
@@ -4711,6 +6312,17 @@
         }
       ],
       "multiplier": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 5,
+          "global_weight_mass": 0.0241,
+          "label": "标签 multiplier",
+          "value": "multiplier"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4736,6 +6348,17 @@
       ],
       "others": [
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.875,
+          "weighted_pass_score": 0.875,
+          "quality_score": 0.9188,
+          "cases": 8,
+          "global_weight_mass": 0.022,
+          "label": "标签 others",
+          "value": "others"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 0.875,
@@ -4760,6 +6383,17 @@
       ],
       "frequency_divider": [
         {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.75,
+          "weighted_pass_score": 0.75,
+          "quality_score": 0.8,
+          "cases": 4,
+          "global_weight_mass": 0.0183,
+          "label": "标签 frequency_divider",
+          "value": "frequency_divider"
+        },
+        {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 0.75,
@@ -4782,20 +6416,18 @@
           "value": "frequency_divider"
         }
       ],
-      "verilogeval": [
-        {
-          "model_id": "openrouter/hunter-alpha",
-          "provider": "openrouter",
-          "score": 0.7356,
-          "weighted_pass_score": 0.7356,
-          "quality_score": 0.7842,
-          "cases": 156,
-          "global_weight_mass": 0.2,
-          "label": "标签 verilogeval",
-          "value": "verilogeval"
-        }
-      ],
       "m2014": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.9333,
+          "weighted_pass_score": 0.9333,
+          "quality_score": 0.9467,
+          "cases": 15,
+          "global_weight_mass": 0.017,
+          "label": "标签 m2014",
+          "value": "m2014"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4806,9 +6438,31 @@
           "global_weight_mass": 0.017,
           "label": "标签 m2014",
           "value": "m2014"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 15,
+          "global_weight_mass": 0.017,
+          "label": "标签 m2014",
+          "value": "m2014"
         }
       ],
       "fsm": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 7,
+          "global_weight_mass": 0.0141,
+          "label": "标签 fsm",
+          "value": "fsm"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4819,9 +6473,31 @@
           "global_weight_mass": 0.0141,
           "label": "标签 fsm",
           "value": "fsm"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 7,
+          "global_weight_mass": 0.0141,
+          "label": "标签 fsm",
+          "value": "fsm"
         }
       ],
       "ece241": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.6,
+          "weighted_pass_score": 0.6,
+          "quality_score": 0.68,
+          "cases": 10,
+          "global_weight_mass": 0.0114,
+          "label": "标签 ece241",
+          "value": "ece241"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4832,9 +6508,31 @@
           "global_weight_mass": 0.0114,
           "label": "标签 ece241",
           "value": "ece241"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.1,
+          "weighted_pass_score": 0.1,
+          "quality_score": 0.1,
+          "cases": 10,
+          "global_weight_mass": 0.0114,
+          "label": "标签 ece241",
+          "value": "ece241"
         }
       ],
       "review2015": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 0.7396,
+          "weighted_pass_score": 0.7396,
+          "quality_score": 0.7917,
+          "cases": 7,
+          "global_weight_mass": 0.01,
+          "label": "标签 review2015",
+          "value": "review2015"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4845,9 +6543,31 @@
           "global_weight_mass": 0.01,
           "label": "标签 review2015",
           "value": "review2015"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 7,
+          "global_weight_mass": 0.01,
+          "label": "标签 review2015",
+          "value": "review2015"
         }
       ],
       "easy": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 10,
+          "global_weight_mass": 0.0076,
+          "label": "标签 easy",
+          "value": "easy"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4858,9 +6578,31 @@
           "global_weight_mass": 0.0076,
           "label": "标签 easy",
           "value": "easy"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 10,
+          "global_weight_mass": 0.0076,
+          "label": "标签 easy",
+          "value": "easy"
         }
       ],
       "always": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 6,
+          "global_weight_mass": 0.0068,
+          "label": "标签 always",
+          "value": "always"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4871,9 +6613,31 @@
           "global_weight_mass": 0.0068,
           "label": "标签 always",
           "value": "always"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
+          "cases": 6,
+          "global_weight_mass": 0.0068,
+          "label": "标签 always",
+          "value": "always"
         }
       ],
       "mt2015": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 5,
+          "global_weight_mass": 0.0058,
+          "label": "标签 mt2015",
+          "value": "mt2015"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
@@ -4884,15 +6648,48 @@
           "global_weight_mass": 0.0058,
           "label": "标签 mt2015",
           "value": "mt2015"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.2039,
+          "weighted_pass_score": 0.2039,
+          "quality_score": 0.2039,
+          "cases": 5,
+          "global_weight_mass": 0.0058,
+          "label": "标签 mt2015",
+          "value": "mt2015"
         }
       ],
       "bugs": [
+        {
+          "model_id": "openrouter/healer-alpha",
+          "provider": "openrouter",
+          "score": 1.0,
+          "weighted_pass_score": 1.0,
+          "quality_score": 1.0,
+          "cases": 3,
+          "global_weight_mass": 0.0035,
+          "label": "标签 bugs",
+          "value": "bugs"
+        },
         {
           "model_id": "openrouter/hunter-alpha",
           "provider": "openrouter",
           "score": 1.0,
           "weighted_pass_score": 1.0,
           "quality_score": 1.0,
+          "cases": 3,
+          "global_weight_mass": 0.0035,
+          "label": "标签 bugs",
+          "value": "bugs"
+        },
+        {
+          "model_id": "gemini-3.1-pro-preview",
+          "provider": "gemini",
+          "score": 0.0,
+          "weighted_pass_score": 0.0,
+          "quality_score": 0.0,
           "cases": 3,
           "global_weight_mass": 0.0035,
           "label": "标签 bugs",

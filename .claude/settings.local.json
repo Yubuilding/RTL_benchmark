@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find results:*)"
+      "Bash(find results:*)",
+      "Bash(python3:*)"
     ]
   }
 }

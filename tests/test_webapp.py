@@ -417,6 +417,49 @@ class WebAppServiceTests(unittest.TestCase):
             self.assertTrue(suite)
             self.assertTrue(suite_update_board)
 
+    def test_write_run_result_keeps_snapshot_when_leaderboard_update_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            config_path = self._write_base_config(tmp_path)
+            service = WebAppService(str(config_path), str(tmp_path / "webui.json"))
+            run_result = {
+                "run_id": "resilient_run",
+                "started_at": "2026-03-18T05:40:30Z",
+                "finished_at": "",
+                "status": "running",
+                "error": "",
+                "source": "webui",
+                "scope": "selected_problems",
+                "custom_problem": False,
+                "problem_ids": ["rtl_add8"],
+                "problems": [
+                    {
+                        "id": "rtl_add8",
+                        "task_type": "rtl",
+                        "source": "rtl",
+                        "suite": "rtl",
+                        "category": "baseline",
+                        "track": "rtl_core",
+                        "difficulty": "easy",
+                        "exposure": "public",
+                        "tags": ["basic"],
+                    }
+                ],
+                "models": [{"id": "gpt-4.1-mini", "provider": "openai"}],
+                "cases": [],
+                "summary": [],
+                "slice_rankings": {},
+                "scoring_policy": {},
+                "run_root": str(tmp_path / "runs" / "resilient_run"),
+            }
+
+            with patch("rtl_benchmark.webapp.update_leaderboard", side_effect=RuntimeError("boom")):
+                service._write_run_result(run_result, update_board=True)
+
+            saved = json.loads((tmp_path / "raw" / "resilient_run.json").read_text(encoding="utf-8"))
+            self.assertEqual(saved["run_id"], "resilient_run")
+            self.assertEqual(saved["status"], "running")
+
     def test_ui_config_clamps_excessive_max_tokens(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
