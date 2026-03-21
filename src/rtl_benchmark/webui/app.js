@@ -22,6 +22,47 @@ const state = {
   pollTimer: null,
 };
 
+function captureScrollSnapshot() {
+  const containers = {};
+  document.querySelectorAll("[data-scroll-key]").forEach((element) => {
+    const key = String(element.dataset.scrollKey || "").trim();
+    if (!key) {
+      return;
+    }
+    containers[key] = {
+      top: element.scrollTop,
+      left: element.scrollLeft,
+    };
+  });
+  return {
+    windowX: window.scrollX,
+    windowY: window.scrollY,
+    containers,
+  };
+}
+
+function restoreScrollSnapshot(snapshot) {
+  if (!snapshot) {
+    return;
+  }
+  document.querySelectorAll("[data-scroll-key]").forEach((element) => {
+    const key = String(element.dataset.scrollKey || "").trim();
+    const saved = snapshot.containers ? snapshot.containers[key] : null;
+    if (!saved) {
+      return;
+    }
+    element.scrollTop = Number(saved.top || 0);
+    element.scrollLeft = Number(saved.left || 0);
+  });
+  window.scrollTo(Number(snapshot.windowX || 0), Number(snapshot.windowY || 0));
+}
+
+function preserveScroll(renderFn) {
+  const snapshot = captureScrollSnapshot();
+  renderFn();
+  restoreScrollSnapshot(snapshot);
+}
+
 function byId(id) {
   return document.getElementById(id);
 }
@@ -255,6 +296,10 @@ function syncRunModelSelection(options = {}) {
 }
 
 function render() {
+  preserveScroll(() => renderView());
+}
+
+function renderView() {
   renderProviders();
   renderRunModelPicker();
   renderProblems();
@@ -557,6 +602,7 @@ function renderJobs() {
               `
               : ""
           }
+          ${renderJobFailedCases(job)}
           <div class="stack-actions">
             ${
               hasResult
@@ -708,8 +754,15 @@ function renderLeaderboard() {
                 <td class="mono">${escapeHtml(row.last_run_id || "")}</td>
                 <td>
                   ${
+                    Number(row.failed_cases || 0) > 0
+                      ? `<button class="mini-button" data-leaderboard-rerun-model="${escapeHtml(row.model_id)}" data-leaderboard-rerun-provider="${escapeHtml(
+                          row.provider || "",
+                        )}">Rerun ${row.failed_cases} Failed Cases</button>`
+                      : ""
+                  }
+                  ${
                     row.last_run_id
-                      ? `<a class="mini-link" href="/leaderboard?run=${encodeURIComponent(row.last_run_id)}">Compare</a>`
+                      ? `${Number(row.failed_cases || 0) > 0 ? " " : ""}<a class="mini-link" href="/leaderboard?run=${encodeURIComponent(row.last_run_id)}">Compare</a>`
                       : ""
                   }
                 </td>
@@ -805,23 +858,22 @@ function renderLeaderboardPage() {
   if (!dom.leaderboardCompareControls || !dom.leaderboardCompareSummary || !dom.leaderboardCompareTable || !dom.leaderboardCompareRunMeta) {
     return;
   }
-  if (!state.selectedRun) {
+  const modelRows = (state.leaderboard && state.leaderboard.models) || [];
+  const compare = state.leaderboardCompare;
+
+  if (!modelRows.length) {
     dom.leaderboardCompareRunMeta.textContent = "";
-    dom.leaderboardCompareControls.innerHTML = `<div class="empty-state">Select a recorded run to compare two models.</div>`;
+    dom.leaderboardCompareControls.innerHTML = `<div class="empty-state">Run benchmark problems to compare models on the leaderboard.</div>`;
     dom.leaderboardCompareSummary.innerHTML = "";
     dom.leaderboardCompareTable.innerHTML = "";
     return;
   }
 
-  const modelRows = state.selectedRun.model_results || [];
-  const compare = state.leaderboardCompare;
-  dom.leaderboardCompareRunMeta.textContent = `${state.selectedRun.scope || "run"} · ${state.selectedRun.started_at || ""} → ${
-    state.selectedRun.finished_at || ""
-  }`;
+  dom.leaderboardCompareRunMeta.textContent = renderLeaderboardCompareMeta(compare);
   dom.leaderboardCompareControls.innerHTML = renderLeaderboardCompareControls(modelRows);
 
   if (!state.compareModelA || !state.compareModelB) {
-    dom.leaderboardCompareSummary.innerHTML = `<div class="empty-state">Pick two different models from this run.</div>`;
+    dom.leaderboardCompareSummary.innerHTML = `<div class="empty-state">Pick two different models from the leaderboard.</div>`;
     dom.leaderboardCompareTable.innerHTML = "";
     return;
   }
@@ -854,7 +906,7 @@ function renderResultsModelSummary() {
       </div>
       <div class="problem-meta">${models.length} models</div>
     </div>
-    <div class="results-model-list">
+    <div class="results-model-list" data-scroll-key="results-model-list">
       ${models
         .map((model) => {
           const expanded = state.expandedModels.has(model.model_id);
@@ -887,38 +939,42 @@ function renderResultsModelSummary() {
 
 function renderModelCasesTable(model) {
   return `
-    <div class="case-nav-list">
+    <div class="case-nav-scroll" data-scroll-key="results-cases-${escapeHtml(model.model_id)}">
+      <div class="case-nav-list">
       ${model.items
         .map((item) => {
           const key = caseKey(item);
           const selected = state.selectedCaseKey === key;
           return `
-            <button
-              class="case-nav-button ${selected ? "case-nav-button-active" : ""}"
-              data-select-case="${escapeHtml(key)}"
-              data-model-id="${escapeHtml(model.model_id)}"
-            >
-              <div class="case-nav-top">
-                <strong class="mono">${escapeHtml(item.problem_id)}</strong>
-                ${renderInlineStatus(item.passed ? "pass" : "fail")}
-              </div>
-              <div class="case-nav-meta">
-                <span>${escapeHtml(item.problem_source || (item.problem || {}).source || "")}</span>
-                <span>${escapeHtml(item.problem_category || (item.problem || {}).category || "")}</span>
-                <span>${escapeHtml(item.problem_suite || (item.problem || {}).suite || "")}</span>
-                <span>${escapeHtml(item.problem_difficulty || (item.problem || {}).difficulty || "")}</span>
-              </div>
-              <div class="case-nav-stages">
-                <span>L ${shortStage(item.lint)}</span>
-                <span>S ${shortStage(item.simulation)}</span>
-                <span>Y ${shortStage(item.synthesis)}</span>
-                <span>A ${item.attempt || 0}</span>
-                <span>M ${formatOptionalRate(item.mutation_kill_rate)}</span>
-              </div>
-            </button>
+            <article class="case-nav-entry">
+              <button
+                class="case-nav-button ${selected ? "case-nav-button-active" : ""}"
+                data-select-case="${escapeHtml(key)}"
+                data-model-id="${escapeHtml(model.model_id)}"
+              >
+                <div class="case-nav-top">
+                  <strong class="mono">${escapeHtml(item.problem_id)}</strong>
+                  ${renderInlineStatus(item.passed ? "pass" : "fail")}
+                </div>
+                <div class="case-nav-meta">
+                  <span>${escapeHtml(item.problem_source || (item.problem || {}).source || "")}</span>
+                  <span>${escapeHtml(item.problem_category || (item.problem || {}).category || "")}</span>
+                  <span>${escapeHtml(item.problem_suite || (item.problem || {}).suite || "")}</span>
+                  <span>${escapeHtml(item.problem_difficulty || (item.problem || {}).difficulty || "")}</span>
+                </div>
+                <div class="case-nav-stages">
+                  <span>L ${shortStage(item.lint)}</span>
+                  <span>S ${shortStage(item.simulation)}</span>
+                  <span>Y ${shortStage(item.synthesis)}</span>
+                  <span>A ${item.attempt || 0}</span>
+                  <span>M ${formatOptionalRate(item.mutation_kill_rate)}</span>
+                </div>
+              </button>
+            </article>
           `;
         })
         .join("")}
+      </div>
     </div>
   `;
 }
@@ -1118,7 +1174,7 @@ function renderLeaderboardCompareControls(models) {
     .map(
       (item) =>
         `<option value="${escapeHtml(item.model_id)}" ${item.model_id === state.compareModelA ? "selected" : ""}>${escapeHtml(
-          item.model_id,
+          compareModelOptionLabel(item),
         )}</option>`,
     )
     .join("");
@@ -1126,7 +1182,7 @@ function renderLeaderboardCompareControls(models) {
     .map(
       (item) =>
         `<option value="${escapeHtml(item.model_id)}" ${item.model_id === state.compareModelB ? "selected" : ""}>${escapeHtml(
-          item.model_id,
+          compareModelOptionLabel(item),
         )}</option>`,
     )
     .join("");
@@ -1288,20 +1344,22 @@ function renderLeaderboardCompareRow(compare, row) {
           ${(row.tags || []).length ? `<span>${escapeHtml((row.tags || []).slice(0, 3).join(", "))}</span>` : ""}
         </div>
       </td>
-      <td>${renderCompareCaseCell(compare.run_id, row.model_a)}</td>
-      <td>${renderCompareCaseCell(compare.run_id, row.model_b)}</td>
+      <td>${renderCompareCaseCell(compare, row.model_a)}</td>
+      <td>${renderCompareCaseCell(compare, row.model_b)}</td>
       <td>${renderCompareOutcome(row.outcome)}</td>
     </tr>
   `;
 }
 
-function renderCompareCaseCell(runId, entry) {
+function renderCompareCaseCell(compare, entry) {
   if (!entry || !entry.present) {
     return `<div class="compare-case"><span class="status-chip status-skipped">missing</span></div>`;
   }
   const stageLine = `L ${shortStage({ status: entry.lint_status })} · S ${shortStage({ status: entry.simulation_status })} · Y ${shortStage({
     status: entry.synthesis_status,
   })}`;
+  const runId = entry.run_id || compare.run_id || "";
+  const showRunId = runId && runId !== compare.run_id;
   const openLink = entry.case_key
     ? `<a class="mini-link" href="/results?run=${encodeURIComponent(runId)}&case=${encodeURIComponent(entry.case_key)}">Open</a>`
     : "";
@@ -1311,6 +1369,7 @@ function renderCompareCaseCell(runId, entry) {
         ${renderInlineStatus(entry.status)}
         <span class="problem-meta">attempt ${entry.attempt || 0}</span>
       </div>
+      ${showRunId ? `<div class="problem-meta mono">${escapeHtml(runId)}</div>` : ""}
       <div class="problem-meta mono">${escapeHtml(stageLine)}</div>
       <div class="compare-feedback">${escapeHtml(entry.feedback || "No feedback.")}</div>
       ${openLink}
@@ -1343,6 +1402,25 @@ function compareLabels(compare) {
   };
 }
 
+function compareModelOptionLabel(item) {
+  const provider = String((item && item.provider) || "").trim();
+  const modelId = String((item && item.model_id) || "").trim();
+  return provider ? `${modelId} · ${provider}` : modelId;
+}
+
+function renderLeaderboardCompareMeta(compare) {
+  if (!compare) {
+    return "Leaderboard aggregate across all benchmark problems.";
+  }
+  if (compare.compare_mode === "leaderboard") {
+    return `Leaderboard aggregate · latest coverage from all recorded runs · A ${compare.model_a_run_id || "n/a"} · B ${compare.model_b_run_id || "n/a"}`;
+  }
+  if (compare.compare_mode === "same_run" && compare.run_id) {
+    return `Same run · ${compare.run_id} · ${compare.started_at || ""} → ${compare.finished_at || ""}`;
+  }
+  return `Compare view · A ${compare.model_a_run_id || "n/a"} · B ${compare.model_b_run_id || "n/a"}`;
+}
+
 function renderLeaderboardBreakdown(row) {
   const groups = [
     { key: "sources", title: "Sources" },
@@ -1359,22 +1437,24 @@ function renderLeaderboardBreakdown(row) {
       return `
         <section class="leaderboard-breakdown-group">
           <div class="leaderboard-breakdown-title">${escapeHtml(group.title)}</div>
-          <div class="leaderboard-breakdown-items">
-            ${entries
-              .map(
-                (entry) => `
-                  <article class="leaderboard-breakdown-item">
-                    <div class="leaderboard-breakdown-label">${escapeHtml(displaySliceLabel(entry))}</div>
-                    <div class="leaderboard-breakdown-metrics">
-                      <span>${formatRate(entry.slice_weighted_pass_rate)}</span>
-                      <span>Q ${formatRate(entry.slice_quality_score)}</span>
-                      <span>${formatSignedRate(entry.lift_vs_model_overall)}</span>
-                    </div>
-                    <div class="leaderboard-breakdown-meta">${entry.cases || 0} cases · weight ${formatRate(entry.global_weight_mass)}</div>
-                  </article>
-                `,
-              )
-              .join("")}
+          <div class="leaderboard-breakdown-scroll">
+            <div class="leaderboard-breakdown-items">
+              ${entries
+                .map(
+                  (entry) => `
+                    <article class="leaderboard-breakdown-item">
+                      <div class="leaderboard-breakdown-label">${escapeHtml(displaySliceLabel(entry))}</div>
+                      <div class="leaderboard-breakdown-metrics">
+                        <span>${formatRate(entry.slice_weighted_pass_rate)}</span>
+                        <span>Q ${formatRate(entry.slice_quality_score)}</span>
+                        <span>${formatSignedRate(entry.lift_vs_model_overall)}</span>
+                      </div>
+                      <div class="leaderboard-breakdown-meta">${entry.cases || 0} cases · weight ${formatRate(entry.global_weight_mass)}</div>
+                    </article>
+                  `,
+                )
+                .join("")}
+            </div>
           </div>
         </section>
       `;
@@ -1779,6 +1859,31 @@ async function pauseJob(jobId, button) {
   }
 }
 
+async function rerunLeaderboardFailures(modelId, provider, failedCases, button) {
+  if (Number(failedCases || 0) <= 0) {
+    throw new Error("No failed cases are available for rerun.");
+  }
+  const confirmed = window.confirm(`Create a new job to rerun ${failedCases} failed leaderboard cases for ${modelId}?`);
+  if (!confirmed) {
+    return;
+  }
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = true;
+    setButtonState(button, "Queued...", "button-busy");
+  }
+  try {
+    const payload = await apiPost("/api/leaderboard/rerun-failures", {
+      model_id: modelId,
+      provider,
+    });
+    await loadState({ preserveInputs: true });
+    showToast(`Queued new job ${((payload || {}).job || {}).job_id || ""} for ${modelId}.`, "success");
+  } catch (error) {
+    resetButtonState(button);
+    throw error;
+  }
+}
+
 async function deleteJob(jobId, button) {
   const confirmed = window.confirm("Delete this job and remove its saved run snapshot?");
   if (!confirmed) {
@@ -1811,8 +1916,10 @@ async function resetLeaderboardData(button) {
     const payload = await apiPost("/api/leaderboard/reset", {});
     state.leaderboard = payload.leaderboard || { updated_at: "", models: [] };
     state.leaderboardCompare = null;
-    renderLeaderboard();
-    renderLeaderboardPage();
+    preserveScroll(() => {
+      renderLeaderboard();
+      renderLeaderboardPage();
+    });
     if (button instanceof HTMLButtonElement) {
       button.disabled = false;
       setButtonState(button, "Reset", "button-success");
@@ -1826,19 +1933,33 @@ async function resetLeaderboardData(button) {
 }
 
 async function viewRun(runId, options = {}) {
+  const previousRunId = state.selectedRunId;
+  const sameRun = previousRunId === runId;
+  const previousExpandedModels = new Set(state.expandedModels);
+  const previousSelectedCaseKey = state.selectedCaseKey;
+  const previousArtifactViewer = state.artifactViewer;
   const payload = await apiGet(`/api/history/${encodeURIComponent(runId)}`);
   state.selectedRunId = runId;
   state.selectedRun = payload;
-  state.artifactViewer = null;
-  state.expandedModels = new Set();
-  if (payload.model_results && payload.model_results.length) {
-    state.expandedModels.add(payload.model_results[0].model_id);
+  if (sameRun) {
+    const availableModels = new Set((payload.model_results || []).map((item) => item.model_id));
+    state.expandedModels = new Set(Array.from(previousExpandedModels).filter((modelId) => availableModels.has(modelId)));
+    if (!state.expandedModels.size && payload.model_results && payload.model_results.length) {
+      state.expandedModels.add(payload.model_results[0].model_id);
+    }
+  } else {
+    state.expandedModels = new Set();
+    if (payload.model_results && payload.model_results.length) {
+      state.expandedModels.add(payload.model_results[0].model_id);
+    }
   }
   if (page === "leaderboard") {
     syncCompareSelection();
   }
-  state.selectedCaseKey = page === "results" ? currentCaseFromUrl() : "";
+  state.selectedCaseKey = page === "results" ? (sameRun ? previousSelectedCaseKey || currentCaseFromUrl() : currentCaseFromUrl()) : "";
   ensureSelectedCase();
+  state.artifactViewer =
+    sameRun && previousArtifactViewer && previousArtifactViewer.caseKey === state.selectedCaseKey ? previousArtifactViewer : null;
   if (page === "results") {
     updateResultsUrl(options);
   } else if (page === "leaderboard") {
@@ -1855,19 +1976,21 @@ async function loadLeaderboardCompare(options = {}) {
   if (page !== "leaderboard") {
     return;
   }
-  if (!state.selectedRunId || !state.compareModelA || !state.compareModelB || state.compareModelA === state.compareModelB) {
+  if (!state.compareModelA || !state.compareModelB || state.compareModelA === state.compareModelB) {
     state.leaderboardCompare = null;
-    renderLeaderboardPage();
+    preserveScroll(() => renderLeaderboardPage());
     return;
   }
-  const payload = await apiGet(
-    `/api/leaderboard/compare?run=${encodeURIComponent(state.selectedRunId)}&a=${encodeURIComponent(
-      state.compareModelA,
-    )}&b=${encodeURIComponent(state.compareModelB)}`,
-  );
+  const params = new URLSearchParams();
+  if (state.selectedRunId) {
+    params.set("run", state.selectedRunId);
+  }
+  params.set("a", state.compareModelA);
+  params.set("b", state.compareModelB);
+  const payload = await apiGet(`/api/leaderboard/compare?${params.toString()}`);
   state.leaderboardCompare = payload;
   updateLeaderboardUrl(options);
-  renderLeaderboardPage();
+  preserveScroll(() => renderLeaderboardPage());
 }
 
 async function viewArtifact(path, name, caseKeyValue) {
@@ -1902,7 +2025,7 @@ function caseKey(item) {
 }
 
 function syncCompareSelection() {
-  const models = ((state.selectedRun && state.selectedRun.model_results) || []).map((item) => item.model_id);
+  const models = ((state.leaderboard && state.leaderboard.models) || []).map((item) => item.model_id);
   const fromUrl = currentCompareModelsFromUrl();
   if (!models.length) {
     state.compareModelA = "";
@@ -1953,11 +2076,13 @@ function updateResultsUrl(options = {}) {
 }
 
 function updateLeaderboardUrl(options = {}) {
-  if (page !== "leaderboard" || options.pushHistory === false || !state.selectedRunId) {
+  if (page !== "leaderboard" || options.pushHistory === false) {
     return;
   }
   const params = new URLSearchParams();
-  params.set("run", state.selectedRunId);
+  if (state.selectedRunId) {
+    params.set("run", state.selectedRunId);
+  }
   if (state.compareModelA) {
     params.set("a", state.compareModelA);
   }
@@ -2161,7 +2286,7 @@ function bindEvents() {
       } else {
         state.expandedModels.add(modelId);
       }
-      renderResultsModelSummary();
+      preserveScroll(() => renderResultsModelSummary());
       return;
     }
 
@@ -2173,14 +2298,32 @@ function bindEvents() {
       }
       state.artifactViewer = null;
       updateResultsUrl();
-      renderCaseConsole();
-      renderResultsModelSummary();
+      preserveScroll(() => {
+        renderCaseConsole();
+        renderResultsModelSummary();
+      });
       return;
     }
 
     const artifactPath = target.dataset.viewArtifact;
     if (artifactPath) {
       viewArtifact(artifactPath, target.dataset.artifactName || "", target.dataset.caseKey || "").catch(showError);
+      return;
+    }
+
+    const leaderboardRerunModel = target.dataset.leaderboardRerunModel;
+    if (leaderboardRerunModel) {
+      const row = ((state.leaderboard && state.leaderboard.models) || []).find(
+        (item) =>
+          String((item && item.model_id) || "").trim() === leaderboardRerunModel &&
+          String((item && item.provider) || "").trim() === String(target.dataset.leaderboardRerunProvider || "").trim(),
+      );
+      rerunLeaderboardFailures(
+        leaderboardRerunModel,
+        target.dataset.leaderboardRerunProvider || "",
+        Number((row && row.failed_cases) || 0),
+        target,
+      ).catch(showError);
       return;
     }
 
@@ -2220,6 +2363,64 @@ function groupProblems(problems) {
 
 function countCategories(grouped) {
   return grouped.reduce((count, source) => count + source.categories.length, 0);
+}
+
+function selectFinalCases(rows) {
+  const final = new Map();
+  (rows || []).forEach((item) => {
+    const modelId = String((item && item.model_id) || "").trim();
+    const problemId = String((item && item.problem_id) || "").trim();
+    if (!modelId || !problemId) {
+      return;
+    }
+    const key = `${modelId}::${problemId}`;
+    const current = final.get(key);
+    const currentAttempt = current ? Number(current.attempt || 0) : -1;
+    const attempt = Number(item.attempt || 0);
+    if (!current || attempt >= currentAttempt) {
+      final.set(key, item);
+    }
+  });
+  return Array.from(final.values());
+}
+
+function failedFinalCases(job) {
+  if (!job || !job.result) {
+    return [];
+  }
+  return selectFinalCases((job.result && job.result.cases) || [])
+    .filter((item) => item && item.passed === false)
+    .sort((a, b) => `${a.model_id}/${a.problem_id}`.localeCompare(`${b.model_id}/${b.problem_id}`));
+}
+
+function renderJobFailedCases(job) {
+  if (!job || !job.result) {
+    return "";
+  }
+  const failedCases = failedFinalCases(job);
+  if (!failedCases.length) {
+    return "";
+  }
+  return `
+    <div class="job-failed-cases">
+      <div class="problem-meta">Failed Cases</div>
+      <div class="job-failed-case-list">
+        ${failedCases
+          .slice(0, 10)
+          .map(
+            (item) => `
+              <div class="job-failed-case-row">
+                <div>
+                  <strong class="mono">${escapeHtml(item.model_id)} / ${escapeHtml(item.problem_id)}</strong>
+                  <div class="problem-meta">${escapeHtml(item.feedback || "failed")}</div>
+                </div>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
 }
 
 function formatRate(value) {

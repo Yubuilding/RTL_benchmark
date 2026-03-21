@@ -346,6 +346,7 @@ class Evaluator:
         ignored_module_names = {
             "module",
             "if",
+            "else",
             "for",
             "while",
             "case",
@@ -370,6 +371,8 @@ class Evaluator:
             if module_name in ignored_module_names:
                 continue
             if module_name.lower() in ignored_lower:
+                continue
+            if instance_name in ignored_module_names or instance_name in ignored_lower:
                 continue
             if instance_name.startswith(("top_module", "dut", "uut", "stim")):
                 continue

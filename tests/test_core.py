@@ -160,6 +160,9 @@ class ProblemBankTests(unittest.TestCase):
         self.assertEqual(by_id["industrial_valid_ready_slice"].difficulty, "hard")
         self.assertEqual(by_id["industrial_valid_ready_slice"].exposure, "curated")
         self.assertEqual(by_id["industrial_rr_arb4"].track, "control")
+        self.assertEqual(by_id["verilogeval_099_m2014_q6c"].module_header, "module TopModule ( input [5:0] y, input w, output Y2, output Y4 );")
+        self.assertIn("output       Y2", by_id["verilogeval_099_m2014_q6c"].reference_rtl)
+        self.assertIn("output       Y4", by_id["verilogeval_099_m2014_q6c"].reference_rtl)
 
     def test_load_problems_supports_metadata_filters(self) -> None:
         problems = load_problems(
@@ -272,6 +275,52 @@ class RunnerTests(unittest.TestCase):
     def test_runner_clamps_excessive_max_tokens(self) -> None:
         runner = ModelRunner({"max_tokens": 1048576})
         self.assertEqual(runner.max_tokens, 8192)
+
+    def test_problem_max_tokens_scales_with_reference_solution_size(self) -> None:
+        runner = ModelRunner({"max_tokens": 1024})
+        short_problem = Problem(
+            id="short_rtl",
+            task_type="rtl",
+            language="verilog",
+            prompt="Implement a tiny passthrough.",
+            top_module="tiny",
+            module_header="module tiny(input logic a, output logic y);",
+            reference_rtl="module tiny(input logic a, output logic y);\n  assign y = a;\nendmodule\n",
+            testbench="module tb; endmodule",
+            difficulty="easy",
+        )
+        long_problem = Problem(
+            id="long_tb",
+            task_type="testbench",
+            language="verilog",
+            prompt="Implement a large self-checking testbench.",
+            top_module="tb",
+            module_header="module tb;",
+            reference_tb="\n".join(
+                [
+                    "module tb;",
+                    "  logic clk;",
+                    "  logic rst_n;",
+                ]
+                + [f"  logic [31:0] data_{idx};" for idx in range(80)]
+                + [
+                    "  initial begin",
+                    "    rst_n = 0;",
+                    "  end",
+                    "endmodule",
+                ]
+            ),
+            golden_rtl="module dut; endmodule",
+            mutant_rtls=["module dut; endmodule"] * 4,
+            difficulty="hard",
+        )
+
+        short_limit = runner._problem_max_tokens(short_problem)
+        long_limit = runner._problem_max_tokens(long_problem)
+
+        self.assertLess(short_limit, runner.max_tokens)
+        self.assertGreater(long_limit, short_limit)
+        self.assertLessEqual(long_limit, runner.max_tokens)
 
     def test_runner_extracts_hdl_from_fenced_response_with_preamble(self) -> None:
         runner = ModelRunner({})
@@ -425,6 +474,54 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(runner.last_trace["metrics"]["total_tokens"], 168)
         self.assertGreaterEqual(runner.last_trace["metrics"]["duration_seconds"], 0.0)
         self.assertIn("output_chars", runner.last_trace["metrics"])
+
+    def test_openai_request_uses_problem_specific_max_tokens(self) -> None:
+        runner = ModelRunner({"max_tokens": 1024, "temperature": 0.0})
+        problem = Problem(
+            id="rtl_small",
+            task_type="rtl",
+            language="verilog",
+            prompt="Implement a tiny passthrough module.",
+            top_module="tiny",
+            module_header="module tiny(input logic a, output logic y);",
+            reference_rtl="module tiny(input logic a, output logic y);\n  assign y = a;\nendmodule\n",
+            testbench="module tb; endmodule",
+            difficulty="easy",
+        )
+        model = ModelDescriptor(
+            id="gpt-4.1-mini",
+            provider="openai",
+            raw={"_base_url": "https://api.openai.com/v1", "_api_key_env": "OPENAI_API_KEY"},
+        )
+
+        class FakeResponse:
+            status = 200
+
+            def __enter__(self) -> "FakeResponse":
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> bool:
+                return False
+
+            def read(self) -> bytes:
+                return json.dumps(
+                    {
+                        "choices": [
+                            {
+                                "message": {
+                                    "content": "module tiny(input logic a, output logic y); assign y = a; endmodule"
+                                }
+                            }
+                        ]
+                    }
+                ).encode("utf-8")
+
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}, clear=False):
+            with patch.object(urllib.request, "urlopen", return_value=FakeResponse()):
+                runner.generate(model, problem)
+
+        self.assertLess(runner.last_trace["request"]["payload"]["max_tokens"], 1024)
+        self.assertGreaterEqual(runner.last_trace["request"]["payload"]["max_tokens"], 160)
 
     def test_openai_generation_accepts_model_scoped_api_key(self) -> None:
         runner = ModelRunner({"max_tokens": 128, "temperature": 0.0})
@@ -613,6 +710,56 @@ class EvaluatorTests(unittest.TestCase):
             self.assertTrue(any(log_name == "lint.log" and "RefModule.sv" in cmd for cmd, log_name in commands))
             self.assertFalse(any("begin.sv" in cmd for cmd, _ in commands))
 
+    def test_eval_rtl_does_not_treat_else_if_as_reference_module(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            problem = Problem(
+                id="verilogeval_else_false_positive",
+                task_type="rtl",
+                language="systemverilog",
+                prompt="Implement TopModule.",
+                top_module="TopModule",
+                reference_rtl="module TopModule(input logic a, output logic y); assign y = a; endmodule\n",
+                testbench=(
+                    "module tb;\n"
+                    "  logic a;\n"
+                    "  logic y_ref;\n"
+                    "  logic y_dut;\n"
+                    "  RefModule good1(.a(a), .y(y_ref));\n"
+                    "  TopModule uut(.a(a), .y(y_dut));\n"
+                    "  initial begin\n"
+                    "    if (y_ref)\n"
+                    "      a = 1'b1;\n"
+                    "    else if (y_dut)\n"
+                    "      a = 1'b0;\n"
+                    "  end\n"
+                    "endmodule\n"
+                ),
+            )
+            evaluator = Evaluator(tmp)
+            commands: list[tuple[list[str], str]] = []
+
+            def fake_run_cmd(cmd: list[str], cwd: Path, log_name: str, timeout_seconds: int = 20) -> StageStatus:
+                commands.append((cmd, log_name))
+                return StageStatus(status="pass")
+
+            with patch("rtl_benchmark.evaluator.tool_exists", return_value=True):
+                with patch("rtl_benchmark.evaluator.run_cmd", side_effect=fake_run_cmd):
+                    result = evaluator.evaluate(
+                        model_id="openrouter/hunter-alpha",
+                        problem=problem,
+                        candidate_code="module TopModule(input logic a, output logic y); assign y = a; endmodule\n",
+                        attempt=1,
+                    )
+
+            case_dir = Path(result.artifact_dir)
+            reference_file = case_dir / "RefModule.sv"
+
+            self.assertTrue(result.passed)
+            self.assertTrue(reference_file.exists())
+            self.assertFalse((case_dir / "else.sv").exists())
+            self.assertTrue(any(log_name == "lint.log" and "RefModule.sv" in cmd for cmd, log_name in commands))
+            self.assertFalse(any("else.sv" in cmd for cmd, _ in commands))
+
     def test_run_sim_wraps_vvp_with_waveform_limit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             case_dir = Path(tmp)
@@ -731,7 +878,7 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(len(result["cases"]), expected_problem_count)
             self.assertEqual(len(result["problems"]), expected_problem_count)
             self.assertEqual(result["problem_ids"], [problem["id"] for problem in result["problems"]])
-            self.assertTrue(all(case["feedback"].startswith("generation failed:") for case in result["cases"]))
+            self.assertTrue(all(case["feedback"].startswith("generation failed") for case in result["cases"]))
             self.assertTrue(all(case["lint"]["status"] == "skipped" for case in result["cases"]))
 
     def test_explicit_model_lists_run_on_every_invocation(self) -> None:

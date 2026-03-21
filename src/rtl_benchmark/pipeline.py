@@ -159,7 +159,7 @@ class BenchmarkPipeline:
         detail: str = "",
     ) -> CaseResult:
         skipped = StageStatus(status="skipped", reason="generation failed")
-        feedback = "generation failed: provider returned no HDL code"
+        feedback = "generation failed"
         if detail:
             feedback = f"{feedback}; {detail}"
         return CaseResult(

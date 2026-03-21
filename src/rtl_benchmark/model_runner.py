@@ -87,11 +87,12 @@ class ModelRunner:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
+        max_tokens = self._problem_max_tokens(problem)
 
         payload = {
             "model": model.id,
             "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
+            "max_tokens": max_tokens,
             "messages": [
                 {
                     "role": "system",
@@ -147,6 +148,7 @@ class ModelRunner:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
+        max_tokens = self._problem_max_tokens(problem)
         encoded_model = urllib.parse.quote(model.id, safe="")
         url = f"https://api-inference.huggingface.co/models/{encoded_model}"
 
@@ -154,7 +156,7 @@ class ModelRunner:
             "inputs": prompt,
             "parameters": {
                 "temperature": self.temperature,
-                "max_new_tokens": self.max_tokens,
+                "max_new_tokens": max_tokens,
                 "return_full_text": False,
                 "do_sample": self.temperature > 0,
             },
@@ -218,10 +220,11 @@ class ModelRunner:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
+        max_tokens = self._problem_max_tokens(problem)
         payload = {
             "model": model.id,
             "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
+            "max_tokens": max_tokens,
             "messages": [
                 {
                     "role": "system",
@@ -276,9 +279,10 @@ class ModelRunner:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
+        max_tokens = self._problem_max_tokens(problem)
         payload = {
             "model": model.id,
-            "max_tokens": self.max_tokens,
+            "max_tokens": max_tokens,
             "temperature": self.temperature,
             "system": "You are an expert RTL engineer. Return only code, no markdown.",
             "messages": [{"role": "user", "content": prompt}],
@@ -328,6 +332,7 @@ class ModelRunner:
             return ""
 
         prompt = self._build_prompt(problem, feedback)
+        max_tokens = self._problem_max_tokens(problem)
         model_id = self._normalize_gemini_model_id(model.id)
         payload = {
             "system_instruction": {
@@ -336,7 +341,7 @@ class ModelRunner:
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": self.temperature,
-                "maxOutputTokens": self.max_tokens,
+                "maxOutputTokens": max_tokens,
                 "responseMimeType": "text/plain",
             },
         }
@@ -397,6 +402,44 @@ class ModelRunner:
 
         return base
 
+    def _problem_max_tokens(self, problem: Problem) -> int:
+        reference = self._expected_solution_text(problem)
+        if not reference:
+            return self.max_tokens
+
+        reference_lines = [line for line in reference.splitlines() if line.strip()]
+        reference_chars = len(reference)
+        prompt_chars = len(problem.prompt or "")
+        header_chars = len(problem.module_header or "")
+
+        estimated_tokens = int(round(reference_chars / 3.2))
+        structural_margin = len(reference_lines) * 6
+        prompt_margin = min(96, prompt_chars // 80)
+        header_margin = min(48, header_chars // 12)
+
+        task_floor = 160 if problem.task_type == "rtl" else 256
+        task_buffer = 64 if problem.task_type == "rtl" else 128
+        if problem.task_type == "testbench":
+            task_buffer += min(128, len(problem.mutant_rtls or []) * 16)
+
+        target = estimated_tokens + structural_margin + prompt_margin + header_margin + task_buffer
+        target = max(task_floor, target)
+
+        difficulty = str(problem.difficulty or "").strip().lower()
+        difficulty_scale = {
+            "easy": 1.0,
+            "medium": 1.15,
+            "hard": 1.35,
+            "adhoc": 1.5,
+        }.get(difficulty, 1.1)
+        adjusted = int(round(target * difficulty_scale))
+        return max(1, min(self.max_tokens, adjusted))
+
+    def _expected_solution_text(self, problem: Problem) -> str:
+        if problem.task_type == "testbench":
+            return str(problem.reference_tb or "").strip()
+        return str(problem.reference_rtl or "").strip()
+
     def _resolve_api_key(self, model: ModelDescriptor, env_name: str) -> str:
         inline_key = str(model.raw.get("_api_key", "")).strip()
         if inline_key:
@@ -405,6 +448,10 @@ class ModelRunner:
 
     def _finalize_generated_output(self, text: str) -> str:
         if not text.strip():
+            if not self.last_error:
+                self.last_error = self._diagnose_missing_output()
+            if self.last_trace:
+                self.last_trace["error"] = self.last_error
             return ""
         extracted = extract_hdl_code(text)
         issue = validate_hdl_candidate(extracted)
@@ -415,6 +462,82 @@ class ModelRunner:
                 self.last_trace["error"] = self.last_error
             return ""
         return extracted
+
+    def _diagnose_missing_output(self) -> str:
+        response = self.last_trace.get("response", {}) if isinstance(self.last_trace, dict) else {}
+        payload = response.get("payload", {}) if isinstance(response, dict) else {}
+        if isinstance(payload, dict):
+            openai_like = self._diagnose_openai_like_missing_output(payload)
+            if openai_like:
+                return openai_like
+            anthropic_like = self._diagnose_anthropic_missing_output(payload)
+            if anthropic_like:
+                return anthropic_like
+            gemini_like = self._diagnose_gemini_missing_output(payload)
+            if gemini_like:
+                return gemini_like
+        return "provider returned no assistant code content"
+
+    def _diagnose_openai_like_missing_output(self, payload: dict[str, object]) -> str:
+        choices = payload.get("choices", [])
+        if not isinstance(choices, list) or not choices:
+            return ""
+        first = choices[0] if isinstance(choices[0], dict) else {}
+        message = first.get("message", {}) if isinstance(first.get("message", {}), dict) else {}
+        finish_reason = str(first.get("finish_reason", "") or "").strip()
+        content = message.get("content")
+        reasoning = message.get("reasoning")
+        reasoning_text = self._message_content_to_text(reasoning)
+        if content is None and reasoning_text:
+            reason_suffix = f" (finish_reason={finish_reason})" if finish_reason else ""
+            return (
+                f"provider returned no assistant code content{reason_suffix}; "
+                f"response contained reasoning only ({len(reasoning_text)} chars)"
+            )
+        if content is None and finish_reason == "length":
+            return "provider returned no assistant code content (finish_reason=length; output likely truncated before code)"
+        if content is None:
+            reason_suffix = f" (finish_reason={finish_reason})" if finish_reason else ""
+            return f"provider returned no assistant code content{reason_suffix}"
+        return ""
+
+    def _diagnose_anthropic_missing_output(self, payload: dict[str, object]) -> str:
+        content = payload.get("content", [])
+        if not isinstance(content, list):
+            return ""
+        text_parts = []
+        thinking_parts = []
+        for part in content:
+            if not isinstance(part, dict):
+                continue
+            part_type = str(part.get("type", "") or "")
+            if part_type == "text":
+                text_parts.append(str(part.get("text", "")))
+            elif part_type == "thinking":
+                thinking_parts.append(str(part.get("thinking", "")))
+        text = "\n".join(item for item in text_parts if item).strip()
+        thinking = "\n".join(item for item in thinking_parts if item).strip()
+        stop_reason = str(payload.get("stop_reason", "") or "").strip()
+        if not text and thinking:
+            reason_suffix = f" (stop_reason={stop_reason})" if stop_reason else ""
+            return (
+                f"provider returned no assistant code content{reason_suffix}; "
+                f"response contained thinking only ({len(thinking)} chars)"
+            )
+        return ""
+
+    def _diagnose_gemini_missing_output(self, payload: dict[str, object]) -> str:
+        candidates = payload.get("candidates", [])
+        if not isinstance(candidates, list) or not candidates:
+            return ""
+        first = candidates[0] if isinstance(candidates[0], dict) else {}
+        finish_reason = str(first.get("finishReason", "") or "").strip()
+        content = first.get("content", {}) if isinstance(first.get("content", {}), dict) else {}
+        parts = content.get("parts", []) if isinstance(content.get("parts", []), list) else []
+        text = "\n".join(str(part.get("text", "")) for part in parts if isinstance(part, dict) and part.get("text")).strip()
+        if not text and finish_reason:
+            return f"provider returned no assistant code content (finish_reason={finish_reason})"
+        return ""
 
     def _extract_openai_message(self, payload: dict) -> str:
         choices = payload.get("choices", [])

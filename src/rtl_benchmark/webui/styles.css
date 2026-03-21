@@ -586,6 +586,15 @@ button.ghost:hover,
   background: var(--color-accent-muted);
 }
 
+button.ghost:disabled,
+.mini-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+}
+
 .mini-button {
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-xs);
@@ -1030,24 +1039,36 @@ select {
 }
 
 /* Scrollbar Styling */
+.stack-list-scroll::-webkit-scrollbar,
+.leaderboard-breakdown-scroll::-webkit-scrollbar,
+.case-nav-scroll::-webkit-scrollbar,
 .results-history-list::-webkit-scrollbar,
 pre::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
+.stack-list-scroll::-webkit-scrollbar-track,
+.leaderboard-breakdown-scroll::-webkit-scrollbar-track,
+.case-nav-scroll::-webkit-scrollbar-track,
 .results-history-list::-webkit-scrollbar-track,
 pre::-webkit-scrollbar-track {
   background: var(--color-bg-secondary);
   border-radius: var(--radius-full);
 }
 
+.stack-list-scroll::-webkit-scrollbar-thumb,
+.leaderboard-breakdown-scroll::-webkit-scrollbar-thumb,
+.case-nav-scroll::-webkit-scrollbar-thumb,
 .results-history-list::-webkit-scrollbar-thumb,
 pre::-webkit-scrollbar-thumb {
   background: var(--color-bg-tertiary);
   border-radius: var(--radius-full);
 }
 
+.stack-list-scroll::-webkit-scrollbar-thumb:hover,
+.leaderboard-breakdown-scroll::-webkit-scrollbar-thumb:hover,
+.case-nav-scroll::-webkit-scrollbar-thumb:hover,
 .results-history-list::-webkit-scrollbar-thumb:hover,
 pre::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
@@ -1296,6 +1317,12 @@ pre::-webkit-scrollbar-thumb:hover {
   color: var(--color-text-primary);
 }
 
+.leaderboard-breakdown-scroll {
+  max-height: min(24rem, 50vh);
+  overflow: auto;
+  padding-right: var(--space-2);
+}
+
 .leaderboard-breakdown-items {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1347,6 +1374,12 @@ pre::-webkit-scrollbar-thumb:hover {
   gap: var(--space-3);
 }
 
+.results-model-list {
+  max-height: min(72vh, 1100px);
+  overflow: auto;
+  padding-right: var(--space-2);
+}
+
 .model-nav-card {
   padding: var(--space-4);
   border-radius: var(--radius-lg);
@@ -1396,6 +1429,18 @@ pre::-webkit-scrollbar-thumb:hover {
   font-family: var(--font-mono);
 }
 
+.case-nav-scroll {
+  max-height: min(26rem, 50vh);
+  overflow: auto;
+  margin-top: var(--space-3);
+  padding-right: var(--space-2);
+}
+
+.case-nav-entry {
+  display: grid;
+  gap: var(--space-2);
+}
+
 .case-nav-button {
   width: 100%;
   border-radius: var(--radius-md);
@@ -1418,6 +1463,25 @@ pre::-webkit-scrollbar-thumb:hover {
   border-color: var(--color-secondary);
   background: var(--color-secondary-muted);
   box-shadow: 0 0 16px var(--color-secondary-muted);
+}
+
+.case-nav-actions,
+.job-failed-case-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.job-failed-cases {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.job-failed-case-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: center;
 }
 
 /* ================================================================
@@ -1699,6 +1763,12 @@ tbody tr:hover {
   gap: var(--space-3);
 }
 
+.stack-list-scroll {
+  max-height: min(34rem, 65vh);
+  overflow: auto;
+  padding-right: var(--space-2);
+}
+
 .stack-card {
   padding: var(--space-4);
   cursor: pointer;
@@ -1789,6 +1859,15 @@ tbody tr:hover {
 
   .results-sidebar {
     position: static;
+  }
+
+  .results-model-list,
+  .stack-list-scroll,
+  .leaderboard-breakdown-scroll,
+  .case-nav-scroll {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .artifact-row,

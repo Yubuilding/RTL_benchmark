@@ -208,10 +208,6 @@ class WebAppService:
         return None
 
     def compare_models(self, run_id: str, model_a: str, model_b: str) -> dict[str, Any] | None:
-        detail = self.load_history_detail(run_id)
-        if detail is None:
-            return None
-
         left = str(model_a).strip()
         right = str(model_b).strip()
         if not left or not right:
@@ -219,52 +215,23 @@ class WebAppService:
         if left == right:
             raise ValueError("model_a and model_b must be different")
 
-        available_models = [str(item.get("model_id", "")) for item in detail.get("model_results", []) if item.get("model_id")]
+        board = self.load_leaderboard()
+        available_models = [str(item.get("model_id", "")) for item in board.get("models", []) if item.get("model_id")]
         if left not in available_models:
-            raise ValueError(f"model not found in run: {left}")
+            raise ValueError(f"model not found in leaderboard: {left}")
         if right not in available_models:
-            raise ValueError(f"model not found in run: {right}")
+            raise ValueError(f"model not found in leaderboard: {right}")
 
-        case_index = self._index_final_cases(detail.get("cases", []))
-        left_cases = case_index.get(left, {})
-        right_cases = case_index.get(right, {})
-        all_problem_ids = sorted(set(left_cases) | set(right_cases))
-
-        rows = [self._build_compare_row(problem_id, left_cases.get(problem_id), right_cases.get(problem_id)) for problem_id in all_problem_ids]
-        outcome_order = {"a_only_pass": 0, "b_only_pass": 1, "both_fail": 2, "both_pass": 3, "missing": 4}
-        rows.sort(key=lambda item: (outcome_order.get(str(item.get("outcome", "")), 99), str(item.get("problem_id", ""))))
-
-        comparable = sum(1 for row in rows if row["model_a"]["present"] and row["model_b"]["present"])
-        both_pass = sum(1 for row in rows if row["outcome"] == "both_pass")
-        both_fail = sum(1 for row in rows if row["outcome"] == "both_fail")
-        a_only_pass = sum(1 for row in rows if row["outcome"] == "a_only_pass")
-        b_only_pass = sum(1 for row in rows if row["outcome"] == "b_only_pass")
-        missing_a = sum(1 for row in rows if not row["model_a"]["present"])
-        missing_b = sum(1 for row in rows if not row["model_b"]["present"])
-
-        return {
-            "run_id": str(detail.get("run_id", run_id)),
-            "started_at": str(detail.get("started_at", "")),
-            "finished_at": str(detail.get("finished_at", "")),
-            "model_a": left,
-            "model_b": right,
-            "available_models": available_models,
-            "summary": {
-                "total_cases": len(rows),
-                "comparable_cases": comparable,
-                "same_outcome_cases": both_pass + both_fail,
-                "model_a_passed": sum(1 for row in rows if row["model_a"]["status"] == "pass"),
-                "model_b_passed": sum(1 for row in rows if row["model_b"]["status"] == "pass"),
-                "both_pass": both_pass,
-                "both_fail": both_fail,
-                "a_only_pass": a_only_pass,
-                "b_only_pass": b_only_pass,
-                "missing_a": missing_a,
-                "missing_b": missing_b,
-            },
-            "rows": rows,
-            "slice_comparison": self._build_slice_comparison(detail, left, right),
-        }
+        detail = self._build_leaderboard_compare_detail()
+        return self._build_compare_payload(
+            left,
+            right,
+            left_detail=detail,
+            right_detail=detail,
+            available_models=available_models,
+            requested_run_id=run_id,
+            compare_mode="leaderboard",
+        )
 
     def load_leaderboard(self) -> dict[str, Any]:
         board = rebuild_leaderboard_from_raw_results(
@@ -422,11 +389,160 @@ class WebAppService:
                 bucket[problem_id] = case
         return index
 
+    def _build_leaderboard_compare_detail(self) -> dict[str, Any]:
+        raw_dir = ensure_dir(self.base_config.get("raw_results_dir", "results/raw"))
+        reset_after = self._leaderboard_reset_at()
+        final_cases_by_problem: dict[tuple[str, str], dict[str, Any]] = {}
+        final_case_order: dict[tuple[str, str], tuple[str, str]] = {}
+        scoring_policy: dict[str, Any] = {}
+        model_last_meta: dict[str, dict[str, Any]] = {}
+
+        for path in raw_dir.glob("*.json"):
+            try:
+                data = load_json(path, default={})
+            except json.JSONDecodeError:
+                continue
+            started_at = str(data.get("started_at", ""))
+            scope = str(data.get("scope", "suite"))
+            if not scope_updates_leaderboard(scope, custom_problem=bool(data.get("custom_problem", False))):
+                continue
+            if reset_after and started_at and started_at < reset_after:
+                continue
+            cases = list(data.get("cases", []))
+            if not cases:
+                continue
+
+            run_id = str(data.get("run_id", path.stem))
+            scored = build_suite_leaderboard(
+                cases=cases,
+                problems=list(data.get("problems", [])),
+                scoring_config=dict(data.get("scoring_policy", {})),
+            )
+            run_sort_key = (started_at or "", run_id)
+            for case in scored["final_cases"]:
+                model_id = str(case.get("model_id", "")).strip()
+                problem_id = str(case.get("problem_id", "")).strip()
+                if not model_id or not problem_id:
+                    continue
+                key = (model_id, problem_id)
+                current_sort_key = final_case_order.get(key, ("", ""))
+                if run_sort_key < current_sort_key:
+                    continue
+                row = dict(case)
+                row["run_id"] = run_id
+                row["run_started_at"] = started_at
+                final_cases_by_problem[key] = row
+                final_case_order[key] = run_sort_key
+
+            for model in scored["summary"]:
+                model_id = str(model.get("model_id", "")).strip()
+                if not model_id:
+                    continue
+                current = model_last_meta.get(model_id)
+                candidate = {"run_id": run_id, "started_at": started_at}
+                if current is None or (candidate["started_at"] or "", candidate["run_id"]) >= (
+                    current.get("started_at", "") or "",
+                    current.get("run_id", ""),
+                ):
+                    model_last_meta[model_id] = candidate
+            scoring_policy = scored.get("scoring_policy", {}) or scoring_policy
+
+        merged_cases = sorted(
+            final_cases_by_problem.values(),
+            key=lambda case: (str(case.get("model_id", "")), str(case.get("problem_id", ""))),
+        )
+        scored = build_suite_leaderboard(cases=merged_cases, scoring_config=scoring_policy)
+        return {
+            "run_id": "",
+            "started_at": "",
+            "finished_at": "",
+            "cases": scored["cases"],
+            "summary": scored["summary"],
+            "model_last_meta": model_last_meta,
+        }
+
+    def _build_compare_payload(
+        self,
+        model_a: str,
+        model_b: str,
+        left_detail: dict[str, Any],
+        right_detail: dict[str, Any],
+        available_models: list[str],
+        requested_run_id: str = "",
+        compare_mode: str = "latest_runs",
+    ) -> dict[str, Any]:
+        left_run_id = str(left_detail.get("run_id", "")).strip()
+        right_run_id = str(right_detail.get("run_id", "")).strip()
+        case_index_left = self._index_final_cases(left_detail.get("cases", []))
+        case_index_right = self._index_final_cases(right_detail.get("cases", []))
+        left_cases = case_index_left.get(model_a, {})
+        right_cases = case_index_right.get(model_b, {})
+        all_problem_ids = sorted(set(left_cases) | set(right_cases))
+
+        rows = [
+            self._build_compare_row(
+                problem_id,
+                left_cases.get(problem_id),
+                right_cases.get(problem_id),
+                left_run_id=left_run_id,
+                right_run_id=right_run_id,
+            )
+            for problem_id in all_problem_ids
+        ]
+        outcome_order = {"a_only_pass": 0, "b_only_pass": 1, "both_fail": 2, "both_pass": 3, "missing": 4}
+        rows.sort(key=lambda item: (outcome_order.get(str(item.get("outcome", "")), 99), str(item.get("problem_id", ""))))
+
+        comparable = sum(1 for row in rows if row["model_a"]["present"] and row["model_b"]["present"])
+        both_pass = sum(1 for row in rows if row["outcome"] == "both_pass")
+        both_fail = sum(1 for row in rows if row["outcome"] == "both_fail")
+        a_only_pass = sum(1 for row in rows if row["outcome"] == "a_only_pass")
+        b_only_pass = sum(1 for row in rows if row["outcome"] == "b_only_pass")
+        missing_a = sum(1 for row in rows if not row["model_a"]["present"])
+        missing_b = sum(1 for row in rows if not row["model_b"]["present"])
+        same_run = left_run_id and left_run_id == right_run_id
+
+        left_meta = (left_detail.get("model_last_meta", {}) if isinstance(left_detail.get("model_last_meta"), dict) else {}).get(model_a, {})
+        right_meta = (right_detail.get("model_last_meta", {}) if isinstance(right_detail.get("model_last_meta"), dict) else {}).get(model_b, {})
+
+        return {
+            "run_id": left_run_id if same_run else "",
+            "requested_run_id": str(requested_run_id or "").strip(),
+            "compare_mode": "same_run" if same_run else compare_mode,
+            "started_at": str(left_detail.get("started_at", "")) if same_run else "",
+            "finished_at": str(left_detail.get("finished_at", "")) if same_run else "",
+            "model_a": model_a,
+            "model_b": model_b,
+            "model_a_run_id": str(left_meta.get("run_id", left_run_id)),
+            "model_a_started_at": str(left_meta.get("started_at", left_detail.get("started_at", ""))),
+            "model_a_finished_at": str(left_detail.get("finished_at", "")),
+            "model_b_run_id": str(right_meta.get("run_id", right_run_id)),
+            "model_b_started_at": str(right_meta.get("started_at", right_detail.get("started_at", ""))),
+            "model_b_finished_at": str(right_detail.get("finished_at", "")),
+            "available_models": available_models,
+            "summary": {
+                "total_cases": len(rows),
+                "comparable_cases": comparable,
+                "same_outcome_cases": both_pass + both_fail,
+                "model_a_passed": sum(1 for row in rows if row["model_a"]["status"] == "pass"),
+                "model_b_passed": sum(1 for row in rows if row["model_b"]["status"] == "pass"),
+                "both_pass": both_pass,
+                "both_fail": both_fail,
+                "a_only_pass": a_only_pass,
+                "b_only_pass": b_only_pass,
+                "missing_a": missing_a,
+                "missing_b": missing_b,
+            },
+            "rows": rows,
+            "slice_comparison": self._build_slice_comparison(left_detail, right_detail, model_a, model_b),
+        }
+
     def _build_compare_row(
         self,
         problem_id: str,
         left_case: dict[str, Any] | None,
         right_case: dict[str, Any] | None,
+        left_run_id: str = "",
+        right_run_id: str = "",
     ) -> dict[str, Any]:
         seed = left_case or right_case or {}
         problem = dict(seed.get("problem", {}))
@@ -435,8 +551,8 @@ class WebAppService:
         suite = str(problem.get("suite") or seed.get("problem_suite", ""))
         difficulty = str(problem.get("difficulty") or seed.get("problem_difficulty", ""))
 
-        left = self._serialize_compare_case(left_case)
-        right = self._serialize_compare_case(right_case)
+        left = self._serialize_compare_case(left_case, run_id=left_run_id)
+        right = self._serialize_compare_case(right_case, run_id=right_run_id)
         if left["present"] and right["present"]:
             if left["status"] == "pass" and right["status"] == "fail":
                 outcome = "a_only_pass"
@@ -462,13 +578,14 @@ class WebAppService:
             "model_b": right,
         }
 
-    def _serialize_compare_case(self, case: dict[str, Any] | None) -> dict[str, Any]:
+    def _serialize_compare_case(self, case: dict[str, Any] | None, run_id: str = "") -> dict[str, Any]:
         if not case:
             return {
                 "present": False,
                 "status": "missing",
                 "passed": None,
                 "attempt": None,
+                "run_id": "",
                 "feedback": "",
                 "case_key": "",
                 "lint_status": "missing",
@@ -482,6 +599,7 @@ class WebAppService:
             "status": "pass" if passed else "fail",
             "passed": passed,
             "attempt": int(case.get("attempt", 0) or 0),
+            "run_id": str(case.get("run_id", run_id or "")),
             "feedback": str(case.get("feedback", "")),
             "case_key": self._case_key(case),
             "lint_status": self._stage_status(case.get("lint")),
@@ -501,10 +619,17 @@ class WebAppService:
     def _stage_status(self, stage: dict[str, Any] | None) -> str:
         return str((stage or {}).get("status", "missing"))
 
-    def _build_slice_comparison(self, detail: dict[str, Any], model_a: str, model_b: str) -> dict[str, list[dict[str, Any]]]:
-        summary_rows = {str(row.get("model_id", "")): row for row in detail.get("summary", [])}
-        left = summary_rows.get(model_a, {})
-        right = summary_rows.get(model_b, {})
+    def _build_slice_comparison(
+        self,
+        left_detail: dict[str, Any],
+        right_detail: dict[str, Any],
+        model_a: str,
+        model_b: str,
+    ) -> dict[str, list[dict[str, Any]]]:
+        left_summary_rows = {str(row.get("model_id", "")): row for row in left_detail.get("summary", [])}
+        right_summary_rows = {str(row.get("model_id", "")): row for row in right_detail.get("summary", [])}
+        left = left_summary_rows.get(model_a, {})
+        right = right_summary_rows.get(model_b, {})
         return {
             "sources": self._compare_breakdown_group(left, right, "sources"),
             "difficulties": self._compare_breakdown_group(left, right, "difficulties"),
@@ -570,6 +695,7 @@ class WebAppService:
             "progress": self._build_progress(message="queued"),
             "eta_state": self._new_eta_state(safe_request.get("uiConfig", {})),
             "pause_requested": False,
+            "rerun_targets": [],
             "request": safe_request,
             "result": None,
         }
@@ -605,6 +731,179 @@ class WebAppService:
             self._persist_jobs_locked()
             payload = self._with_job_result(dict(job))
         return payload
+
+    def rerun_case(self, job_id: str, model_id: str, problem_id: str) -> dict[str, Any]:
+        left = str(model_id).strip()
+        right = str(problem_id).strip()
+        if not left or not right:
+            raise ValueError("model_id and problem_id are required")
+
+        request: dict[str, Any]
+        with self._jobs_lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                raise KeyError(job_id)
+            status = str(job.get("status", ""))
+            if status in {"running", "queued"}:
+                worker = self._job_threads.get(job_id)
+                if worker is not None and worker.is_alive():
+                    raise ValueError("job is still running")
+            request = dict(job.get("request", {}))
+            if not request:
+                raise ValueError("job request is missing")
+            run_id = str(job.get("run_id", "")).strip()
+            if not run_id:
+                raise ValueError("job has no saved run")
+            snapshot = self._load_run_snapshot(run_id)
+            if snapshot is None:
+                raise ValueError("job snapshot not found")
+            case_index = self._index_final_cases(list(snapshot.get("cases", [])))
+            target = case_index.get(left, {}).get(right)
+            if target is None:
+                raise ValueError("case not found in job")
+            if bool(target.get("passed")):
+                raise ValueError("only failed cases can be rerun")
+
+            job["status"] = "queued"
+            job["finished_at"] = ""
+            job["error"] = ""
+            job["pause_requested"] = False
+            job["rerun_targets"] = [{"model_id": left, "problem_id": right}]
+            job["rerun_count"] = int(job.get("rerun_count", 0) or 0) + 1
+            job["progress"] = self._build_progress(
+                message="queued",
+                model_id=left,
+                problem_id=right,
+                completed_cases=0,
+                total_cases=1,
+            )
+            job["eta_state"] = self._normalize_eta_state(job.get("eta_state", {}), request.get("uiConfig", {}))
+            self._persist_jobs_locked()
+            payload = self._with_job_result(dict(job))
+
+        thread = threading.Thread(target=self._run_job, args=(job_id, request), daemon=True)
+        with self._jobs_lock:
+            self._job_threads[job_id] = thread
+        thread.start()
+        return payload
+
+    def rerun_failed_cases(self, job_id: str) -> dict[str, Any]:
+        request: dict[str, Any]
+        with self._jobs_lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                raise KeyError(job_id)
+            status = str(job.get("status", ""))
+            if status in {"running", "queued"}:
+                worker = self._job_threads.get(job_id)
+                if worker is not None and worker.is_alive():
+                    raise ValueError("job is still running")
+            request = dict(job.get("request", {}))
+            if not request:
+                raise ValueError("job request is missing")
+            run_id = str(job.get("run_id", "")).strip()
+            if not run_id:
+                raise ValueError("job has no saved run")
+            snapshot = self._load_run_snapshot(run_id)
+            if snapshot is None:
+                raise ValueError("job snapshot not found")
+
+            failed_targets = [
+                {
+                    "model_id": str(case.get("model_id", "")).strip(),
+                    "problem_id": str(case.get("problem_id", "")).strip(),
+                }
+                for case in select_final_cases(list(snapshot.get("cases", [])))
+                if case.get("passed") is False
+            ]
+            failed_targets = [item for item in failed_targets if item["model_id"] and item["problem_id"]]
+            if not failed_targets:
+                raise ValueError("job has no failed cases to rerun")
+
+            job["status"] = "queued"
+            job["finished_at"] = ""
+            job["error"] = ""
+            job["pause_requested"] = False
+            job["rerun_targets"] = failed_targets
+            job["rerun_count"] = int(job.get("rerun_count", 0) or 0) + 1
+            first_target = failed_targets[0]
+            job["progress"] = self._build_progress(
+                message="queued",
+                model_id=first_target["model_id"],
+                problem_id=first_target["problem_id"],
+                completed_cases=0,
+                total_cases=len(failed_targets),
+            )
+            job["eta_state"] = self._normalize_eta_state(job.get("eta_state", {}), request.get("uiConfig", {}))
+            self._persist_jobs_locked()
+            payload = self._with_job_result(dict(job))
+
+        thread = threading.Thread(target=self._run_job, args=(job_id, request), daemon=True)
+        with self._jobs_lock:
+            self._job_threads[job_id] = thread
+        thread.start()
+        return payload
+
+    def start_leaderboard_failed_cases_job(self, model_id: str, provider: str = "") -> dict[str, Any]:
+        selected_model_id = str(model_id).strip()
+        selected_provider = str(provider).strip()
+        if not selected_model_id:
+            raise ValueError("model_id is required")
+
+        board = self.load_leaderboard()
+        row = next((item for item in board.get("models", []) if str(item.get("model_id", "")).strip() == selected_model_id), None)
+        if row is None:
+            raise ValueError("model not found in leaderboard")
+        leaderboard_provider = str(row.get("provider", "")).strip()
+        if selected_provider and leaderboard_provider and selected_provider != leaderboard_provider:
+            raise ValueError("provider does not match leaderboard model")
+        selected_provider = selected_provider or leaderboard_provider
+        if not selected_provider:
+            raise ValueError("provider is required for leaderboard rerun")
+
+        ui_config = self.load_ui_config()
+        providers = {
+            str(item.get("provider", "")).strip(): item
+            for item in ui_config.get("providers", [])
+            if str(item.get("provider", "")).strip()
+        }
+        provider_config = providers.get(selected_provider)
+        if provider_config is None or not provider_config.get("enabled"):
+            raise ValueError("leaderboard model provider is not enabled in current config")
+        configured_models = {str(item).strip() for item in provider_config.get("models", []) if str(item).strip()}
+        if selected_model_id not in configured_models:
+            raise ValueError("leaderboard model is not enabled in current config")
+
+        detail = self._build_leaderboard_compare_detail()
+        failed_cases = [
+            case
+            for case in select_final_cases(list(detail.get("cases", [])))
+            if str(case.get("model_id", "")).strip() == selected_model_id and case.get("passed") is False
+        ]
+        if not failed_cases:
+            raise ValueError("leaderboard model has no failed cases to rerun")
+
+        problem_ids = sorted({str(case.get("problem_id", "")).strip() for case in failed_cases if str(case.get("problem_id", "")).strip()})
+        if not problem_ids:
+            raise ValueError("leaderboard model has no rerunnable failed cases")
+
+        available_problem_ids = {
+            problem.id for problem in load_problems(self.base_config["problem_glob"], self.base_config.get("problem_filters", {}))
+        }
+        selected_problem_ids = [problem_id for problem_id in problem_ids if problem_id in available_problem_ids]
+        if len(selected_problem_ids) != len(problem_ids):
+            raise ValueError("some failed leaderboard cases are no longer available in the current benchmark set")
+        if not selected_problem_ids:
+            raise ValueError("failed leaderboard cases are not available in the current benchmark set")
+
+        request = {
+            "scope": "selected_problems",
+            "uiConfig": ui_config,
+            "selectedModels": [{"provider": selected_provider, "model_id": selected_model_id}],
+            "problemIds": selected_problem_ids,
+            "customProblem": {},
+        }
+        return self.start_job(request)
 
     def resume_job(self, job_id: str) -> dict[str, Any]:
         request: dict[str, Any]
@@ -716,6 +1015,7 @@ class WebAppService:
             }
             if final_status == "completed":
                 update_payload["finished_at"] = now_utc_iso()
+                update_payload["rerun_targets"] = []
             self._update_job(job_id, **update_payload)
         except Exception as exc:
             partial_result = getattr(exc, "partial_result", None)
@@ -783,6 +1083,16 @@ class WebAppService:
         model_runner = ModelRunner(ui_config.get("generation", {}))
         max_iterations = int(self.base_config.get("max_iterations", 1))
 
+        rerun_targets = self._normalize_rerun_targets(existing_job.get("rerun_targets", []))
+        target_case_keys = {
+            (model.id, problem.id)
+            for model in models
+            for problem in problems
+            if not rerun_targets or (model.id, problem.id) in rerun_targets
+        }
+        if rerun_targets and not target_case_keys:
+            raise ValueError("rerun target is no longer available")
+
         case_records = list((snapshot or {}).get("cases", []))
         problem_snapshots = list((snapshot or {}).get("problems", [])) or [asdict(problem) for problem in problems]
         completed_cases = select_final_cases(case_records)
@@ -794,11 +1104,13 @@ class WebAppService:
         completed_keys = {
             (model_id, problem_id)
             for model_id, problem_id in completed_keys
-            if model_id in {model.id for model in models} and problem_id in {problem.id for problem in problems}
+            if (model_id, problem_id) in target_case_keys
         }
-        total_cases = len(models) * len(problems)
+        if rerun_targets:
+            completed_keys = {key for key in completed_keys if key not in rerun_targets}
+        total_cases = len(target_case_keys)
         eta_state = self._normalize_eta_state(self._get_job(job_id).get("eta_state", {}), ui_config)
-        initial_eta = self._estimate_eta(eta_state, self._remaining_eta_problems(models, problems, completed_keys))
+        initial_eta = self._estimate_eta(eta_state, self._remaining_eta_problems(models, problems, completed_keys, target_case_keys))
         self._update_job(
             job_id,
             progress=self._build_progress(
@@ -826,10 +1138,12 @@ class WebAppService:
                         update_board=update_board,
                         completed_cases=len(completed_keys),
                         total_cases=total_cases,
-                        eta=self._estimate_eta(eta_state, self._remaining_eta_problems(models, problems, completed_keys)),
+                        eta=self._estimate_eta(eta_state, self._remaining_eta_problems(models, problems, completed_keys, target_case_keys)),
                     )
                     if paused_result is not None:
                         return paused_result
+                    if (model.id, problem.id) not in target_case_keys:
+                        continue
                     if (model.id, problem.id) in completed_keys:
                         continue
                     feedback = ""
@@ -840,9 +1154,12 @@ class WebAppService:
                     case_evaluation_seconds = 0.0
                     case_output_tokens = 0
                     case_token_seconds = 0.0
-
-                    for attempt in range(1, max_iterations + 1):
-                        attempt_eta = self._estimate_eta(eta_state, self._remaining_eta_problems(models, problems, completed_keys))
+                    initial_attempt = self._next_case_attempt(case_records, model.id, problem.id)
+                    for attempt in range(initial_attempt, initial_attempt + max_iterations):
+                        attempt_eta = self._estimate_eta(
+                            eta_state,
+                            self._remaining_eta_problems(models, problems, completed_keys, target_case_keys),
+                        )
                         self._update_job(
                             job_id,
                             progress=self._build_progress(
@@ -944,7 +1261,10 @@ class WebAppService:
                         token_seconds=case_token_seconds,
                     )
                     completed_keys.add((model.id, problem.id))
-                    remaining_eta = self._estimate_eta(eta_state, self._remaining_eta_problems(models, problems, completed_keys))
+                    remaining_eta = self._estimate_eta(
+                        eta_state,
+                        self._remaining_eta_problems(models, problems, completed_keys, target_case_keys),
+                    )
                     self._update_job(
                         job_id,
                         progress=self._build_progress(
@@ -1179,7 +1499,7 @@ class WebAppService:
         detail: str = "",
     ) -> CaseResult:
         skipped = StageStatus(status="skipped", reason="generation failed")
-        feedback = "generation failed: provider returned no HDL code"
+        feedback = "generation failed"
         if detail:
             feedback = f"{feedback}; {detail}"
         return CaseResult(
@@ -1430,10 +1750,13 @@ class WebAppService:
         models: list[ModelDescriptor],
         problems: list[Problem],
         completed_keys: set[tuple[str, str]],
+        target_keys: set[tuple[str, str]] | None = None,
     ) -> list[Problem]:
         remaining: list[Problem] = []
         for model in models:
             for problem in problems:
+                if target_keys is not None and (model.id, problem.id) not in target_keys:
+                    continue
                 if (model.id, problem.id) in completed_keys:
                     continue
                 remaining.append(problem)
@@ -1669,8 +1992,10 @@ class WebAppService:
             "run_root": str(row.get("run_root", "")),
             "resolved_models": list(row.get("resolved_models", [])) if isinstance(row.get("resolved_models"), list) else [],
             "resume_count": int(row.get("resume_count", 0) or 0),
+            "rerun_count": int(row.get("rerun_count", 0) or 0),
             "eta_state": self._normalize_eta_state(row.get("eta_state", {}), request.get("uiConfig", {})),
             "pause_requested": bool(row.get("pause_requested", False)),
+            "rerun_targets": list(row.get("rerun_targets", [])) if isinstance(row.get("rerun_targets"), list) else [],
         }
 
     def _persist_jobs_locked(self) -> None:
@@ -1981,6 +2306,27 @@ class WebAppService:
             return None
         return load_json(raw_path, default={})
 
+    def _normalize_rerun_targets(self, payload: Any) -> set[tuple[str, str]]:
+        normalized: set[tuple[str, str]] = set()
+        for item in payload if isinstance(payload, list) else []:
+            if not isinstance(item, dict):
+                continue
+            model_id = str(item.get("model_id", "")).strip()
+            problem_id = str(item.get("problem_id", "")).strip()
+            if model_id and problem_id:
+                normalized.add((model_id, problem_id))
+        return normalized
+
+    def _next_case_attempt(self, case_records: list[dict[str, Any]], model_id: str, problem_id: str) -> int:
+        highest = 0
+        for row in case_records:
+            if str(row.get("model_id", "")).strip() != model_id:
+                continue
+            if str(row.get("problem_id", "")).strip() != problem_id:
+                continue
+            highest = max(highest, int(row.get("attempt", 0) or 0))
+        return highest + 1
+
 
 class WebAppRequestHandler(BaseHTTPRequestHandler):
     service: WebAppService
@@ -2025,9 +2371,6 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
             run_id = unquote(query.get("run", [""])[0]).strip()
             model_a = unquote(query.get("a", [""])[0]).strip()
             model_b = unquote(query.get("b", [""])[0]).strip()
-            if not run_id:
-                self._send_json({"error": "run is required"}, status=HTTPStatus.BAD_REQUEST)
-                return
             try:
                 payload = self.service.compare_models(run_id, model_a, model_b)
             except ValueError as exc:
@@ -2087,6 +2430,17 @@ class WebAppRequestHandler(BaseHTTPRequestHandler):
             except KeyError:
                 self._send_json({"error": "job not found"}, status=HTTPStatus.NOT_FOUND)
                 return
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json({"ok": True, "job": job}, status=HTTPStatus.ACCEPTED)
+            return
+        if path == "/api/leaderboard/rerun-failures":
+            try:
+                job = self.service.start_leaderboard_failed_cases_job(
+                    str(data.get("model_id", "")),
+                    str(data.get("provider", "")),
+                )
             except ValueError as exc:
                 self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
                 return

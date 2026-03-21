@@ -191,3 +191,39 @@ Extended live web jobs with ETA estimates driven by provider latency traces, nor
 
 - Manual browser verification should confirm ETA stability against real provider latency rather than mocked instant responses.
 - If ETA drift becomes noticeable on very heterogeneous suites, consider learning per-suite or per-track calibration factors instead of a single global complexity fit.
+
+
+## Session 6: Improve leaderboard compare and generation diagnostics
+
+**Date**: 2026-03-21
+**Task**: Improve leaderboard compare and generation diagnostics
+
+### Summary
+
+Refined generation sizing and failure diagnostics, aggregated model comparison across leaderboard history, improved rerun/failure UX, and aligned benchmark metadata plus tests with the new behavior.
+
+### Main Changes
+
+- Added problem-aware generation token budgets plus better provider-side empty-response diagnostics, and normalized generation-failed feedback.
+- Switched model comparison to aggregate across the leaderboard using the latest model/problem result from raw runs, including per-side run metadata.
+- Added failed-case rerun coverage and UI affordances for inspecting failed cases, with scrollable job/history/compare panels.
+- Fixed evaluator reference-module detection to ignore `else if` false positives and corrected benchmark metadata/testbenches for affected RTLLM and VerilogEval cases.
+- Refreshed `results/leaderboard.json` and expanded regression coverage in `tests/test_core.py` and `tests/test_webapp.py`.
+
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] `PYTHONPATH=src python3 -m unittest tests.test_core`
+- [OK] `PYTHONPATH=src python3 -m unittest tests.test_webapp`
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

@@ -364,6 +364,8 @@ def _build_model_summary(
         else None,
         "avg_mutation_kill_rate": round(sum(float(rate) for rate in mutation_rates) / len(mutation_rates), 4) if mutation_rates else None,
         "cases": total,
+        "passed_cases": passed,
+        "failed_cases": max(0, total - passed),
     }
 
     breakdowns = _build_breakdowns(items, row, field_averages, scoring_policy, tag_keep)
